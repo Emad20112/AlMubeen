@@ -1,0 +1,16 @@
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^3.3.1
+  qcf_quran_plus: ^0.0.8
+  just_audio: ^0.10.5
+  audio_service: ^0.18.18
+  drift: ^2.33.0
+  drift_flutter: ^0.3.0
+  sqlite3_flutter_libs: ^0.6.0+eol
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  permission_handler: ^12.0.2
+  geolocator: ^14.0.2
+  adhan: ^2.0.0+1
+  intl: ^0.20.2
+  flutter_svg: ^2.3.0
+  flutter_islamic_icons: ^1.0.2
