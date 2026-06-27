@@ -58,7 +58,8 @@ class _TranslationBottomSheetState
       downloadedTranslations: downloadedTranslations,
     );
 
-    if (selectedTranslationId == null && activeTranslation != null) {
+    if (activeTranslation != null &&
+        selectedTranslationId != activeTranslation.id) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) {
           return;

@@ -10,6 +10,8 @@ class AppConfig {
   AppConfig._();
 
   static const String _envAssetPath = 'env/app.env';
+  static const String _defaultBackendUrl =
+      'https://quan-packend-qgl5ro509-inma-soft.vercel.app';
 
   static late final Uri quranBackendUrl;
 
@@ -35,7 +37,7 @@ class AppConfig {
 
     if (!kReleaseMode) {
       debugPrint(
-        'AppConfig: using development backend defaults. '
+        'AppConfig: using deployed backend default. '
         'Copy env/app.env.example to env/app.env for local overrides.',
       );
     }
@@ -61,10 +63,6 @@ class AppConfig {
       return Uri.parse(explicit.replaceAll(RegExp(r'/+$'), ''));
     }
 
-    if (Platform.isAndroid) {
-      return Uri.parse('http://10.0.2.2:3000');
-    }
-
-    return Uri.parse('http://localhost:3000');
+    return Uri.parse(_defaultBackendUrl);
   }
 }

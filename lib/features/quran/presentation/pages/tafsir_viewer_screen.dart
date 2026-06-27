@@ -1,5 +1,6 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
+import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/tafsir_html_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,18 +22,87 @@ class TafsirViewerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedTafsirId = ref.watch(selectedTafsirProvider);
+    final tafsirsAsync = ref.watch(tafsirsProvider);
+    final downloadedTafsirsAsync = ref.watch(downloadedTafsirsProvider);
+    final downloadedTafsirs = downloadedTafsirsAsync.maybeWhen(
+      data: (tafsirs) => tafsirs,
+      orElse: () => <Tafsir>[],
+    );
+    final availableTafsirs = tafsirsAsync.maybeWhen(
+      data: (tafsirs) => tafsirs,
+      orElse: () => downloadedTafsirs,
+    );
+    final activeTafsir = _resolveActiveTafsir(
+      selectedTafsirId: selectedTafsirId,
+      tafsirs: availableTafsirs,
+      downloadedTafsirs: downloadedTafsirs,
+    );
+
+    if (activeTafsir != null && activeTafsir.id != selectedTafsirId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          ref.read(selectedTafsirProvider.notifier).state = activeTafsir.id;
+        }
+      });
+    }
+
+    if (tafsirsAsync.isLoading && activeTafsir == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (activeTafsir == null) {
+      return Scaffold(
+        backgroundColor: isDark ? AppColors.darkScaffold : AppColors.parchment,
+        appBar: AppBar(
+          title: Text('تفسير سورة ${getSurahName(chapterNumber)}'),
+          backgroundColor: isDark
+              ? const Color(0xFF1A1210)
+              : AppColors.maroon800,
+          foregroundColor: isDark
+              ? const Color(0xFFD8B457)
+              : AppColors.parchmentLight,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'تعذر تحميل التفسير',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     final tafsirAsync = ayahNumber != null
         ? ref.watch(
             tafsirAyahProvider((
-              resourceId: selectedTafsirId,
+              resourceId: activeTafsir.id,
               chapterNumber: chapterNumber,
               ayahNumber: ayahNumber!,
             )),
           )
         : ref.watch(
             tafsirChapterProvider((
-              resourceId: selectedTafsirId,
+              resourceId: activeTafsir.id,
               chapterNumber: chapterNumber,
             )),
           );
@@ -83,7 +153,7 @@ class TafsirViewerScreen extends ConsumerWidget {
                   if (ayahNumber != null) {
                     ref.invalidate(
                       tafsirAyahProvider((
-                        resourceId: selectedTafsirId,
+                        resourceId: activeTafsir.id,
                         chapterNumber: chapterNumber,
                         ayahNumber: ayahNumber!,
                       )),
@@ -91,7 +161,7 @@ class TafsirViewerScreen extends ConsumerWidget {
                   } else {
                     ref.invalidate(
                       tafsirChapterProvider((
-                        resourceId: selectedTafsirId,
+                        resourceId: activeTafsir.id,
                         chapterNumber: chapterNumber,
                       )),
                     );
@@ -179,4 +249,32 @@ class TafsirViewerScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+Tafsir? _resolveActiveTafsir({
+  required int selectedTafsirId,
+  required List<Tafsir> tafsirs,
+  required List<Tafsir> downloadedTafsirs,
+}) {
+  for (final tafsir in tafsirs) {
+    if (tafsir.id == selectedTafsirId) {
+      return tafsir;
+    }
+  }
+
+  for (final tafsir in downloadedTafsirs) {
+    if (tafsir.id == selectedTafsirId) {
+      return tafsir;
+    }
+  }
+
+  if (tafsirs.isNotEmpty) {
+    return tafsirs.first;
+  }
+
+  if (downloadedTafsirs.isNotEmpty) {
+    return downloadedTafsirs.first;
+  }
+
+  return null;
 }

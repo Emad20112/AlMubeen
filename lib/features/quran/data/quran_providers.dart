@@ -5,6 +5,7 @@ import 'package:al_mubeen/core/database/app_database_provider.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_bookmark_service.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_reading_progress.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_reciter_local_data_source.dart';
+import 'package:al_mubeen/features/quran/data/local/quran_resource_catalog_storage.dart';
 import 'package:al_mubeen/features/quran/data/local/translation_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/local/tafsir_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_api_client.dart';
@@ -54,6 +55,11 @@ final translationLocalDataSourceProvider = Provider<TranslationLocalDataSource>(
     return TranslationLocalDataSource(database: ref.watch(appDatabaseProvider));
   },
 );
+
+final quranResourceCatalogStorageProvider =
+    Provider<QuranResourceCatalogStorage>((ref) {
+      return QuranResourceCatalogStorage();
+    });
 
 final downloadedTafsirsProvider = FutureProvider<List<Tafsir>>((ref) async {
   return ref.watch(tafsirLocalDataSourceProvider).getDownloadedTafsirs();
@@ -121,82 +127,75 @@ final quranLastSavedPageProvider = FutureProvider<int>((ref) async {
 
 /// Provider for fetching the list of available tafsirs
 final tafsirsProvider = FutureProvider<List<Tafsir>>((ref) async {
-  final repository = ref.watch(quranRepositoryProvider);
+  final storage = ref.watch(quranResourceCatalogStorageProvider);
+  final localArabicTafsirs = await storage.getTafsirs(language: 'ar');
+  final localEnglishTafsirs = await storage.getTafsirs(language: 'en');
+
+  if (localArabicTafsirs.isNotEmpty && localEnglishTafsirs.isNotEmpty) {
+    return _mergeTafsirs(localArabicTafsirs, localEnglishTafsirs);
+  }
+
+  final remoteTafsirs = await _fetchTafsirsCatalog(
+    ref: ref,
+    storage: storage,
+    fallbackArabicTafsirs: localArabicTafsirs,
+    fallbackEnglishTafsirs: localEnglishTafsirs,
+  );
+  if (remoteTafsirs.isNotEmpty) {
+    return remoteTafsirs;
+  }
+
+  final localMergedTafsirs = _mergeTafsirs(
+    localArabicTafsirs,
+    localEnglishTafsirs,
+  );
+  if (localMergedTafsirs.isNotEmpty) {
+    return localMergedTafsirs;
+  }
+
   final localDownloadedTafsirs = await ref.watch(
     downloadedTafsirsProvider.future,
   );
-
-  final results = await Future.wait([
-    repository.getTafsirs(
-      language: 'ar',
-      fetchPolicy: DataFetchPolicy.networkOnly,
-    ),
-    repository.getTafsirs(
-      language: 'en',
-      fetchPolicy: DataFetchPolicy.networkOnly,
-    ),
-  ]);
-
-  final arabicTafsirs = results[0].when(
-    success: (tafsirs) => tafsirs,
-    error: (_) => <Tafsir>[],
-  );
-  final englishTafsirs = results[1].when(
-    success: (tafsirs) => tafsirs,
-    error: (_) => <Tafsir>[],
-  );
-
-  if (arabicTafsirs.isEmpty && englishTafsirs.isEmpty) {
-    return localDownloadedTafsirs;
-  }
-
-  final mergedRemoteTafsirs = _mergeTafsirs(arabicTafsirs, englishTafsirs);
-  if (mergedRemoteTafsirs.isNotEmpty) {
-    return mergedRemoteTafsirs;
-  }
-
   return localDownloadedTafsirs;
 });
 
 /// Provider for fetching the list of available translations
 final translationsProvider = FutureProvider<List<Translation>>((ref) async {
-  final repository = ref.watch(quranRepositoryProvider);
+  final storage = ref.watch(quranResourceCatalogStorageProvider);
+  final localArabicTranslations = await storage.getTranslations(language: 'ar');
+  final localEnglishTranslations = await storage.getTranslations(
+    language: 'en',
+  );
+
+  if (localArabicTranslations.isNotEmpty &&
+      localEnglishTranslations.isNotEmpty) {
+    return _mergeTranslations(
+      localArabicTranslations,
+      localEnglishTranslations,
+    );
+  }
+
+  final remoteTranslations = await _fetchTranslationsCatalog(
+    ref: ref,
+    storage: storage,
+    fallbackArabicTranslations: localArabicTranslations,
+    fallbackEnglishTranslations: localEnglishTranslations,
+  );
+  if (remoteTranslations.isNotEmpty) {
+    return remoteTranslations;
+  }
+
+  final localMergedTranslations = _mergeTranslations(
+    localArabicTranslations,
+    localEnglishTranslations,
+  );
+  if (localMergedTranslations.isNotEmpty) {
+    return localMergedTranslations;
+  }
+
   final localDownloadedTranslations = await ref.watch(
     downloadedTranslationsProvider.future,
   );
-
-  final results = await Future.wait([
-    repository.getTranslations(
-      language: 'ar',
-      fetchPolicy: DataFetchPolicy.networkOnly,
-    ),
-    repository.getTranslations(
-      language: 'en',
-      fetchPolicy: DataFetchPolicy.networkOnly,
-    ),
-  ]);
-
-  final arabicTranslations = results[0].when(
-    success: (translations) => translations,
-    error: (_) => <Translation>[],
-  );
-  final englishTranslations = results[1].when(
-    success: (translations) => translations,
-    error: (_) => <Translation>[],
-  );
-
-  if (arabicTranslations.isEmpty && englishTranslations.isEmpty) {
-    return localDownloadedTranslations;
-  }
-
-  final mergedRemoteTranslations = _mergeTranslations(
-    arabicTranslations,
-    englishTranslations,
-  );
-  if (mergedRemoteTranslations.isNotEmpty) {
-    return mergedRemoteTranslations;
-  }
-
   return localDownloadedTranslations;
 });
 
@@ -421,6 +420,94 @@ final translationAyahProvider =
 
 /// Provider for the currently selected tafsir (defaults to Tafsir Muyassar - ID 16)
 final selectedTafsirProvider = StateProvider<int>((ref) => 16);
+
+Future<List<Tafsir>> _fetchTafsirsCatalog({
+  required Ref ref,
+  required QuranResourceCatalogStorage storage,
+  required List<Tafsir> fallbackArabicTafsirs,
+  required List<Tafsir> fallbackEnglishTafsirs,
+}) async {
+  final repository = ref.watch(quranRepositoryProvider);
+  final results = await Future.wait([
+    repository.getTafsirs(
+      language: 'ar',
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    ),
+    repository.getTafsirs(
+      language: 'en',
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    ),
+  ]);
+
+  final fetchedArabicTafsirs = results[0].when(
+    success: (tafsirs) => tafsirs,
+    error: (_) => <Tafsir>[],
+  );
+  final fetchedEnglishTafsirs = results[1].when(
+    success: (tafsirs) => tafsirs,
+    error: (_) => <Tafsir>[],
+  );
+
+  if (fetchedArabicTafsirs.isNotEmpty) {
+    await storage.saveTafsirs(fetchedArabicTafsirs, language: 'ar');
+  }
+  if (fetchedEnglishTafsirs.isNotEmpty) {
+    await storage.saveTafsirs(fetchedEnglishTafsirs, language: 'en');
+  }
+
+  return _mergeTafsirs(
+    fetchedArabicTafsirs.isNotEmpty
+        ? fetchedArabicTafsirs
+        : fallbackArabicTafsirs,
+    fetchedEnglishTafsirs.isNotEmpty
+        ? fetchedEnglishTafsirs
+        : fallbackEnglishTafsirs,
+  );
+}
+
+Future<List<Translation>> _fetchTranslationsCatalog({
+  required Ref ref,
+  required QuranResourceCatalogStorage storage,
+  required List<Translation> fallbackArabicTranslations,
+  required List<Translation> fallbackEnglishTranslations,
+}) async {
+  final repository = ref.watch(quranRepositoryProvider);
+  final results = await Future.wait([
+    repository.getTranslations(
+      language: 'ar',
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    ),
+    repository.getTranslations(
+      language: 'en',
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    ),
+  ]);
+
+  final fetchedArabicTranslations = results[0].when(
+    success: (translations) => translations,
+    error: (_) => <Translation>[],
+  );
+  final fetchedEnglishTranslations = results[1].when(
+    success: (translations) => translations,
+    error: (_) => <Translation>[],
+  );
+
+  if (fetchedArabicTranslations.isNotEmpty) {
+    await storage.saveTranslations(fetchedArabicTranslations, language: 'ar');
+  }
+  if (fetchedEnglishTranslations.isNotEmpty) {
+    await storage.saveTranslations(fetchedEnglishTranslations, language: 'en');
+  }
+
+  return _mergeTranslations(
+    fetchedArabicTranslations.isNotEmpty
+        ? fetchedArabicTranslations
+        : fallbackArabicTranslations,
+    fetchedEnglishTranslations.isNotEmpty
+        ? fetchedEnglishTranslations
+        : fallbackEnglishTranslations,
+  );
+}
 
 List<Tafsir> _mergeTafsirs(
   List<Tafsir> arabicTafsirs,
