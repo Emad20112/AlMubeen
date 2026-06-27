@@ -14,4 +14,4 @@ class HomeFeature {
   final bool isImportant;
 }
 
-enum HomeFeatureAction { openSurahPicker, openAdhkarGrid, openQuranAudioDownload }
+enum HomeFeatureAction { openQuranReader, openAdhkarGrid, openQuranAudioDownload }

@@ -1,5 +1,6 @@
 import 'package:al_mubeen/app/bootstrap/app_bootstrap.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_audio_download_screen.dart';
+import 'package:al_mubeen/features/quran/presentation/pages/translation_download_screen.dart';
 import 'package:al_mubeen/features/adhkar/presentation/screens/adhkar_details_screen.dart';
 import 'package:al_mubeen/features/adhkar/presentation/screens/adhkar_grid_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +25,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: QuranAudioDownloadScreen.routePath,
       builder: (context, state) => const QuranAudioDownloadScreen(),
+    ),
+    GoRoute(
+      path: TranslationDownloadScreen.routeName,
+      builder: (context, state) => const TranslationDownloadScreen(),
     ),
   ],
 );

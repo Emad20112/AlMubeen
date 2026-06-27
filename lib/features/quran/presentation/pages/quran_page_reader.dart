@@ -3,11 +3,17 @@ import 'dart:async';
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
 import 'package:al_mubeen/features/quran/application/quran_highlight_controller.dart';
+import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
+import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/adaptive_quran_page_view.dart';
-import 'package:al_mubeen/features/quran/presentation/widgets/ayah_action_sheet.dart';
-import 'package:flutter/foundation.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/ayah_audio_player_bar.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/ayah_interaction_overlay.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_bottom_panel.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_header.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_scrim.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 
@@ -27,11 +33,16 @@ class QuranPageReader extends ConsumerStatefulWidget {
   ConsumerState<QuranPageReader> createState() => _QuranPageReaderState();
 }
 
-class _QuranPageReaderState extends ConsumerState<QuranPageReader> {
+class _QuranPageReaderState extends ConsumerState<QuranPageReader>
+    with SingleTickerProviderStateMixin {
   late final PageController _pageController;
   late final ValueNotifier<int> _currentPage;
   late final ValueNotifier<bool> _isTajweed;
   late final QuranHighlightController _highlightController;
+
+  /// Controls the header/footer overlay visibility.
+  late final AnimationController _overlayAnimation;
+  bool _isOverlayVisible = false;
 
   /// Tracks the last ayah we synced so we don't re-highlight redundantly.
   AyahRef? _lastSyncedAyah;
@@ -39,12 +50,27 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader> {
   @override
   void initState() {
     super.initState();
-    final initialPage = widget.initialPage.clamp(1, totalPagesCount).toInt();
+    debugPrint(
+      'QuranPageReader.initState: widget.initialPage=${widget.initialPage} runtimeType=${widget.initialPage.runtimeType}',
+    );
+    late final int initialPage;
+    try {
+      initialPage = widget.initialPage.clamp(1, totalPagesCount).toInt();
+    } catch (e, st) {
+      debugPrint(
+        'QuranPageReader.initState: failed to clamp initialPage=${widget.initialPage} - $e\n$st',
+      );
+      initialPage = 1;
+    }
 
     _pageController = PageController(initialPage: initialPage - 1);
     _currentPage = ValueNotifier<int>(initialPage);
     _isTajweed = ValueNotifier<bool>(true);
     _highlightController = QuranHighlightController();
+    _overlayAnimation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
 
     final initialHighlight = widget.initialHighlight;
     if (initialHighlight != null) {
@@ -57,20 +83,34 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader> {
     }
 
     unawaited(QcfFontLoader.preloadPages(initialPage, radius: 3));
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _saveCurrentProgress(initialPage);
+    });
   }
 
   @override
   void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _pageController.dispose();
     _currentPage.dispose();
     _isTajweed.dispose();
     _highlightController.dispose();
+    _overlayAnimation.dispose();
     super.dispose();
   }
 
   void _handlePageChanged(int page) {
     _currentPage.value = page;
     unawaited(QcfFontLoader.preloadPages(page, radius: 3));
+    _saveCurrentProgress(page);
+  }
+
+  void _saveCurrentProgress(int page) {
+    final surahNumber = getSurahNumberFromPage(page);
+    ref
+        .read(quranReadingProgressServiceProvider)
+        .savePosition(page: page, surahNumber: surahNumber);
   }
 
   void _goToPage(int page) {
@@ -84,6 +124,26 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader> {
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
     );
+  }
+
+  void _toggleOverlay() {
+    setState(() {
+      _isOverlayVisible = !_isOverlayVisible;
+      if (_isOverlayVisible) {
+        _overlayAnimation.forward();
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      } else {
+        _overlayAnimation.reverse();
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      }
+    });
+  }
+
+  void _hideOverlay() {
+    if (!_isOverlayVisible) {
+      return;
+    }
+    _toggleOverlay();
   }
 
   Color _highlightColor(BuildContext context) {
@@ -113,10 +173,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader> {
     }
 
     _lastSyncedAyah = currentAyah;
-    _highlightController.highlightSingle(
-      currentAyah,
-      _highlightColor(context),
-    );
+    _highlightController.highlightSingle(currentAyah, _highlightColor(context));
 
     // Auto-navigate to the page that contains this ayah.
     if (currentAyah.page != _currentPage.value) {
@@ -137,9 +194,10 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader> {
 
     _highlightController.toggleSingle(ayahRef, _highlightColor(context));
 
-    showAyahActionSheet(
+    showAyahOverlay(
       context: context,
       ayahRef: ayahRef,
+      globalPosition: details.globalPosition,
       isHighlighted: !isHighlighted,
       onToggleHighlight: () {
         _highlightController.toggleSingle(ayahRef, _highlightColor(context));
@@ -148,197 +206,167 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader> {
     );
   }
 
+  void _handleSurahSelected(int surahNumber) {
+    final page = getPageNumber(surahNumber, 1);
+    _goToPage(page);
+    _hideOverlay();
+  }
+
+  Widget _buildAnimatedOverlay({
+    required Offset beginOffset,
+    required Widget child,
+  }) {
+    return AnimatedBuilder(
+      animation: _overlayAnimation,
+      builder: (context, child) {
+        if (_overlayAnimation.isDismissed) {
+          return const SizedBox.shrink();
+        }
+
+        final slideOffset =
+            Tween<Offset>(
+                  begin: beginOffset,
+                  end: Offset.zero,
+                )
+                .animate(
+                  CurvedAnimation(
+                    parent: _overlayAnimation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                )
+                .value;
+
+        final opacity = CurvedAnimation(
+          parent: _overlayAnimation,
+          curve: Curves.easeOut,
+        ).value;
+
+        return FractionalTranslation(
+          translation: slideOffset,
+          child: Opacity(opacity: opacity, child: child),
+        );
+      },
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Listen to audio state changes and sync the highlight / page.
-    ref.listen<QuranAudioState>(quranAudioControllerProvider, (_, next) {
+    ref.listen<QuranAudioState>(quranAudioControllerProvider, (previous, next) {
       _syncAudioHighlight(next);
-    });
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkScaffold : AppColors.parchment,
-      appBar: AppBar(
-        leading: const BackButton(),
-        title: ValueListenableBuilder<int>(
-          valueListenable: _currentPage,
-          builder: (context, page, child) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
+      // Show elegant snackbar if there's an error (e.g., no internet)
+      if (next.errorMessage != null &&
+          next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
               children: [
-                Text(
-                  getCurrentHizbTextForPage(page, isArabic: true),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).appBarTheme.foregroundColor,
-                  ),
-                ),
-                Text(
-                  'صفحة ${_toArabicNumber(page)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).appBarTheme.foregroundColor?.withValues(alpha: 0.72),
+                const Icon(Icons.wifi_off_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    next.errorMessage!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
-            );
-          },
-        ),
-        actions: [
-          // Show a stop button when audio is actively playing.
-          Consumer(
-            builder: (context, ref, child) {
-              final audioState = ref.watch(quranAudioControllerProvider);
-              if (!audioState.isPlaying && !audioState.isLoading) {
-                return const SizedBox.shrink();
-              }
-
-              return IconButton(
-                tooltip: 'إيقاف التلاوة',
-                onPressed: () {
-                  ref.read(quranAudioControllerProvider.notifier).stop();
-                },
-                icon: audioState.isLoading
-                    ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator.adaptive(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.stop_circle_outlined),
-              );
-            },
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 4),
           ),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isTajweed,
-            builder: (context, isTajweed, child) {
-              return IconButton(
-                tooltip: isTajweed ? 'إيقاف ألوان التجويد' : 'تفعيل التجويد',
-                onPressed: () {
-                  _isTajweed.value = !isTajweed;
-                },
-                icon: Icon(
-                  isTajweed
-                      ? Icons.palette_outlined
-                      : Icons.format_color_reset_outlined,
+        );
+      }
+    });
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final audioBottomInset = _isOverlayVisible
+        ? kQuranReaderBottomPanelHeight + 16
+        : 60.0;
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.darkScaffold : AppColors.parchment,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _toggleOverlay,
+              behavior: HitTestBehavior.translucent,
+              child: SafeArea(
+                top: false,
+                child: AdaptiveQuranPageView(
+                  pageController: _pageController,
+                  highlightsListenable: _highlightController,
+                  isTajweedListenable: _isTajweed,
+                  onPageChanged: _handlePageChanged,
+                  onLongPress: _handleLongPress,
+                ),
+              ),
+            ),
+          ),
+
+          Positioned.fill(
+            child: QuranReaderScrim(
+              animation: _overlayAnimation,
+              onTap: _hideOverlay,
+            ),
+          ),
+
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: AyahAudioPlayerBar(bottomInset: audioBottomInset),
+          ),
+
+          ValueListenableBuilder<int>(
+            valueListenable: _currentPage,
+            builder: (context, page, child) {
+              return Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _buildAnimatedOverlay(
+                  beginOffset: const Offset(0, 1),
+                  child: QuranReaderBottomPanel(
+                    currentPage: page,
+                    isTajweedListenable: _isTajweed,
+                    onPageSelected: _goToPage,
+                    onCloseOverlay: _hideOverlay,
+                  ),
                 ),
               );
             },
           ),
-          ValueListenableBuilder<List<HighlightVerse>>(
-            valueListenable: _highlightController,
-            builder: (context, highlights, child) {
-              return IconButton(
-                tooltip: 'مسح التظليل',
-                onPressed: highlights.isEmpty
-                    ? null
-                    : _highlightController.clear,
-                icon: const Icon(Icons.layers_clear_outlined),
+
+          ValueListenableBuilder<int>(
+            valueListenable: _currentPage,
+            builder: (context, page, child) {
+              return Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: _buildAnimatedOverlay(
+                  beginOffset: const Offset(0, -1),
+                  child: QuranReaderHeader(
+                    currentPage: page,
+                    onSurahSelected: _handleSurahSelected,
+                  ),
+                ),
               );
             },
           ),
         ],
-      ),
-      body: SafeArea(
-        child: AdaptiveQuranPageView(
-          pageController: _pageController,
-          highlightsListenable: _highlightController,
-          isTajweedListenable: _isTajweed,
-          onPageChanged: _handlePageChanged,
-          onLongPress: _handleLongPress,
-        ),
-      ),
-      bottomNavigationBar: _QuranReaderBottomBar(
-        currentPageListenable: _currentPage,
-        onPreviousPage: () => _goToPage(_currentPage.value - 1),
-        onNextPage: () => _goToPage(_currentPage.value + 1),
-      ),
-    );
-  }
-
-  static String _toArabicNumber(int number) {
-    const digits = {
-      '0': '٠',
-      '1': '١',
-      '2': '٢',
-      '3': '٣',
-      '4': '٤',
-      '5': '٥',
-      '6': '٦',
-      '7': '٧',
-      '8': '٨',
-      '9': '٩',
-    };
-
-    return number
-        .toString()
-        .split('')
-        .map((digit) => digits[digit] ?? digit)
-        .join();
-  }
-}
-
-class _QuranReaderBottomBar extends StatelessWidget {
-  const _QuranReaderBottomBar({
-    required this.currentPageListenable,
-    required this.onPreviousPage,
-    required this.onNextPage,
-  });
-
-  final ValueListenable<int> currentPageListenable;
-  final VoidCallback onPreviousPage;
-  final VoidCallback onNextPage;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Material(
-        color: Theme.of(context).colorScheme.surface,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: ValueListenableBuilder<int>(
-            valueListenable: currentPageListenable,
-            builder: (context, page, child) {
-              return Row(
-                children: [
-                  IconButton(
-                    tooltip: 'الصفحة السابقة',
-                    onPressed: page <= 1 ? null : onPreviousPage,
-                    icon: const Icon(Icons.chevron_right),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'صفحة ${_QuranPageReaderState._toArabicNumber(page)} من ${_QuranPageReaderState._toArabicNumber(totalPagesCount)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: false,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'الصفحة التالية',
-                    onPressed: page >= totalPagesCount ? null : onNextPage,
-                    icon: const Icon(Icons.chevron_left),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
       ),
     );
   }

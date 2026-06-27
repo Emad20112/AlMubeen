@@ -70,6 +70,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   StreamSubscription<Duration?>? _durationSubscription;
   String? _loadedKey;
   final Set<String> _prefetchingKeys = <String>{};
+  int _requestId = 0;
 
   @override
   QuranAudioState build() {
@@ -93,6 +94,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       _positionSubscription?.cancel();
       _durationSubscription?.cancel();
       _audioPlayer.dispose();
+      debugPrint('🧹 AudioPlayer disposed.');
     });
 
     return const QuranAudioState();
@@ -106,8 +108,10 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
 
     if (_loadedKey == key) {
       if (_audioPlayer.playing) {
+        debugPrint('⏸️ Pausing audio playback.');
         await _audioPlayer.pause();
       } else {
+        debugPrint('▶️ Resuming audio playback.');
         if (_audioPlayer.processingState == ProcessingState.completed) {
           await _audioPlayer.seek(Duration.zero);
         }
@@ -116,11 +120,19 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       return;
     }
 
+    final reqId = ++_requestId;
+    
     state = QuranAudioState(
       currentAyah: ayahRef,
       recitationId: recitationId,
       isLoading: true,
     );
+
+    // Stop current playback to ensure a clean slate and avoid overlapping audio streams
+    await _audioPlayer.stop();
+    _loadedKey = null;
+
+    debugPrint('🔍 Fetching audio URL for Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}');
 
     final result = await ref
         .read(quranAudioRepositoryProvider)
@@ -129,8 +141,15 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
           recitationId: recitationId,
         );
 
+    // If another play request was made while we were fetching, abort this one.
+    if (reqId != _requestId) {
+      debugPrint('⏭️ Audio request cancelled for Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}');
+      return;
+    }
+
     final audioFile = result.valueOrNull;
     if (audioFile == null) {
+      debugPrint('❌ Failed to get audio URL: ${result.failureOrNull?.message}');
       state = QuranAudioState(
         currentAyah: ayahRef,
         recitationId: recitationId,
@@ -141,12 +160,18 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     }
 
     try {
-      final audioSource = LockCachingAudioSource(audioFile.url);
+      debugPrint('✅ Audio URL loaded: ${audioFile.url}');
+      // Use standard URI streaming instead of LockCachingAudioSource to prevent aggressive disk caching & memory leaks
+      final audioSource = AudioSource.uri(audioFile.url);
       await _audioPlayer.setAudioSource(audioSource);
+      
+      if (reqId != _requestId) return; // Prevent playing if cancelled during setAudioSource
+      
       _loadedKey = key;
       await _audioPlayer.play();
+      debugPrint('🔊 Playing audio...');
     } on Object catch (error) {
-      debugPrint('Quran audio playback error: $error');
+      debugPrint('🚨 Quran audio playback error: $error');
       state = QuranAudioState(
         currentAyah: ayahRef,
         recitationId: recitationId,
@@ -179,7 +204,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
         return;
       }
 
-      final audioSource = LockCachingAudioSource(audioFile.url);
+      final audioSource = AudioSource.uri(audioFile.url);
       await _audioPlayer.setAudioSource(audioSource);
       _loadedKey = key;
     } on Object catch (_) {
@@ -190,6 +215,8 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   }
 
   Future<void> stop() async {
+    _requestId++; // Cancel any pending play requests
+    debugPrint('⏹️ Stopping audio completely.');
     await _audioPlayer.stop();
     _loadedKey = null;
     state = const QuranAudioState();
@@ -200,7 +227,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       final session = await AudioSession.instance;
       await session.configure(const AudioSessionConfiguration.speech());
     } on Object catch (error) {
-      debugPrint('Quran audio session error: $error');
+      debugPrint('🚨 Quran audio session error: $error');
     }
   }
 
@@ -217,8 +244,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     );
 
     if (completed) {
-      unawaited(_audioPlayer.seek(Duration.zero));
-
+      debugPrint('🏁 Audio playback completed. Advancing to next Ayah.');
       final current = state.currentAyah;
       final recId = state.recitationId;
 

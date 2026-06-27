@@ -24,6 +24,54 @@ abstract interface class QuranRepository {
     int perPage = 50,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
   });
+
+  Future<DataResult<List<Tafsir>>> getTafsirs({
+    String language = 'en',
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  });
+
+  Future<DataResult<List<TafsirText>>> getTafsirChapterTexts({
+    required int resourceId,
+    required int chapterNumber,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  });
+
+  Future<DataResult<TafsirText>> getTafsirForChapter({
+    required int resourceId,
+    required int chapterNumber,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  });
+
+  Future<DataResult<TafsirText>> getTafsirForAyah({
+    required int resourceId,
+    required int chapterNumber,
+    required int ayahNumber,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  });
+
+  Future<DataResult<List<Translation>>> getTranslations({
+    String language = 'en',
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  });
+
+  Future<DataResult<List<TranslationText>>> getTranslationChapterTexts({
+    required int resourceId,
+    required int chapterNumber,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  });
+
+  Future<DataResult<TranslationText>> getTranslationForChapter({
+    required int resourceId,
+    required int chapterNumber,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  });
+
+  Future<DataResult<TranslationText>> getTranslationForAyah({
+    required int resourceId,
+    required int chapterNumber,
+    required int ayahNumber,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  });
 }
 
 @immutable
@@ -103,4 +151,84 @@ final class QuranPagination {
   final int? nextPage;
   final int? totalPages;
   final int? totalRecords;
+}
+
+@immutable
+final class Tafsir {
+  const Tafsir({
+    required this.id,
+    required this.name,
+    this.authorName,
+    this.translatedAuthorName,
+    this.slug,
+    this.languageName,
+    this.resourceName,
+  });
+
+  final int id;
+  final String name;
+  final String? authorName;
+  final String? translatedAuthorName;
+  final String? slug;
+  final String? languageName;
+  final String? resourceName;
+}
+
+@immutable
+final class TafsirText {
+  const TafsirText({
+    required this.resourceId,
+    required this.resourceName,
+    required this.text,
+    this.verseKey,
+    this.verseNumber,
+    this.chapterId,
+  });
+
+  final int resourceId;
+  final String resourceName;
+  final String text;
+  final String? verseKey;
+  final int? verseNumber;
+  final int? chapterId;
+}
+
+@immutable
+final class Translation {
+  const Translation({
+    required this.id,
+    required this.name,
+    this.authorName,
+    this.translatedAuthorName,
+    this.slug,
+    this.languageName,
+    this.resourceName,
+  });
+
+  final int id;
+  final String name;
+  final String? authorName;
+  final String? translatedAuthorName;
+  final String? slug;
+  final String? languageName;
+  final String? resourceName;
+}
+
+@immutable
+final class TranslationText {
+  const TranslationText({
+    required this.resourceId,
+    required this.resourceName,
+    required this.text,
+    this.verseKey,
+    this.verseNumber,
+    this.chapterId,
+  });
+
+  final int resourceId;
+  final String resourceName;
+  final String text;
+  final String? verseKey;
+  final int? verseNumber;
+  final int? chapterId;
 }

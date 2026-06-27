@@ -69,10 +69,7 @@ class QuranVerseCache extends Table {
 }
 
 @DataClassName('QuranRecitationCacheEntry')
-@TableIndex(
-  name: 'quran_recitation_cache_language',
-  columns: {#languageCode},
-)
+@TableIndex(name: 'quran_recitation_cache_language', columns: {#languageCode})
 @TableIndex(name: 'quran_recitation_cache_updated_at', columns: {#updatedAt})
 class QuranRecitationCache extends Table {
   IntColumn get recitationId => integer()();
@@ -126,6 +123,126 @@ class AdhkarFavorites extends Table {
   Set<Column<Object>> get primaryKey => {itemId};
 }
 
+@DataClassName('QuranReadingProgressEntry')
+class QuranReadingProgressCache extends Table {
+  IntColumn get id => integer().withDefault(const Constant(1))();
+  IntColumn get lastPage => integer()();
+  IntColumn get lastSurahNumber => integer()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('QuranBookmarkEntry')
+class QuranBookmarks extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get page => integer()();
+  IntColumn get surahNumber => integer()();
+  IntColumn get ayahNumber => integer().nullable()();
+  TextColumn get label => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => [
+    {page, surahNumber, ayahNumber},
+  ];
+}
+
+@DataClassName('DownloadedTafsirEntry')
+@TableIndex(name: 'downloaded_tafsirs_resource_id', columns: {#resourceId})
+@TableIndex(name: 'downloaded_tafsirs_updated_at', columns: {#updatedAt})
+class DownloadedTafsirs extends Table {
+  IntColumn get resourceId => integer()();
+
+  TextColumn get name => text()();
+
+  TextColumn get authorName => text().nullable()();
+
+  TextColumn get slug => text().nullable()();
+
+  TextColumn get languageName => text().nullable()();
+
+  TextColumn get resourceName => text().nullable()();
+
+  DateTimeColumn get downloadedAt => dateTime()();
+
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {resourceId};
+}
+
+@DataClassName('DownloadedTranslationEntry')
+@TableIndex(name: 'downloaded_translations_resource_id', columns: {#resourceId})
+@TableIndex(name: 'downloaded_translations_updated_at', columns: {#updatedAt})
+class DownloadedTranslations extends Table {
+  IntColumn get resourceId => integer()();
+
+  TextColumn get name => text()();
+
+  TextColumn get authorName => text().nullable()();
+
+  TextColumn get slug => text().nullable()();
+
+  TextColumn get languageName => text().nullable()();
+
+  TextColumn get resourceName => text().nullable()();
+
+  DateTimeColumn get downloadedAt => dateTime()();
+
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {resourceId};
+}
+
+@DataClassName('TafsirTextCacheEntry')
+@TableIndex(
+  name: 'tafsir_text_cache_resource_chapter_ayah',
+  columns: {#resourceId, #chapterId, #ayahNumber},
+)
+@TableIndex(name: 'tafsir_text_cache_updated_at', columns: {#cachedAt})
+class TafsirTextCache extends Table {
+  IntColumn get resourceId => integer()();
+
+  IntColumn get chapterId => integer()();
+
+  IntColumn get ayahNumber => integer()();
+
+  TextColumn get tafsirText => text()();
+
+  TextColumn get resourceName => text()();
+
+  DateTimeColumn get cachedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {resourceId, chapterId, ayahNumber};
+}
+
+@DataClassName('TranslationTextCacheEntry')
+@TableIndex(
+  name: 'translation_text_cache_resource_chapter_ayah',
+  columns: {#resourceId, #chapterId, #ayahNumber},
+)
+@TableIndex(name: 'translation_text_cache_updated_at', columns: {#cachedAt})
+class TranslationTextCache extends Table {
+  IntColumn get resourceId => integer()();
+
+  IntColumn get chapterId => integer()();
+
+  IntColumn get ayahNumber => integer()();
+
+  TextColumn get translationText => text()();
+
+  TextColumn get resourceName => text()();
+
+  DateTimeColumn get cachedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {resourceId, chapterId, ayahNumber};
+}
+
 @DriftDatabase(
   tables: [
     QuranChapterCache,
@@ -134,6 +251,12 @@ class AdhkarFavorites extends Table {
     QuranCacheMetadata,
     AdhkarProgressCache,
     AdhkarFavorites,
+    QuranReadingProgressCache,
+    QuranBookmarks,
+    DownloadedTafsirs,
+    DownloadedTranslations,
+    TafsirTextCache,
+    TranslationTextCache,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -142,7 +265,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forExecutor(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
@@ -155,6 +278,100 @@ class AppDatabase extends _$AppDatabase {
         if (from < 3) {
           await migrator.createTable(adhkarProgressCache);
           await migrator.createTable(adhkarFavorites);
+        }
+        if (from < 4) {
+          await migrator.createTable(quranReadingProgressCache);
+        }
+        if (from < 5) {
+          // Delete all data from the table to fix schema issues
+          await (migrator.database as AppDatabase).customStatement(
+            'DELETE FROM quran_reading_progress_cache',
+          );
+        }
+        if (from < 6) {
+          await migrator.createTable(quranBookmarks);
+        }
+        if (from < 7) {
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE TABLE IF NOT EXISTS downloaded_tafsirs (
+              resource_id INTEGER NOT NULL PRIMARY KEY,
+              name TEXT NOT NULL,
+              author_name TEXT,
+              slug TEXT,
+              language_name TEXT,
+              resource_name TEXT,
+              downloaded_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            )
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE TABLE IF NOT EXISTS tafsir_text_cache (
+              resource_id INTEGER NOT NULL,
+              chapter_id INTEGER NOT NULL,
+              ayah_number INTEGER NOT NULL,
+              tafsir_text TEXT NOT NULL,
+              resource_name TEXT NOT NULL,
+              cached_at INTEGER NOT NULL,
+              PRIMARY KEY (resource_id, chapter_id, ayah_number)
+            )
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE INDEX IF NOT EXISTS downloaded_tafsirs_resource_id 
+            ON downloaded_tafsirs (resource_id)
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE INDEX IF NOT EXISTS downloaded_tafsirs_updated_at 
+            ON downloaded_tafsirs (updated_at)
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE INDEX IF NOT EXISTS tafsir_text_cache_resource_chapter_ayah 
+            ON tafsir_text_cache (resource_id, chapter_id, ayah_number)
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE INDEX IF NOT EXISTS tafsir_text_cache_updated_at 
+            ON tafsir_text_cache (cached_at)
+          ''');
+        }
+        if (from < 8) {
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE TABLE IF NOT EXISTS downloaded_translations (
+              resource_id INTEGER NOT NULL PRIMARY KEY,
+              name TEXT NOT NULL,
+              author_name TEXT,
+              slug TEXT,
+              language_name TEXT,
+              resource_name TEXT,
+              downloaded_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            )
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE TABLE IF NOT EXISTS translation_text_cache (
+              resource_id INTEGER NOT NULL,
+              chapter_id INTEGER NOT NULL,
+              ayah_number INTEGER NOT NULL,
+              translation_text TEXT NOT NULL,
+              resource_name TEXT NOT NULL,
+              cached_at INTEGER NOT NULL,
+              PRIMARY KEY (resource_id, chapter_id, ayah_number)
+            )
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE INDEX IF NOT EXISTS downloaded_translations_resource_id 
+            ON downloaded_translations (resource_id)
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE INDEX IF NOT EXISTS downloaded_translations_updated_at 
+            ON downloaded_translations (updated_at)
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE INDEX IF NOT EXISTS translation_text_cache_resource_chapter_ayah 
+            ON translation_text_cache (resource_id, chapter_id, ayah_number)
+          ''');
+          await (migrator.database as AppDatabase).customStatement('''
+            CREATE INDEX IF NOT EXISTS translation_text_cache_updated_at 
+            ON translation_text_cache (cached_at)
+          ''');
         }
       },
     );

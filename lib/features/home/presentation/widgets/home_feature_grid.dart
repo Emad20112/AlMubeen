@@ -17,7 +17,7 @@ class HomeFeatureGrid extends StatelessWidget {
     HomeFeature(
       title: 'قراءة القرآن الكريم',
       icon: FlutterIslamicIcons.quran2,
-      action: HomeFeatureAction.openSurahPicker,
+      action: HomeFeatureAction.openQuranReader,
     ),
     HomeFeature(
       title: 'استماع القرآن',

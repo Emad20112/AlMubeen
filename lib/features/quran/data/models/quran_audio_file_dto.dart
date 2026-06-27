@@ -44,6 +44,14 @@ final class QuranAudioFileDto {
   }
 
   static Uri _audioUrl(String value) {
+    if (value.startsWith('//')) {
+      return Uri.parse('https:$value');
+    }
+    if (value.startsWith('mirrors.quranicaudio.com') || 
+        value.startsWith('audio.qurancdn.com')) {
+      return Uri.parse('https://$value');
+    }
+
     final uri = Uri.parse(value);
     if (uri.hasScheme) {
       return uri;

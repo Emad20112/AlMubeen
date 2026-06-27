@@ -10,13 +10,14 @@ final class QuranComRemoteDataSource implements QuranDataSource {
   QuranComRemoteDataSource({required QuranComApiClient apiClient})
     : _apiClient = apiClient;
 
-  static const int defaultMushafId = 1;
   static const int maxVersesPerPage = 50;
+
+  static const _verseFields =
+      'text_uthmani,text_uthmani_simple,verse_key,verse_number,'
+      'page_number,juz_number,hizb_number,rub_el_hizb_number,sajdah_number,id';
 
   final QuranComApiClient _apiClient;
 
-  /// Quranpedia reciters endpoint returns grouped reciters.
-  /// This method flattens them into a single list for UI consumption.
   Future<DataResult<JsonList>> getRecitations({
     String language = 'ar',
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
@@ -25,33 +26,17 @@ final class QuranComRemoteDataSource implements QuranDataSource {
       return _cacheMiss();
     }
 
-    final result = await _apiClient.getJsonList(
-      'reciters',
+    final result = await _apiClient.getJson(
+      'api/recitations',
       queryParameters: {'language': language},
     );
 
     return result.when(
-      success: (groups) => DataSuccess(_flattenReciterGroups(groups)),
+      success: (json) => _readList(DataSuccess(json), 'recitations'),
       error: DataError.new,
     );
   }
 
-  /// Optional helper if your UI wants the raw grouped response.
-  Future<DataResult<JsonList>> getGroupedRecitations({
-    String language = 'ar',
-    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
-  }) async {
-    if (!fetchPolicy.canReadNetwork) {
-      return _cacheMiss();
-    }
-
-    return _apiClient.getJsonList(
-      'reciters',
-      queryParameters: {'language': language},
-    );
-  }
-
-  /// Chapter/surah metadata from Quranpedia's Hafs mushaf.
   @override
   Future<DataResult<JsonList>> getChapters({
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
@@ -60,11 +45,10 @@ final class QuranComRemoteDataSource implements QuranDataSource {
       return _cacheMiss();
     }
 
-    final result = await _apiClient.getJson('mushafs/$defaultMushafId');
-    return _readList(result, 'surahs');
+    final result = await _apiClient.getJson('api/chapters');
+    return _readList(result, 'chapters');
   }
 
-  /// Surah metadata for a single chapter.
   @override
   Future<DataResult<JsonMap>> getChapter({
     required int chapterNumber,
@@ -74,12 +58,151 @@ final class QuranComRemoteDataSource implements QuranDataSource {
       return _cacheMiss();
     }
 
-    return _apiClient.getJson('surah/information/$chapterNumber');
+    final result = await _apiClient.getJson('api/chapters/$chapterNumber');
+    return _readObject(result, 'chapter');
   }
 
-  /// Single ayah from the Hafs mushaf.
   @override
   Future<DataResult<JsonMap>> getVerse({
+    required QuranVerseKey verseKey,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    final result = await _apiClient.getJson(
+      'api/verses/${verseKey.value}',
+      queryParameters: const {'fields': _verseFields},
+    );
+    return _readObject(result, 'verse');
+  }
+
+  @override
+  Future<DataResult<JsonList>> getVersesByChapter({
+    required int chapterNumber,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    final result = await _apiClient.getJson(
+      'api/chapters/$chapterNumber/verses',
+      queryParameters: const {
+        'fields': _verseFields,
+        'per_page': '$maxVersesPerPage',
+      },
+    );
+
+    return _readList(result, 'verses');
+  }
+
+  Future<DataResult<JsonMap>> getVersesPageByChapter({
+    required int chapterNumber,
+    int page = 1,
+    int perPage = maxVersesPerPage,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    final boundedPerPage = perPage.clamp(1, maxVersesPerPage);
+    final boundedPage = page < 1 ? 1 : page;
+
+    return _apiClient.getJson(
+      'api/chapters/$chapterNumber/verses',
+      queryParameters: {
+        'fields': _verseFields,
+        'page': '$boundedPage',
+        'per_page': '$boundedPerPage',
+      },
+    );
+  }
+
+  Future<DataResult<JsonList>> getTafsirsByChapter({
+    required int chapterNumber,
+    String language = 'en',
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    final result = await _apiClient.getJson(
+      'api/tafsirs',
+      queryParameters: {'language': language},
+    );
+    return _readList(result, 'tafsirs');
+  }
+
+  Future<DataResult<JsonList>> getTranslationsByChapter({
+    required int chapterNumber,
+    String language = 'en',
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    final result = await _apiClient.getJson(
+      'api/translations',
+      queryParameters: {'language': language},
+    );
+    return _readList(result, 'translations');
+  }
+
+  Future<DataResult<JsonMap>> getTafsirForAyah({
+    required int chapterNumber,
+    required int ayahNumber,
+    required int bookId,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    return _apiClient.getJson(
+      'api/tafsirs/$bookId/chapter/$chapterNumber',
+      queryParameters: {'verse_key': '$chapterNumber:$ayahNumber'},
+    );
+  }
+
+  Future<DataResult<JsonMap>> getTafsirChapter({
+    required int chapterNumber,
+    required int bookId,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    return _apiClient.getJson('api/tafsirs/$bookId/chapter/$chapterNumber');
+  }
+
+  Future<DataResult<JsonMap>> getTranslationChapter({
+    required int chapterNumber,
+    required int bookId,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    return _apiClient.getJson(
+      'api/translations',
+      queryParameters: {
+        'resourceId': '$bookId',
+        'chapterNumber': '$chapterNumber',
+        'translation_fields':
+            'text,resource_name,verse_key,verse_number,chapter_id,resource_id',
+      },
+    );
+  }
+
+  Future<DataResult<JsonList>> getAyahAudioFiles({
+    required int recitationId,
     required QuranVerseKey verseKey,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
   }) async {
@@ -98,108 +221,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
     }
 
     final result = await _apiClient.getJson(
-      'mushafs/$defaultMushafId/${parsed.$1}/${parsed.$2}',
-    );
-    return result;
-  }
-
-  /// All ayahs for a surah.
-  @override
-  Future<DataResult<JsonList>> getVersesByChapter({
-    required int chapterNumber,
-    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
-  }) async {
-    if (!fetchPolicy.canReadNetwork) {
-      return _cacheMiss();
-    }
-
-    return _apiClient.getJsonList('mushafs/$defaultMushafId/$chapterNumber');
-  }
-
-  /// Quranpedia does not page ayahs in this endpoint, so we page locally.
-  Future<DataResult<JsonMap>> getVersesPageByChapter({
-    required int chapterNumber,
-    int page = 1,
-    int perPage = maxVersesPerPage,
-    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
-  }) async {
-    if (!fetchPolicy.canReadNetwork) {
-      return _cacheMiss();
-    }
-
-    final versesResult = await getVersesByChapter(
-      chapterNumber: chapterNumber,
-      fetchPolicy: fetchPolicy,
-    );
-
-    return versesResult.when(
-      success: (verses) {
-        final boundedPerPage = perPage.clamp(1, maxVersesPerPage);
-        final boundedPage = page < 1 ? 1 : page;
-        final start = (boundedPage - 1) * boundedPerPage;
-        final end = (start + boundedPerPage).clamp(0, verses.length);
-        final pageItems = start >= verses.length
-            ? <dynamic>[]
-            : verses.sublist(start, end);
-
-        final totalRecords = verses.length;
-        final totalPages = (totalRecords / boundedPerPage).ceil();
-        final nextPage = boundedPage < totalPages ? boundedPage + 1 : null;
-
-        return DataSuccess(<String, dynamic>{
-          'verses': pageItems,
-          'pagination': {
-            'current_page': boundedPage,
-            'per_page': boundedPerPage,
-            'next_page': nextPage,
-            'total_pages': totalPages,
-            'total_records': totalRecords,
-          },
-        });
-      },
-      error: DataError.new,
-    );
-  }
-
-  /// Tafsir books available for a given surah.
-  Future<DataResult<JsonList>> getTafsirsByChapter({
-    required int chapterNumber,
-    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
-  }) async {
-    if (!fetchPolicy.canReadNetwork) {
-      return _cacheMiss();
-    }
-
-    return _apiClient.getJsonList('surah/tafsirs/$chapterNumber');
-  }
-
-  /// Tafsir content for a single ayah from a specific tafsir book.
-  Future<DataResult<JsonMap>> getTafsirForAyah({
-    required int chapterNumber,
-    required int ayahNumber,
-    required int bookId,
-    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
-  }) async {
-    if (!fetchPolicy.canReadNetwork) {
-      return _cacheMiss();
-    }
-
-    return _apiClient.getJson('ayah/$chapterNumber/$ayahNumber/book/$bookId');
-  }
-
-  /// Audio files for a single ayah from a recitation.
-  /// Quranpedia exposes recitation resources under `resources/recitations`.
-  Future<DataResult<JsonList>> getAyahAudioFiles({
-    required int recitationId,
-    required QuranVerseKey verseKey,
-    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
-  }) async {
-    if (!fetchPolicy.canReadNetwork) {
-      return _cacheMiss();
-    }
-
-    final result = await _apiClient.getJson(
-      'resources/recitations/$recitationId/by_ayah/${verseKey.value}',
+      'api/recitations/$recitationId/by_ayah/${parsed.$1}/${parsed.$2}',
       queryParameters: const {
         'fields': 'id,verse_key,url,format,duration',
         'per_page': '1',
@@ -209,7 +231,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
     return _readList(result, 'audio_files');
   }
 
-  DataResult<JsonMap> _readMap(DataResult<JsonMap> result, String key) {
+  DataResult<JsonMap> _readObject(DataResult<JsonMap> result, String key) {
     return result.when(
       success: (json) {
         final value = json[key];
@@ -247,20 +269,6 @@ final class QuranComRemoteDataSource implements QuranDataSource {
     );
   }
 
-  List<dynamic> _flattenReciterGroups(JsonList groups) {
-    final reciters = <dynamic>[];
-
-    for (final group in groups) {
-      if (group is JsonList) {
-        reciters.addAll(group);
-      } else if (group is JsonMap) {
-        reciters.add(group);
-      }
-    }
-
-    return reciters;
-  }
-
   (int, int)? _parseVerseKey(String value) {
     final normalized = value.trim();
     final parts = normalized.split(RegExp(r'[:\-/]'));
@@ -282,7 +290,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
       DataFailure(
         kind: DataFailureKind.cacheMiss,
         message:
-            'Remote Quranpedia data source cannot satisfy cache-only reads.',
+            'Remote Quran backend data source cannot satisfy cache-only reads.',
       ),
     );
   }

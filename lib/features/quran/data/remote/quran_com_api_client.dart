@@ -22,21 +22,13 @@ abstract interface class QuranComApiClient {
 
 final class HttpQuranComApiClient implements QuranComApiClient {
   HttpQuranComApiClient({
-    Uri? baseUri,
+    required Uri baseUri,
     HttpClient? httpClient,
-    String? accessToken,
-    String? clientId,
     Map<String, String> headers = const {},
     this.requestTimeout = const Duration(seconds: 15),
-  })  : baseUri = baseUri ??
-            Uri.parse('https://apis.quran.foundation/content/api/v4'),
-        _httpClient = httpClient ?? HttpClient(),
-        _headers = Map.unmodifiable({
-          if (accessToken != null && accessToken.isNotEmpty)
-            'x-auth-token': accessToken,
-          if (clientId != null && clientId.isNotEmpty) 'x-client-id': clientId,
-          ...headers,
-        });
+  }) : baseUri = baseUri,
+       _httpClient = httpClient ?? HttpClient(),
+       _headers = Map.unmodifiable(headers);
 
   final Uri baseUri;
   final Duration requestTimeout;
@@ -50,12 +42,9 @@ final class HttpQuranComApiClient implements QuranComApiClient {
   }) async {
     final uri = _resolve(path, queryParameters);
 
-    debugPrint('QuranComApiClient: GET $uri');
-    if (_headers.isNotEmpty) {
-      debugPrint('QuranComApiClient: headers: ${_headers.keys.toList()}');
-    }
+    debugPrint('QuranBackendClient: GET $uri');
     if (queryParameters.isNotEmpty) {
-      debugPrint('QuranComApiClient: queryParameters: $queryParameters');
+      debugPrint('QuranBackendClient: queryParameters: $queryParameters');
     }
 
     try {
@@ -73,69 +62,53 @@ final class HttpQuranComApiClient implements QuranComApiClient {
           .join()
           .timeout(requestTimeout);
 
-      debugPrint('QuranComApiClient: response status=${response.statusCode}');
-      debugPrint(
-        'QuranComApiClient: response body: ${responseBody.length} bytes',
-      );
+      debugPrint('QuranBackendClient: response status=${response.statusCode}');
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        debugPrint(
-          'QuranComApiClient: non-2xx response: ${response.statusCode} for $uri',
+        return _errorFromBody(
+          statusCode: response.statusCode,
+          body: responseBody,
+          uri: uri,
         );
-        debugPrint(
-          'QuranComApiClient: response body (truncated): '
-          '${responseBody.length > 1000 ? responseBody.substring(0, 1000) : responseBody}',
-        );
+      }
+
+      final decoded = jsonDecode(responseBody);
+      if (decoded is! JsonMap) {
         return DataError(
           DataFailure(
-            kind: _failureKindForStatus(response.statusCode),
-            message: 'Quran Foundation request failed with ${response.statusCode}.',
-            code: response.statusCode.toString(),
+            kind: DataFailureKind.invalidResponse,
+            message: 'Backend response was not a JSON object.',
             uri: uri,
           ),
         );
       }
 
-      final decoded = jsonDecode(responseBody);
-      if (decoded is JsonMap) {
-        return DataSuccess(decoded);
-      }
-
-      return DataError(
-        DataFailure(
-          kind: DataFailureKind.invalidResponse,
-          message: 'Quran Foundation response was not a JSON object.',
-          uri: uri,
-        ),
-      );
+      return _unwrapBackendMap(decoded, uri);
     } on TimeoutException catch (error, stackTrace) {
-      debugPrint('QuranComApiClient: timeout for $uri - ${error.toString()}');
       return DataError(
         DataFailure(
           kind: DataFailureKind.timeout,
-          message: 'Quran Foundation request timed out.',
+          message: 'Backend request timed out.',
           uri: uri,
           cause: error,
           stackTrace: stackTrace,
         ),
       );
     } on FormatException catch (error, stackTrace) {
-      debugPrint('QuranComApiClient: format exception for $uri - ${error.toString()}');
       return DataError(
         DataFailure(
           kind: DataFailureKind.parsing,
-          message: 'Unable to parse Quran Foundation response.',
+          message: 'Unable to parse backend response.',
           uri: uri,
           cause: error,
           stackTrace: stackTrace,
         ),
       );
     } on Object catch (error, stackTrace) {
-      debugPrint('QuranComApiClient: network exception for $uri - ${error.toString()}');
       return DataError(
         DataFailure(
           kind: DataFailureKind.network,
-          message: 'Unable to reach Quran Foundation.',
+          message: 'Unable to reach Al-Mubeen backend.',
           uri: uri,
           cause: error,
           stackTrace: stackTrace,
@@ -149,91 +122,102 @@ final class HttpQuranComApiClient implements QuranComApiClient {
     String path, {
     Map<String, String> queryParameters = const {},
   }) async {
-    final uri = _resolve(path, queryParameters);
+    final result = await getJson(path, queryParameters: queryParameters);
+    return result.when(
+      success: (json) {
+        for (final value in json.values) {
+          if (value is JsonList) {
+            return DataSuccess(value);
+          }
+        }
 
-    debugPrint('QuranComApiClient: GET (list) $uri');
-
-    try {
-      final request = await _httpClient.getUrl(uri).timeout(requestTimeout);
-      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
-      request.headers.set(HttpHeaders.userAgentHeader, 'AlMubeen/1.0');
-
-      for (final entry in _headers.entries) {
-        request.headers.set(entry.key, entry.value);
-      }
-
-      final response = await request.close().timeout(requestTimeout);
-      final responseBody = await utf8.decoder
-          .bind(response)
-          .join()
-          .timeout(requestTimeout);
-
-      debugPrint('QuranComApiClient: response status=${response.statusCode}');
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
         return DataError(
           DataFailure(
-            kind: _failureKindForStatus(response.statusCode),
-            message: 'Quran Foundation request failed with ${response.statusCode}.',
-            code: response.statusCode.toString(),
-            uri: uri,
+            kind: DataFailureKind.invalidResponse,
+            message: 'Backend response did not contain a JSON list.',
           ),
         );
-      }
-
-      final decoded = jsonDecode(responseBody);
-      if (decoded is JsonList) {
-        return DataSuccess(decoded);
-      }
-
-      return DataError(
-        DataFailure(
-          kind: DataFailureKind.invalidResponse,
-          message: 'Quran Foundation response was not a JSON list.',
-          uri: uri,
-        ),
-      );
-    } on TimeoutException catch (error, stackTrace) {
-      return DataError(
-        DataFailure(
-          kind: DataFailureKind.timeout,
-          message: 'Quran Foundation request timed out.',
-          uri: uri,
-          cause: error,
-          stackTrace: stackTrace,
-        ),
-      );
-    } on FormatException catch (error, stackTrace) {
-      return DataError(
-        DataFailure(
-          kind: DataFailureKind.parsing,
-          message: 'Unable to parse Quran Foundation response.',
-          uri: uri,
-          cause: error,
-          stackTrace: stackTrace,
-        ),
-      );
-    } on Object catch (error, stackTrace) {
-      return DataError(
-        DataFailure(
-          kind: DataFailureKind.network,
-          message: 'Unable to reach Quran Foundation.',
-          uri: uri,
-          cause: error,
-          stackTrace: stackTrace,
-        ),
-      );
-    }
+      },
+      error: DataError.new,
+    );
   }
 
   void dispose() {
     _httpClient.close(force: true);
   }
 
+  DataResult<JsonMap> _unwrapBackendMap(JsonMap envelope, Uri uri) {
+    final ok = envelope['ok'];
+    if (ok == false) {
+      final error = envelope['error'];
+      final message = error is JsonMap
+          ? error['message']?.toString() ?? 'Backend request failed.'
+          : 'Backend request failed.';
+
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.network,
+          message: message,
+          uri: uri,
+        ),
+      );
+    }
+
+    final data = envelope['data'];
+    if (data is JsonMap) {
+      return DataSuccess(data);
+    }
+
+    if (data == null) {
+      return const DataSuccess(<String, dynamic>{});
+    }
+
+    return DataError(
+      DataFailure(
+        kind: DataFailureKind.invalidResponse,
+        message: 'Backend "data" field was not a JSON object.',
+        uri: uri,
+      ),
+    );
+  }
+
+  DataError<JsonMap> _errorFromBody({
+    required int statusCode,
+    required String body,
+    required Uri uri,
+  }) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is JsonMap && decoded['error'] is JsonMap) {
+        final message =
+            (decoded['error'] as JsonMap)['message']?.toString() ??
+            'Backend request failed with $statusCode.';
+        return DataError(
+          DataFailure(
+            kind: _failureKindForStatus(statusCode),
+            message: message,
+            code: statusCode.toString(),
+            uri: uri,
+          ),
+        );
+      }
+    } catch (_) {}
+
+    return DataError(
+      DataFailure(
+        kind: _failureKindForStatus(statusCode),
+        message: 'Backend request failed with $statusCode.',
+        code: statusCode.toString(),
+        uri: uri,
+      ),
+    );
+  }
+
   Uri _resolve(String path, Map<String, String> queryParameters) {
     final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
-    final basePath =
-        baseUri.path.endsWith('/') ? baseUri.path : '${baseUri.path}/';
+    final basePath = baseUri.path.endsWith('/')
+        ? baseUri.path
+        : '${baseUri.path}/';
     final mergedQueryParameters = <String, String>{
       ...baseUri.queryParameters,
       ...queryParameters,
@@ -241,8 +225,9 @@ final class HttpQuranComApiClient implements QuranComApiClient {
 
     return baseUri.replace(
       path: '$basePath$normalizedPath',
-      queryParameters:
-          mergedQueryParameters.isEmpty ? null : mergedQueryParameters,
+      queryParameters: mergedQueryParameters.isEmpty
+          ? null
+          : mergedQueryParameters,
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
@@ -11,10 +12,17 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 
 final quranAudioDownloadProvider =
     NotifierProvider<QuranAudioDownloadController, QuranAudioDownloadState>(
-  QuranAudioDownloadController.new,
-);
+      QuranAudioDownloadController.new,
+    );
 
-enum QuranAudioDownloadStatus { idle, downloading, completed, failed }
+enum QuranAudioDownloadStatus {
+  idle,
+  downloading,
+  paused,
+  completed,
+  failed,
+  cancelled,
+}
 
 @immutable
 final class QuranAudioDownloadState {
@@ -41,6 +49,7 @@ final class QuranAudioDownloadState {
   final String? errorMessage;
 
   bool get isDownloading => status == QuranAudioDownloadStatus.downloading;
+  bool get isPaused => status == QuranAudioDownloadStatus.paused;
 
   QuranAudioDownloadState copyWith({
     QuranAudioDownloadStatus? status,
@@ -69,17 +78,57 @@ final class QuranAudioDownloadState {
 
 final class QuranAudioDownloadController
     extends Notifier<QuranAudioDownloadState> {
+  bool _isCancelled = false;
+  bool _isPaused = false;
+  Completer<void>? _pauseCompleter;
+
   @override
   QuranAudioDownloadState build() {
     return const QuranAudioDownloadState();
   }
 
-  Future<void> downloadFullQuran({
-    required QuranRecitation recitation,
-  }) async {
-    if (state.isDownloading) {
+  void pauseDownload() {
+    if (!state.isDownloading) return;
+    _isPaused = true;
+    _pauseCompleter = Completer<void>();
+    state = state.copyWith(
+      status: QuranAudioDownloadStatus.paused,
+      message: 'تم إيقاف التنزيل مؤقتًا',
+    );
+  }
+
+  void resumeDownload() {
+    if (!state.isPaused) return;
+    _isPaused = false;
+    _pauseCompleter?.complete();
+    _pauseCompleter = null;
+    state = state.copyWith(
+      status: QuranAudioDownloadStatus.downloading,
+      message: 'جاري استئناف التنزيل...',
+    );
+  }
+
+  void cancelDownload() {
+    if (!state.isDownloading && !state.isPaused) return;
+    _isCancelled = true;
+    if (_isPaused) {
+      _isPaused = false;
+      _pauseCompleter?.complete();
+    }
+    state = state.copyWith(
+      status: QuranAudioDownloadStatus.cancelled,
+      message: 'تم إلغاء التنزيل',
+    );
+  }
+
+  Future<void> downloadFullQuran({required QuranRecitation recitation}) async {
+    if (state.isDownloading || state.isPaused) {
       return;
     }
+
+    _isCancelled = false;
+    _isPaused = false;
+    _pauseCompleter = null;
 
     final saveRoot = await _prepareSaveDirectory(recitation.reciterName);
     final totalVerses = _countTotalVerses();
@@ -101,6 +150,14 @@ final class QuranAudioDownloadController
 
     try {
       for (var surah = 1; surah <= totalSurahCount; surah++) {
+        if (_isCancelled) {
+          state = state.copyWith(
+            status: QuranAudioDownloadStatus.cancelled,
+            message: 'تم إلغاء التنزيل.',
+          );
+          break;
+        }
+
         final verseCount = getVerseCount(surah);
         final chapterDir = Directory(
           path.join(saveRoot.path, 'surah_${surah.toString().padLeft(3, '0')}'),
@@ -108,6 +165,24 @@ final class QuranAudioDownloadController
         await chapterDir.create(recursive: true);
 
         for (var ayah = 1; ayah <= verseCount; ayah++) {
+          if (_isCancelled) {
+            state = state.copyWith(
+              status: QuranAudioDownloadStatus.cancelled,
+              message: 'تم إلغاء التنزيل.',
+            );
+            break;
+          }
+          if (_isPaused) {
+            await _pauseCompleter?.future;
+            if (_isCancelled) {
+              state = state.copyWith(
+                status: QuranAudioDownloadStatus.cancelled,
+                message: 'تم إلغاء التنزيل.',
+              );
+              break;
+            }
+          }
+
           final verseKey = QuranVerseKey(surah: surah, ayah: ayah);
           final currentVerse = 'سورة ${getSurahNameArabic(surah)} - آية $ayah';
           state = state.copyWith(
@@ -119,10 +194,7 @@ final class QuranAudioDownloadController
 
           final result = await ref
               .read(quranAudioRepositoryProvider)
-              .getAyahAudio(
-                verseKey: verseKey,
-                recitationId: recitation.id,
-              );
+              .getAyahAudio(verseKey: verseKey, recitationId: recitation.id);
 
           final audioFile = result.valueOrNull;
           if (audioFile == null) {
@@ -155,22 +227,26 @@ final class QuranAudioDownloadController
             progress: downloaded / totalVerses,
           );
         }
+
+        if (_isCancelled) break;
       }
 
-      state = state.copyWith(
-        status: errors > 0
-            ? QuranAudioDownloadStatus.failed
-            : QuranAudioDownloadStatus.completed,
-        progress: 1.0,
-        completedCount: totalVerses,
-        currentVerse: 'اكتمل التنزيل.',
-        message: errors > 0
-            ? 'اكتمل التنزيل مع بعض الأخطاء.'
-            : 'اكتمل تنزيل جميع ملفات الصوت.',
-        errorMessage: errors > 0
-            ? 'فشل تنزيل بعض الآيات. راجع الاتصال وحاول مرة أخرى.'
-            : null,
-      );
+      if (!_isCancelled) {
+        state = state.copyWith(
+          status: errors > 0
+              ? QuranAudioDownloadStatus.failed
+              : QuranAudioDownloadStatus.completed,
+          progress: 1.0,
+          completedCount: totalVerses,
+          currentVerse: 'اكتمل التنزيل.',
+          message: errors > 0
+              ? 'اكتمل التنزيل مع بعض الأخطاء.'
+              : 'اكتمل تنزيل جميع ملفات الصوت.',
+          errorMessage: errors > 0
+              ? 'فشل تنزيل بعض الآيات. راجع الاتصال وحاول مرة أخرى.'
+              : null,
+        );
+      }
     } on Object catch (error, stackTrace) {
       state = state.copyWith(
         status: QuranAudioDownloadStatus.failed,

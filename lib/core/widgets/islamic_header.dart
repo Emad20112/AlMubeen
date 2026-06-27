@@ -45,9 +45,10 @@ class IslamicHeader extends StatelessWidget {
           children: [
             Row(
               children: [
-                SizedBox.square(
-                  dimension: 48,
-                  child: Center(child: leading ?? const SizedBox.shrink()),
+                Container(
+                  alignment: Alignment.center,
+                  constraints: const BoxConstraints(minWidth: 48),
+                  child: leading ?? const SizedBox.shrink(),
                 ),
                 Expanded(
                   child: ConstrainedBox(
@@ -89,9 +90,10 @@ class IslamicHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox.square(
-                  dimension: 48,
-                  child: Center(child: trailing ?? const SizedBox.shrink()),
+                Container(
+                  alignment: Alignment.center,
+                  constraints: const BoxConstraints(minWidth: 48),
+                  child: trailing ?? const SizedBox.shrink(),
                 ),
               ],
             ),

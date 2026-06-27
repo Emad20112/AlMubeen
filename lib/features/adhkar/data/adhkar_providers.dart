@@ -7,7 +7,6 @@ import 'package:al_mubeen/features/adhkar/domain/models/adhkar_category.dart';
 import 'package:al_mubeen/features/adhkar/domain/models/adhkar_item.dart';
 import 'package:al_mubeen/features/adhkar/domain/repositories/adhkar_repository.dart';
 import 'package:al_mubeen/features/adhkar/domain/models/adhkar_user_progress.dart';
-import 'package:al_mubeen/features/adhkar/presentation/controllers/adhkar_audio_controller.dart';
 import 'package:al_mubeen/features/adhkar/presentation/controllers/adhkar_progress_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,13 +18,10 @@ final adhkarDbDataSourceProvider = Provider<AdhkarDbDataSource>((ref) {
   return AdhkarDbDataSource(ref.watch(appDatabaseProvider));
 });
 
-final adhkarAudioProvider = NotifierProvider<AdhkarAudioController, AdhkarAudioState>(
-  AdhkarAudioController.new,
-);
-
-final adhkarProgressProvider = NotifierProvider<AdhkarProgressController, Map<String, AdhkarUserProgress>>(
-  AdhkarProgressController.new,
-);
+final adhkarProgressProvider =
+    NotifierProvider<AdhkarProgressController, Map<String, AdhkarUserProgress>>(
+      AdhkarProgressController.new,
+    );
 
 final adhkarRepositoryProvider = Provider<AdhkarRepository>((ref) {
   final repository = IslamHouseAdhkarRepository(

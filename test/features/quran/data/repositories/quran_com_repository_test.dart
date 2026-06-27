@@ -7,8 +7,10 @@ import 'package:al_mubeen/features/quran/data/local/quran_reciter_local_data_sou
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_api_client.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_remote_data_source.dart';
+import 'package:al_mubeen/features/quran/data/repositories/quran_audio_repository_impl.dart';
 import 'package:al_mubeen/features/quran/data/repositories/quran_com_repository.dart';
 import 'package:al_mubeen/features/quran/data/repositories/quran_reciter_repository_impl.dart';
+import 'package:al_mubeen/features/quran/domain/repositories/quran_audio_repository.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:drift/native.dart';
@@ -18,8 +20,8 @@ void main() {
   group('QuranComRepository', () {
     test('parses chapters from Quran.com response', () async {
       final client = _FakeQuranComApiClient({
-        'mushafs/1': const DataSuccess({
-          'surahs': [
+        'api/chapters': const DataSuccess({
+          'chapters': [
             {
               'id': 1,
               'revelation_place': 'makkah',
@@ -50,7 +52,8 @@ void main() {
 
     test('parses a verse by Quran verse key', () async {
       final client = _FakeQuranComApiClient({
-        'mushafs/1/2/255': const DataSuccess({
+        'api/verses/2:255': const DataSuccess({
+          'verse': {
           'id': 262,
           'verse_key': '2:255',
           'verse_number': 255,
@@ -59,6 +62,7 @@ void main() {
           'hizb_number': 5,
           'rub_el_hizb_number': 19,
           'text_uthmani': 'اللَّهُ لَا إِلَـٰهَ إِلَّا هُوَ',
+          },
         }),
       });
       final repository = _repository(client);
@@ -72,7 +76,7 @@ void main() {
       expect(verse.verseKey.value, '2:255');
       expect(verse.pageNumber, 42);
       expect(verse.textUthmani, contains('اللَّهُ'));
-      expect(client.requests.single.path, 'mushafs/1/2/255');
+      expect(client.requests.single.path, 'api/verses/2:255');
     });
 
     test('requests verses by chapter with bounded pagination', () async {
@@ -80,7 +84,8 @@ void main() {
       // The data source pages locally; provide a simple list and assert
       // that paging logic bounds `per_page` to `maxVersesPerPage`.
       final client = _FakeQuranComApiClient({
-        'mushafs/1/2': const DataSuccess([
+        'api/chapters/2/verses': const DataSuccess({
+          'verses': [
           {
             'id': 8,
             'verse_key': '2:1',
@@ -89,7 +94,14 @@ void main() {
             'juz_number': 1,
             'text_uthmani': 'الم',
           },
-        ]),
+          ],
+          'pagination': {
+            'current_page': 1,
+            'per_page': 50,
+            'total_records': 1,
+            'total_pages': 1,
+          },
+        }),
       });
       final repository = _repository(client);
 
@@ -105,13 +117,13 @@ void main() {
       expect(versesPage.pagination?.currentPage, 1);
       expect(versesPage.pagination?.perPage, 50);
       expect(versesPage.pagination?.totalRecords, 1);
-      expect(client.requests.single.path, 'mushafs/1/2');
+      expect(client.requests.single.path, 'api/chapters/2/verses');
     });
 
     test('returns parsing failure for malformed chapter items', () async {
       final client = _FakeQuranComApiClient({
-        'mushafs/1': const DataSuccess({
-          'surahs': ['not-a-json-object'],
+        'api/chapters': const DataSuccess({
+          'chapters': ['not-a-json-object'],
         }),
       });
       final repository = _repository(client);
@@ -144,17 +156,19 @@ void main() {
   group('QuranReciterRepositoryImpl parsing', () {
     test('parses recitation metadata from Quran.com response', () async {
       final client = _FakeQuranComApiClient({
-        'reciters': const DataSuccess([
-          {
-            'id': 7,
-            'reciter_name': 'Mishari Rashid al-Afasy',
-            'style': 'Murattal',
-            'translated_name': {
-              'name': 'Mishari Rashid al-Afasy',
-              'language_name': 'english',
+        'api/recitations': const DataSuccess({
+          'recitations': [
+            {
+              'id': 7,
+              'reciter_name': 'Mishari Rashid al-Afasy',
+              'style': 'Murattal',
+              'translated_name': {
+                'name': 'Mishari Rashid al-Afasy',
+                'language_name': 'english',
+              },
             },
-          },
-        ]),
+          ],
+        }),
       });
       final database = AppDatabase.forExecutor(NativeDatabase.memory());
       addTearDown(database.close);
@@ -175,14 +189,16 @@ void main() {
       expect(recitations.single.style, 'Murattal');
       expect(recitations.single.translatedName, 'Mishari Rashid al-Afasy');
       expect(recitations.single.languageName, 'english');
-      expect(client.requests.single.path, 'reciters');
+      expect(client.requests.single.path, 'api/recitations');
     });
 
     test('returns parsing failure for malformed recitation items', () async {
       final client = _FakeQuranComApiClient({
-        'reciters': const DataSuccess([
-          {'id': 7},
-        ]),
+        'api/recitations': const DataSuccess({
+          'recitations': [
+            {'id': 7},
+          ],
+        }),
       });
       final database = AppDatabase.forExecutor(NativeDatabase.memory());
       addTearDown(database.close);
@@ -237,9 +253,11 @@ void main() {
       final database = AppDatabase.forExecutor(NativeDatabase.memory());
       addTearDown(database.close);
       final client = _FakeQuranComApiClient({
-        'reciters': const DataSuccess([
-          {'id': 4, 'reciter_name': 'Remote reciter'},
-        ]),
+        'api/recitations': const DataSuccess({
+          'recitations': [
+            {'id': 4, 'reciter_name': 'Remote reciter'},
+          ],
+        }),
       });
       final repository = QuranReciterRepositoryImpl(
         remoteDataSource: QuranComRemoteDataSource(apiClient: client),
@@ -260,6 +278,39 @@ void main() {
       expect(cached.single.id, 4);
       expect(cached.single.reciterName, 'Remote reciter');
       expect(client.requests, hasLength(1));
+    });
+  });
+
+  group('QuranAudioRepositoryImpl', () {
+    test('requests ayah audio from the recitations endpoint', () async {
+      final client = _FakeQuranComApiClient({
+        'api/recitations/7/by_ayah/1/1': const DataSuccess({
+          'audio_files': [
+            {
+              'id': 1,
+              'verse_key': '1:1',
+              'url': 'Alafasy/mp3/001001.mp3',
+              'format': 'mp3',
+              'duration': 6,
+            },
+          ],
+        }),
+      });
+      final repository = QuranAudioRepositoryImpl(
+        remoteDataSource: QuranComRemoteDataSource(apiClient: client),
+      );
+
+      final result = await repository.getAyahAudio(
+        verseKey: const QuranVerseKey(surah: 1, ayah: 1),
+        recitationId: 7,
+      );
+
+      expect(result, isA<DataSuccess<QuranAudioFile>>());
+      final audioFile = (result as DataSuccess<QuranAudioFile>).value;
+      expect(audioFile.verseKey.value, '1:1');
+      expect(audioFile.url.toString(), contains('Alafasy/mp3/001001.mp3'));
+      expect(client.requests.single.path, 'api/recitations/7/by_ayah/1/1');
+      expect(client.requests.single.queryParameters['per_page'], '1');
     });
   });
 }

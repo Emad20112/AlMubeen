@@ -2857,6 +2857,2654 @@ class AdhkarFavoritesCompanion extends UpdateCompanion<AdhkarFavoritesEntry> {
   }
 }
 
+class $QuranReadingProgressCacheTable extends QuranReadingProgressCache
+    with TableInfo<$QuranReadingProgressCacheTable, QuranReadingProgressEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $QuranReadingProgressCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _lastPageMeta = const VerificationMeta(
+    'lastPage',
+  );
+  @override
+  late final GeneratedColumn<int> lastPage = GeneratedColumn<int>(
+    'last_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastSurahNumberMeta = const VerificationMeta(
+    'lastSurahNumber',
+  );
+  @override
+  late final GeneratedColumn<int> lastSurahNumber = GeneratedColumn<int>(
+    'last_surah_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    lastPage,
+    lastSurahNumber,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'quran_reading_progress_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<QuranReadingProgressEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('last_page')) {
+      context.handle(
+        _lastPageMeta,
+        lastPage.isAcceptableOrUnknown(data['last_page']!, _lastPageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lastPageMeta);
+    }
+    if (data.containsKey('last_surah_number')) {
+      context.handle(
+        _lastSurahNumberMeta,
+        lastSurahNumber.isAcceptableOrUnknown(
+          data['last_surah_number']!,
+          _lastSurahNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastSurahNumberMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  QuranReadingProgressEntry map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return QuranReadingProgressEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      lastPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_page'],
+      )!,
+      lastSurahNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_surah_number'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $QuranReadingProgressCacheTable createAlias(String alias) {
+    return $QuranReadingProgressCacheTable(attachedDatabase, alias);
+  }
+}
+
+class QuranReadingProgressEntry extends DataClass
+    implements Insertable<QuranReadingProgressEntry> {
+  final int id;
+  final int lastPage;
+  final int lastSurahNumber;
+  final DateTime updatedAt;
+  const QuranReadingProgressEntry({
+    required this.id,
+    required this.lastPage,
+    required this.lastSurahNumber,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['last_page'] = Variable<int>(lastPage);
+    map['last_surah_number'] = Variable<int>(lastSurahNumber);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  QuranReadingProgressCacheCompanion toCompanion(bool nullToAbsent) {
+    return QuranReadingProgressCacheCompanion(
+      id: Value(id),
+      lastPage: Value(lastPage),
+      lastSurahNumber: Value(lastSurahNumber),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory QuranReadingProgressEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return QuranReadingProgressEntry(
+      id: serializer.fromJson<int>(json['id']),
+      lastPage: serializer.fromJson<int>(json['lastPage']),
+      lastSurahNumber: serializer.fromJson<int>(json['lastSurahNumber']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'lastPage': serializer.toJson<int>(lastPage),
+      'lastSurahNumber': serializer.toJson<int>(lastSurahNumber),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  QuranReadingProgressEntry copyWith({
+    int? id,
+    int? lastPage,
+    int? lastSurahNumber,
+    DateTime? updatedAt,
+  }) => QuranReadingProgressEntry(
+    id: id ?? this.id,
+    lastPage: lastPage ?? this.lastPage,
+    lastSurahNumber: lastSurahNumber ?? this.lastSurahNumber,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  QuranReadingProgressEntry copyWithCompanion(
+    QuranReadingProgressCacheCompanion data,
+  ) {
+    return QuranReadingProgressEntry(
+      id: data.id.present ? data.id.value : this.id,
+      lastPage: data.lastPage.present ? data.lastPage.value : this.lastPage,
+      lastSurahNumber: data.lastSurahNumber.present
+          ? data.lastSurahNumber.value
+          : this.lastSurahNumber,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QuranReadingProgressEntry(')
+          ..write('id: $id, ')
+          ..write('lastPage: $lastPage, ')
+          ..write('lastSurahNumber: $lastSurahNumber, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, lastPage, lastSurahNumber, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is QuranReadingProgressEntry &&
+          other.id == this.id &&
+          other.lastPage == this.lastPage &&
+          other.lastSurahNumber == this.lastSurahNumber &&
+          other.updatedAt == this.updatedAt);
+}
+
+class QuranReadingProgressCacheCompanion
+    extends UpdateCompanion<QuranReadingProgressEntry> {
+  final Value<int> id;
+  final Value<int> lastPage;
+  final Value<int> lastSurahNumber;
+  final Value<DateTime> updatedAt;
+  const QuranReadingProgressCacheCompanion({
+    this.id = const Value.absent(),
+    this.lastPage = const Value.absent(),
+    this.lastSurahNumber = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  QuranReadingProgressCacheCompanion.insert({
+    this.id = const Value.absent(),
+    required int lastPage,
+    required int lastSurahNumber,
+    required DateTime updatedAt,
+  }) : lastPage = Value(lastPage),
+       lastSurahNumber = Value(lastSurahNumber),
+       updatedAt = Value(updatedAt);
+  static Insertable<QuranReadingProgressEntry> custom({
+    Expression<int>? id,
+    Expression<int>? lastPage,
+    Expression<int>? lastSurahNumber,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (lastPage != null) 'last_page': lastPage,
+      if (lastSurahNumber != null) 'last_surah_number': lastSurahNumber,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  QuranReadingProgressCacheCompanion copyWith({
+    Value<int>? id,
+    Value<int>? lastPage,
+    Value<int>? lastSurahNumber,
+    Value<DateTime>? updatedAt,
+  }) {
+    return QuranReadingProgressCacheCompanion(
+      id: id ?? this.id,
+      lastPage: lastPage ?? this.lastPage,
+      lastSurahNumber: lastSurahNumber ?? this.lastSurahNumber,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (lastPage.present) {
+      map['last_page'] = Variable<int>(lastPage.value);
+    }
+    if (lastSurahNumber.present) {
+      map['last_surah_number'] = Variable<int>(lastSurahNumber.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QuranReadingProgressCacheCompanion(')
+          ..write('id: $id, ')
+          ..write('lastPage: $lastPage, ')
+          ..write('lastSurahNumber: $lastSurahNumber, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $QuranBookmarksTable extends QuranBookmarks
+    with TableInfo<$QuranBookmarksTable, QuranBookmarkEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $QuranBookmarksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _pageMeta = const VerificationMeta('page');
+  @override
+  late final GeneratedColumn<int> page = GeneratedColumn<int>(
+    'page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _surahNumberMeta = const VerificationMeta(
+    'surahNumber',
+  );
+  @override
+  late final GeneratedColumn<int> surahNumber = GeneratedColumn<int>(
+    'surah_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ayahNumberMeta = const VerificationMeta(
+    'ayahNumber',
+  );
+  @override
+  late final GeneratedColumn<int> ayahNumber = GeneratedColumn<int>(
+    'ayah_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    page,
+    surahNumber,
+    ayahNumber,
+    label,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'quran_bookmarks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<QuranBookmarkEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('page')) {
+      context.handle(
+        _pageMeta,
+        page.isAcceptableOrUnknown(data['page']!, _pageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pageMeta);
+    }
+    if (data.containsKey('surah_number')) {
+      context.handle(
+        _surahNumberMeta,
+        surahNumber.isAcceptableOrUnknown(
+          data['surah_number']!,
+          _surahNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_surahNumberMeta);
+    }
+    if (data.containsKey('ayah_number')) {
+      context.handle(
+        _ayahNumberMeta,
+        ayahNumber.isAcceptableOrUnknown(data['ayah_number']!, _ayahNumberMeta),
+      );
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {page, surahNumber, ayahNumber},
+  ];
+  @override
+  QuranBookmarkEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return QuranBookmarkEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      page: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}page'],
+      )!,
+      surahNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}surah_number'],
+      )!,
+      ayahNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ayah_number'],
+      ),
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $QuranBookmarksTable createAlias(String alias) {
+    return $QuranBookmarksTable(attachedDatabase, alias);
+  }
+}
+
+class QuranBookmarkEntry extends DataClass
+    implements Insertable<QuranBookmarkEntry> {
+  final int id;
+  final int page;
+  final int surahNumber;
+  final int? ayahNumber;
+  final String? label;
+  final DateTime createdAt;
+  const QuranBookmarkEntry({
+    required this.id,
+    required this.page,
+    required this.surahNumber,
+    this.ayahNumber,
+    this.label,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['page'] = Variable<int>(page);
+    map['surah_number'] = Variable<int>(surahNumber);
+    if (!nullToAbsent || ayahNumber != null) {
+      map['ayah_number'] = Variable<int>(ayahNumber);
+    }
+    if (!nullToAbsent || label != null) {
+      map['label'] = Variable<String>(label);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  QuranBookmarksCompanion toCompanion(bool nullToAbsent) {
+    return QuranBookmarksCompanion(
+      id: Value(id),
+      page: Value(page),
+      surahNumber: Value(surahNumber),
+      ayahNumber: ayahNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ayahNumber),
+      label: label == null && nullToAbsent
+          ? const Value.absent()
+          : Value(label),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory QuranBookmarkEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return QuranBookmarkEntry(
+      id: serializer.fromJson<int>(json['id']),
+      page: serializer.fromJson<int>(json['page']),
+      surahNumber: serializer.fromJson<int>(json['surahNumber']),
+      ayahNumber: serializer.fromJson<int?>(json['ayahNumber']),
+      label: serializer.fromJson<String?>(json['label']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'page': serializer.toJson<int>(page),
+      'surahNumber': serializer.toJson<int>(surahNumber),
+      'ayahNumber': serializer.toJson<int?>(ayahNumber),
+      'label': serializer.toJson<String?>(label),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  QuranBookmarkEntry copyWith({
+    int? id,
+    int? page,
+    int? surahNumber,
+    Value<int?> ayahNumber = const Value.absent(),
+    Value<String?> label = const Value.absent(),
+    DateTime? createdAt,
+  }) => QuranBookmarkEntry(
+    id: id ?? this.id,
+    page: page ?? this.page,
+    surahNumber: surahNumber ?? this.surahNumber,
+    ayahNumber: ayahNumber.present ? ayahNumber.value : this.ayahNumber,
+    label: label.present ? label.value : this.label,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  QuranBookmarkEntry copyWithCompanion(QuranBookmarksCompanion data) {
+    return QuranBookmarkEntry(
+      id: data.id.present ? data.id.value : this.id,
+      page: data.page.present ? data.page.value : this.page,
+      surahNumber: data.surahNumber.present
+          ? data.surahNumber.value
+          : this.surahNumber,
+      ayahNumber: data.ayahNumber.present
+          ? data.ayahNumber.value
+          : this.ayahNumber,
+      label: data.label.present ? data.label.value : this.label,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QuranBookmarkEntry(')
+          ..write('id: $id, ')
+          ..write('page: $page, ')
+          ..write('surahNumber: $surahNumber, ')
+          ..write('ayahNumber: $ayahNumber, ')
+          ..write('label: $label, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, page, surahNumber, ayahNumber, label, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is QuranBookmarkEntry &&
+          other.id == this.id &&
+          other.page == this.page &&
+          other.surahNumber == this.surahNumber &&
+          other.ayahNumber == this.ayahNumber &&
+          other.label == this.label &&
+          other.createdAt == this.createdAt);
+}
+
+class QuranBookmarksCompanion extends UpdateCompanion<QuranBookmarkEntry> {
+  final Value<int> id;
+  final Value<int> page;
+  final Value<int> surahNumber;
+  final Value<int?> ayahNumber;
+  final Value<String?> label;
+  final Value<DateTime> createdAt;
+  const QuranBookmarksCompanion({
+    this.id = const Value.absent(),
+    this.page = const Value.absent(),
+    this.surahNumber = const Value.absent(),
+    this.ayahNumber = const Value.absent(),
+    this.label = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  QuranBookmarksCompanion.insert({
+    this.id = const Value.absent(),
+    required int page,
+    required int surahNumber,
+    this.ayahNumber = const Value.absent(),
+    this.label = const Value.absent(),
+    required DateTime createdAt,
+  }) : page = Value(page),
+       surahNumber = Value(surahNumber),
+       createdAt = Value(createdAt);
+  static Insertable<QuranBookmarkEntry> custom({
+    Expression<int>? id,
+    Expression<int>? page,
+    Expression<int>? surahNumber,
+    Expression<int>? ayahNumber,
+    Expression<String>? label,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (page != null) 'page': page,
+      if (surahNumber != null) 'surah_number': surahNumber,
+      if (ayahNumber != null) 'ayah_number': ayahNumber,
+      if (label != null) 'label': label,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  QuranBookmarksCompanion copyWith({
+    Value<int>? id,
+    Value<int>? page,
+    Value<int>? surahNumber,
+    Value<int?>? ayahNumber,
+    Value<String?>? label,
+    Value<DateTime>? createdAt,
+  }) {
+    return QuranBookmarksCompanion(
+      id: id ?? this.id,
+      page: page ?? this.page,
+      surahNumber: surahNumber ?? this.surahNumber,
+      ayahNumber: ayahNumber ?? this.ayahNumber,
+      label: label ?? this.label,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (page.present) {
+      map['page'] = Variable<int>(page.value);
+    }
+    if (surahNumber.present) {
+      map['surah_number'] = Variable<int>(surahNumber.value);
+    }
+    if (ayahNumber.present) {
+      map['ayah_number'] = Variable<int>(ayahNumber.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('QuranBookmarksCompanion(')
+          ..write('id: $id, ')
+          ..write('page: $page, ')
+          ..write('surahNumber: $surahNumber, ')
+          ..write('ayahNumber: $ayahNumber, ')
+          ..write('label: $label, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DownloadedTafsirsTable extends DownloadedTafsirs
+    with TableInfo<$DownloadedTafsirsTable, DownloadedTafsirEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DownloadedTafsirsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _resourceIdMeta = const VerificationMeta(
+    'resourceId',
+  );
+  @override
+  late final GeneratedColumn<int> resourceId = GeneratedColumn<int>(
+    'resource_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _authorNameMeta = const VerificationMeta(
+    'authorName',
+  );
+  @override
+  late final GeneratedColumn<String> authorName = GeneratedColumn<String>(
+    'author_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _slugMeta = const VerificationMeta('slug');
+  @override
+  late final GeneratedColumn<String> slug = GeneratedColumn<String>(
+    'slug',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _languageNameMeta = const VerificationMeta(
+    'languageName',
+  );
+  @override
+  late final GeneratedColumn<String> languageName = GeneratedColumn<String>(
+    'language_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resourceNameMeta = const VerificationMeta(
+    'resourceName',
+  );
+  @override
+  late final GeneratedColumn<String> resourceName = GeneratedColumn<String>(
+    'resource_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _downloadedAtMeta = const VerificationMeta(
+    'downloadedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> downloadedAt = GeneratedColumn<DateTime>(
+    'downloaded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    resourceId,
+    name,
+    authorName,
+    slug,
+    languageName,
+    resourceName,
+    downloadedAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'downloaded_tafsirs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DownloadedTafsirEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('resource_id')) {
+      context.handle(
+        _resourceIdMeta,
+        resourceId.isAcceptableOrUnknown(data['resource_id']!, _resourceIdMeta),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('author_name')) {
+      context.handle(
+        _authorNameMeta,
+        authorName.isAcceptableOrUnknown(data['author_name']!, _authorNameMeta),
+      );
+    }
+    if (data.containsKey('slug')) {
+      context.handle(
+        _slugMeta,
+        slug.isAcceptableOrUnknown(data['slug']!, _slugMeta),
+      );
+    }
+    if (data.containsKey('language_name')) {
+      context.handle(
+        _languageNameMeta,
+        languageName.isAcceptableOrUnknown(
+          data['language_name']!,
+          _languageNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resource_name')) {
+      context.handle(
+        _resourceNameMeta,
+        resourceName.isAcceptableOrUnknown(
+          data['resource_name']!,
+          _resourceNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('downloaded_at')) {
+      context.handle(
+        _downloadedAtMeta,
+        downloadedAt.isAcceptableOrUnknown(
+          data['downloaded_at']!,
+          _downloadedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_downloadedAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {resourceId};
+  @override
+  DownloadedTafsirEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DownloadedTafsirEntry(
+      resourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}resource_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      authorName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author_name'],
+      ),
+      slug: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}slug'],
+      ),
+      languageName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}language_name'],
+      ),
+      resourceName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resource_name'],
+      ),
+      downloadedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}downloaded_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DownloadedTafsirsTable createAlias(String alias) {
+    return $DownloadedTafsirsTable(attachedDatabase, alias);
+  }
+}
+
+class DownloadedTafsirEntry extends DataClass
+    implements Insertable<DownloadedTafsirEntry> {
+  final int resourceId;
+  final String name;
+  final String? authorName;
+  final String? slug;
+  final String? languageName;
+  final String? resourceName;
+  final DateTime downloadedAt;
+  final DateTime updatedAt;
+  const DownloadedTafsirEntry({
+    required this.resourceId,
+    required this.name,
+    this.authorName,
+    this.slug,
+    this.languageName,
+    this.resourceName,
+    required this.downloadedAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['resource_id'] = Variable<int>(resourceId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || authorName != null) {
+      map['author_name'] = Variable<String>(authorName);
+    }
+    if (!nullToAbsent || slug != null) {
+      map['slug'] = Variable<String>(slug);
+    }
+    if (!nullToAbsent || languageName != null) {
+      map['language_name'] = Variable<String>(languageName);
+    }
+    if (!nullToAbsent || resourceName != null) {
+      map['resource_name'] = Variable<String>(resourceName);
+    }
+    map['downloaded_at'] = Variable<DateTime>(downloadedAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DownloadedTafsirsCompanion toCompanion(bool nullToAbsent) {
+    return DownloadedTafsirsCompanion(
+      resourceId: Value(resourceId),
+      name: Value(name),
+      authorName: authorName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(authorName),
+      slug: slug == null && nullToAbsent ? const Value.absent() : Value(slug),
+      languageName: languageName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(languageName),
+      resourceName: resourceName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resourceName),
+      downloadedAt: Value(downloadedAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DownloadedTafsirEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DownloadedTafsirEntry(
+      resourceId: serializer.fromJson<int>(json['resourceId']),
+      name: serializer.fromJson<String>(json['name']),
+      authorName: serializer.fromJson<String?>(json['authorName']),
+      slug: serializer.fromJson<String?>(json['slug']),
+      languageName: serializer.fromJson<String?>(json['languageName']),
+      resourceName: serializer.fromJson<String?>(json['resourceName']),
+      downloadedAt: serializer.fromJson<DateTime>(json['downloadedAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'resourceId': serializer.toJson<int>(resourceId),
+      'name': serializer.toJson<String>(name),
+      'authorName': serializer.toJson<String?>(authorName),
+      'slug': serializer.toJson<String?>(slug),
+      'languageName': serializer.toJson<String?>(languageName),
+      'resourceName': serializer.toJson<String?>(resourceName),
+      'downloadedAt': serializer.toJson<DateTime>(downloadedAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DownloadedTafsirEntry copyWith({
+    int? resourceId,
+    String? name,
+    Value<String?> authorName = const Value.absent(),
+    Value<String?> slug = const Value.absent(),
+    Value<String?> languageName = const Value.absent(),
+    Value<String?> resourceName = const Value.absent(),
+    DateTime? downloadedAt,
+    DateTime? updatedAt,
+  }) => DownloadedTafsirEntry(
+    resourceId: resourceId ?? this.resourceId,
+    name: name ?? this.name,
+    authorName: authorName.present ? authorName.value : this.authorName,
+    slug: slug.present ? slug.value : this.slug,
+    languageName: languageName.present ? languageName.value : this.languageName,
+    resourceName: resourceName.present ? resourceName.value : this.resourceName,
+    downloadedAt: downloadedAt ?? this.downloadedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  DownloadedTafsirEntry copyWithCompanion(DownloadedTafsirsCompanion data) {
+    return DownloadedTafsirEntry(
+      resourceId: data.resourceId.present
+          ? data.resourceId.value
+          : this.resourceId,
+      name: data.name.present ? data.name.value : this.name,
+      authorName: data.authorName.present
+          ? data.authorName.value
+          : this.authorName,
+      slug: data.slug.present ? data.slug.value : this.slug,
+      languageName: data.languageName.present
+          ? data.languageName.value
+          : this.languageName,
+      resourceName: data.resourceName.present
+          ? data.resourceName.value
+          : this.resourceName,
+      downloadedAt: data.downloadedAt.present
+          ? data.downloadedAt.value
+          : this.downloadedAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DownloadedTafsirEntry(')
+          ..write('resourceId: $resourceId, ')
+          ..write('name: $name, ')
+          ..write('authorName: $authorName, ')
+          ..write('slug: $slug, ')
+          ..write('languageName: $languageName, ')
+          ..write('resourceName: $resourceName, ')
+          ..write('downloadedAt: $downloadedAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    resourceId,
+    name,
+    authorName,
+    slug,
+    languageName,
+    resourceName,
+    downloadedAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DownloadedTafsirEntry &&
+          other.resourceId == this.resourceId &&
+          other.name == this.name &&
+          other.authorName == this.authorName &&
+          other.slug == this.slug &&
+          other.languageName == this.languageName &&
+          other.resourceName == this.resourceName &&
+          other.downloadedAt == this.downloadedAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DownloadedTafsirsCompanion
+    extends UpdateCompanion<DownloadedTafsirEntry> {
+  final Value<int> resourceId;
+  final Value<String> name;
+  final Value<String?> authorName;
+  final Value<String?> slug;
+  final Value<String?> languageName;
+  final Value<String?> resourceName;
+  final Value<DateTime> downloadedAt;
+  final Value<DateTime> updatedAt;
+  const DownloadedTafsirsCompanion({
+    this.resourceId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.authorName = const Value.absent(),
+    this.slug = const Value.absent(),
+    this.languageName = const Value.absent(),
+    this.resourceName = const Value.absent(),
+    this.downloadedAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  DownloadedTafsirsCompanion.insert({
+    this.resourceId = const Value.absent(),
+    required String name,
+    this.authorName = const Value.absent(),
+    this.slug = const Value.absent(),
+    this.languageName = const Value.absent(),
+    this.resourceName = const Value.absent(),
+    required DateTime downloadedAt,
+    required DateTime updatedAt,
+  }) : name = Value(name),
+       downloadedAt = Value(downloadedAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<DownloadedTafsirEntry> custom({
+    Expression<int>? resourceId,
+    Expression<String>? name,
+    Expression<String>? authorName,
+    Expression<String>? slug,
+    Expression<String>? languageName,
+    Expression<String>? resourceName,
+    Expression<DateTime>? downloadedAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (resourceId != null) 'resource_id': resourceId,
+      if (name != null) 'name': name,
+      if (authorName != null) 'author_name': authorName,
+      if (slug != null) 'slug': slug,
+      if (languageName != null) 'language_name': languageName,
+      if (resourceName != null) 'resource_name': resourceName,
+      if (downloadedAt != null) 'downloaded_at': downloadedAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  DownloadedTafsirsCompanion copyWith({
+    Value<int>? resourceId,
+    Value<String>? name,
+    Value<String?>? authorName,
+    Value<String?>? slug,
+    Value<String?>? languageName,
+    Value<String?>? resourceName,
+    Value<DateTime>? downloadedAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return DownloadedTafsirsCompanion(
+      resourceId: resourceId ?? this.resourceId,
+      name: name ?? this.name,
+      authorName: authorName ?? this.authorName,
+      slug: slug ?? this.slug,
+      languageName: languageName ?? this.languageName,
+      resourceName: resourceName ?? this.resourceName,
+      downloadedAt: downloadedAt ?? this.downloadedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (resourceId.present) {
+      map['resource_id'] = Variable<int>(resourceId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (authorName.present) {
+      map['author_name'] = Variable<String>(authorName.value);
+    }
+    if (slug.present) {
+      map['slug'] = Variable<String>(slug.value);
+    }
+    if (languageName.present) {
+      map['language_name'] = Variable<String>(languageName.value);
+    }
+    if (resourceName.present) {
+      map['resource_name'] = Variable<String>(resourceName.value);
+    }
+    if (downloadedAt.present) {
+      map['downloaded_at'] = Variable<DateTime>(downloadedAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DownloadedTafsirsCompanion(')
+          ..write('resourceId: $resourceId, ')
+          ..write('name: $name, ')
+          ..write('authorName: $authorName, ')
+          ..write('slug: $slug, ')
+          ..write('languageName: $languageName, ')
+          ..write('resourceName: $resourceName, ')
+          ..write('downloadedAt: $downloadedAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DownloadedTranslationsTable extends DownloadedTranslations
+    with TableInfo<$DownloadedTranslationsTable, DownloadedTranslationEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DownloadedTranslationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _resourceIdMeta = const VerificationMeta(
+    'resourceId',
+  );
+  @override
+  late final GeneratedColumn<int> resourceId = GeneratedColumn<int>(
+    'resource_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _authorNameMeta = const VerificationMeta(
+    'authorName',
+  );
+  @override
+  late final GeneratedColumn<String> authorName = GeneratedColumn<String>(
+    'author_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _slugMeta = const VerificationMeta('slug');
+  @override
+  late final GeneratedColumn<String> slug = GeneratedColumn<String>(
+    'slug',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _languageNameMeta = const VerificationMeta(
+    'languageName',
+  );
+  @override
+  late final GeneratedColumn<String> languageName = GeneratedColumn<String>(
+    'language_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resourceNameMeta = const VerificationMeta(
+    'resourceName',
+  );
+  @override
+  late final GeneratedColumn<String> resourceName = GeneratedColumn<String>(
+    'resource_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _downloadedAtMeta = const VerificationMeta(
+    'downloadedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> downloadedAt = GeneratedColumn<DateTime>(
+    'downloaded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    resourceId,
+    name,
+    authorName,
+    slug,
+    languageName,
+    resourceName,
+    downloadedAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'downloaded_translations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DownloadedTranslationEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('resource_id')) {
+      context.handle(
+        _resourceIdMeta,
+        resourceId.isAcceptableOrUnknown(data['resource_id']!, _resourceIdMeta),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('author_name')) {
+      context.handle(
+        _authorNameMeta,
+        authorName.isAcceptableOrUnknown(data['author_name']!, _authorNameMeta),
+      );
+    }
+    if (data.containsKey('slug')) {
+      context.handle(
+        _slugMeta,
+        slug.isAcceptableOrUnknown(data['slug']!, _slugMeta),
+      );
+    }
+    if (data.containsKey('language_name')) {
+      context.handle(
+        _languageNameMeta,
+        languageName.isAcceptableOrUnknown(
+          data['language_name']!,
+          _languageNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resource_name')) {
+      context.handle(
+        _resourceNameMeta,
+        resourceName.isAcceptableOrUnknown(
+          data['resource_name']!,
+          _resourceNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('downloaded_at')) {
+      context.handle(
+        _downloadedAtMeta,
+        downloadedAt.isAcceptableOrUnknown(
+          data['downloaded_at']!,
+          _downloadedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_downloadedAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {resourceId};
+  @override
+  DownloadedTranslationEntry map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DownloadedTranslationEntry(
+      resourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}resource_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      authorName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author_name'],
+      ),
+      slug: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}slug'],
+      ),
+      languageName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}language_name'],
+      ),
+      resourceName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resource_name'],
+      ),
+      downloadedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}downloaded_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DownloadedTranslationsTable createAlias(String alias) {
+    return $DownloadedTranslationsTable(attachedDatabase, alias);
+  }
+}
+
+class DownloadedTranslationEntry extends DataClass
+    implements Insertable<DownloadedTranslationEntry> {
+  final int resourceId;
+  final String name;
+  final String? authorName;
+  final String? slug;
+  final String? languageName;
+  final String? resourceName;
+  final DateTime downloadedAt;
+  final DateTime updatedAt;
+  const DownloadedTranslationEntry({
+    required this.resourceId,
+    required this.name,
+    this.authorName,
+    this.slug,
+    this.languageName,
+    this.resourceName,
+    required this.downloadedAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['resource_id'] = Variable<int>(resourceId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || authorName != null) {
+      map['author_name'] = Variable<String>(authorName);
+    }
+    if (!nullToAbsent || slug != null) {
+      map['slug'] = Variable<String>(slug);
+    }
+    if (!nullToAbsent || languageName != null) {
+      map['language_name'] = Variable<String>(languageName);
+    }
+    if (!nullToAbsent || resourceName != null) {
+      map['resource_name'] = Variable<String>(resourceName);
+    }
+    map['downloaded_at'] = Variable<DateTime>(downloadedAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DownloadedTranslationsCompanion toCompanion(bool nullToAbsent) {
+    return DownloadedTranslationsCompanion(
+      resourceId: Value(resourceId),
+      name: Value(name),
+      authorName: authorName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(authorName),
+      slug: slug == null && nullToAbsent ? const Value.absent() : Value(slug),
+      languageName: languageName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(languageName),
+      resourceName: resourceName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resourceName),
+      downloadedAt: Value(downloadedAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DownloadedTranslationEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DownloadedTranslationEntry(
+      resourceId: serializer.fromJson<int>(json['resourceId']),
+      name: serializer.fromJson<String>(json['name']),
+      authorName: serializer.fromJson<String?>(json['authorName']),
+      slug: serializer.fromJson<String?>(json['slug']),
+      languageName: serializer.fromJson<String?>(json['languageName']),
+      resourceName: serializer.fromJson<String?>(json['resourceName']),
+      downloadedAt: serializer.fromJson<DateTime>(json['downloadedAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'resourceId': serializer.toJson<int>(resourceId),
+      'name': serializer.toJson<String>(name),
+      'authorName': serializer.toJson<String?>(authorName),
+      'slug': serializer.toJson<String?>(slug),
+      'languageName': serializer.toJson<String?>(languageName),
+      'resourceName': serializer.toJson<String?>(resourceName),
+      'downloadedAt': serializer.toJson<DateTime>(downloadedAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DownloadedTranslationEntry copyWith({
+    int? resourceId,
+    String? name,
+    Value<String?> authorName = const Value.absent(),
+    Value<String?> slug = const Value.absent(),
+    Value<String?> languageName = const Value.absent(),
+    Value<String?> resourceName = const Value.absent(),
+    DateTime? downloadedAt,
+    DateTime? updatedAt,
+  }) => DownloadedTranslationEntry(
+    resourceId: resourceId ?? this.resourceId,
+    name: name ?? this.name,
+    authorName: authorName.present ? authorName.value : this.authorName,
+    slug: slug.present ? slug.value : this.slug,
+    languageName: languageName.present ? languageName.value : this.languageName,
+    resourceName: resourceName.present ? resourceName.value : this.resourceName,
+    downloadedAt: downloadedAt ?? this.downloadedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  DownloadedTranslationEntry copyWithCompanion(
+    DownloadedTranslationsCompanion data,
+  ) {
+    return DownloadedTranslationEntry(
+      resourceId: data.resourceId.present
+          ? data.resourceId.value
+          : this.resourceId,
+      name: data.name.present ? data.name.value : this.name,
+      authorName: data.authorName.present
+          ? data.authorName.value
+          : this.authorName,
+      slug: data.slug.present ? data.slug.value : this.slug,
+      languageName: data.languageName.present
+          ? data.languageName.value
+          : this.languageName,
+      resourceName: data.resourceName.present
+          ? data.resourceName.value
+          : this.resourceName,
+      downloadedAt: data.downloadedAt.present
+          ? data.downloadedAt.value
+          : this.downloadedAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DownloadedTranslationEntry(')
+          ..write('resourceId: $resourceId, ')
+          ..write('name: $name, ')
+          ..write('authorName: $authorName, ')
+          ..write('slug: $slug, ')
+          ..write('languageName: $languageName, ')
+          ..write('resourceName: $resourceName, ')
+          ..write('downloadedAt: $downloadedAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    resourceId,
+    name,
+    authorName,
+    slug,
+    languageName,
+    resourceName,
+    downloadedAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DownloadedTranslationEntry &&
+          other.resourceId == this.resourceId &&
+          other.name == this.name &&
+          other.authorName == this.authorName &&
+          other.slug == this.slug &&
+          other.languageName == this.languageName &&
+          other.resourceName == this.resourceName &&
+          other.downloadedAt == this.downloadedAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DownloadedTranslationsCompanion
+    extends UpdateCompanion<DownloadedTranslationEntry> {
+  final Value<int> resourceId;
+  final Value<String> name;
+  final Value<String?> authorName;
+  final Value<String?> slug;
+  final Value<String?> languageName;
+  final Value<String?> resourceName;
+  final Value<DateTime> downloadedAt;
+  final Value<DateTime> updatedAt;
+  const DownloadedTranslationsCompanion({
+    this.resourceId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.authorName = const Value.absent(),
+    this.slug = const Value.absent(),
+    this.languageName = const Value.absent(),
+    this.resourceName = const Value.absent(),
+    this.downloadedAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  DownloadedTranslationsCompanion.insert({
+    this.resourceId = const Value.absent(),
+    required String name,
+    this.authorName = const Value.absent(),
+    this.slug = const Value.absent(),
+    this.languageName = const Value.absent(),
+    this.resourceName = const Value.absent(),
+    required DateTime downloadedAt,
+    required DateTime updatedAt,
+  }) : name = Value(name),
+       downloadedAt = Value(downloadedAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<DownloadedTranslationEntry> custom({
+    Expression<int>? resourceId,
+    Expression<String>? name,
+    Expression<String>? authorName,
+    Expression<String>? slug,
+    Expression<String>? languageName,
+    Expression<String>? resourceName,
+    Expression<DateTime>? downloadedAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (resourceId != null) 'resource_id': resourceId,
+      if (name != null) 'name': name,
+      if (authorName != null) 'author_name': authorName,
+      if (slug != null) 'slug': slug,
+      if (languageName != null) 'language_name': languageName,
+      if (resourceName != null) 'resource_name': resourceName,
+      if (downloadedAt != null) 'downloaded_at': downloadedAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  DownloadedTranslationsCompanion copyWith({
+    Value<int>? resourceId,
+    Value<String>? name,
+    Value<String?>? authorName,
+    Value<String?>? slug,
+    Value<String?>? languageName,
+    Value<String?>? resourceName,
+    Value<DateTime>? downloadedAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return DownloadedTranslationsCompanion(
+      resourceId: resourceId ?? this.resourceId,
+      name: name ?? this.name,
+      authorName: authorName ?? this.authorName,
+      slug: slug ?? this.slug,
+      languageName: languageName ?? this.languageName,
+      resourceName: resourceName ?? this.resourceName,
+      downloadedAt: downloadedAt ?? this.downloadedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (resourceId.present) {
+      map['resource_id'] = Variable<int>(resourceId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (authorName.present) {
+      map['author_name'] = Variable<String>(authorName.value);
+    }
+    if (slug.present) {
+      map['slug'] = Variable<String>(slug.value);
+    }
+    if (languageName.present) {
+      map['language_name'] = Variable<String>(languageName.value);
+    }
+    if (resourceName.present) {
+      map['resource_name'] = Variable<String>(resourceName.value);
+    }
+    if (downloadedAt.present) {
+      map['downloaded_at'] = Variable<DateTime>(downloadedAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DownloadedTranslationsCompanion(')
+          ..write('resourceId: $resourceId, ')
+          ..write('name: $name, ')
+          ..write('authorName: $authorName, ')
+          ..write('slug: $slug, ')
+          ..write('languageName: $languageName, ')
+          ..write('resourceName: $resourceName, ')
+          ..write('downloadedAt: $downloadedAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TafsirTextCacheTable extends TafsirTextCache
+    with TableInfo<$TafsirTextCacheTable, TafsirTextCacheEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TafsirTextCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _resourceIdMeta = const VerificationMeta(
+    'resourceId',
+  );
+  @override
+  late final GeneratedColumn<int> resourceId = GeneratedColumn<int>(
+    'resource_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _chapterIdMeta = const VerificationMeta(
+    'chapterId',
+  );
+  @override
+  late final GeneratedColumn<int> chapterId = GeneratedColumn<int>(
+    'chapter_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ayahNumberMeta = const VerificationMeta(
+    'ayahNumber',
+  );
+  @override
+  late final GeneratedColumn<int> ayahNumber = GeneratedColumn<int>(
+    'ayah_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tafsirTextMeta = const VerificationMeta(
+    'tafsirText',
+  );
+  @override
+  late final GeneratedColumn<String> tafsirText = GeneratedColumn<String>(
+    'tafsir_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _resourceNameMeta = const VerificationMeta(
+    'resourceName',
+  );
+  @override
+  late final GeneratedColumn<String> resourceName = GeneratedColumn<String>(
+    'resource_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cachedAtMeta = const VerificationMeta(
+    'cachedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+    'cached_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    resourceId,
+    chapterId,
+    ayahNumber,
+    tafsirText,
+    resourceName,
+    cachedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tafsir_text_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TafsirTextCacheEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('resource_id')) {
+      context.handle(
+        _resourceIdMeta,
+        resourceId.isAcceptableOrUnknown(data['resource_id']!, _resourceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_resourceIdMeta);
+    }
+    if (data.containsKey('chapter_id')) {
+      context.handle(
+        _chapterIdMeta,
+        chapterId.isAcceptableOrUnknown(data['chapter_id']!, _chapterIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_chapterIdMeta);
+    }
+    if (data.containsKey('ayah_number')) {
+      context.handle(
+        _ayahNumberMeta,
+        ayahNumber.isAcceptableOrUnknown(data['ayah_number']!, _ayahNumberMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ayahNumberMeta);
+    }
+    if (data.containsKey('tafsir_text')) {
+      context.handle(
+        _tafsirTextMeta,
+        tafsirText.isAcceptableOrUnknown(data['tafsir_text']!, _tafsirTextMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tafsirTextMeta);
+    }
+    if (data.containsKey('resource_name')) {
+      context.handle(
+        _resourceNameMeta,
+        resourceName.isAcceptableOrUnknown(
+          data['resource_name']!,
+          _resourceNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_resourceNameMeta);
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(
+        _cachedAtMeta,
+        cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {resourceId, chapterId, ayahNumber};
+  @override
+  TafsirTextCacheEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TafsirTextCacheEntry(
+      resourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}resource_id'],
+      )!,
+      chapterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}chapter_id'],
+      )!,
+      ayahNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ayah_number'],
+      )!,
+      tafsirText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tafsir_text'],
+      )!,
+      resourceName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resource_name'],
+      )!,
+      cachedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cached_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TafsirTextCacheTable createAlias(String alias) {
+    return $TafsirTextCacheTable(attachedDatabase, alias);
+  }
+}
+
+class TafsirTextCacheEntry extends DataClass
+    implements Insertable<TafsirTextCacheEntry> {
+  final int resourceId;
+  final int chapterId;
+  final int ayahNumber;
+  final String tafsirText;
+  final String resourceName;
+  final DateTime cachedAt;
+  const TafsirTextCacheEntry({
+    required this.resourceId,
+    required this.chapterId,
+    required this.ayahNumber,
+    required this.tafsirText,
+    required this.resourceName,
+    required this.cachedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['resource_id'] = Variable<int>(resourceId);
+    map['chapter_id'] = Variable<int>(chapterId);
+    map['ayah_number'] = Variable<int>(ayahNumber);
+    map['tafsir_text'] = Variable<String>(tafsirText);
+    map['resource_name'] = Variable<String>(resourceName);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    return map;
+  }
+
+  TafsirTextCacheCompanion toCompanion(bool nullToAbsent) {
+    return TafsirTextCacheCompanion(
+      resourceId: Value(resourceId),
+      chapterId: Value(chapterId),
+      ayahNumber: Value(ayahNumber),
+      tafsirText: Value(tafsirText),
+      resourceName: Value(resourceName),
+      cachedAt: Value(cachedAt),
+    );
+  }
+
+  factory TafsirTextCacheEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TafsirTextCacheEntry(
+      resourceId: serializer.fromJson<int>(json['resourceId']),
+      chapterId: serializer.fromJson<int>(json['chapterId']),
+      ayahNumber: serializer.fromJson<int>(json['ayahNumber']),
+      tafsirText: serializer.fromJson<String>(json['tafsirText']),
+      resourceName: serializer.fromJson<String>(json['resourceName']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'resourceId': serializer.toJson<int>(resourceId),
+      'chapterId': serializer.toJson<int>(chapterId),
+      'ayahNumber': serializer.toJson<int>(ayahNumber),
+      'tafsirText': serializer.toJson<String>(tafsirText),
+      'resourceName': serializer.toJson<String>(resourceName),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+    };
+  }
+
+  TafsirTextCacheEntry copyWith({
+    int? resourceId,
+    int? chapterId,
+    int? ayahNumber,
+    String? tafsirText,
+    String? resourceName,
+    DateTime? cachedAt,
+  }) => TafsirTextCacheEntry(
+    resourceId: resourceId ?? this.resourceId,
+    chapterId: chapterId ?? this.chapterId,
+    ayahNumber: ayahNumber ?? this.ayahNumber,
+    tafsirText: tafsirText ?? this.tafsirText,
+    resourceName: resourceName ?? this.resourceName,
+    cachedAt: cachedAt ?? this.cachedAt,
+  );
+  TafsirTextCacheEntry copyWithCompanion(TafsirTextCacheCompanion data) {
+    return TafsirTextCacheEntry(
+      resourceId: data.resourceId.present
+          ? data.resourceId.value
+          : this.resourceId,
+      chapterId: data.chapterId.present ? data.chapterId.value : this.chapterId,
+      ayahNumber: data.ayahNumber.present
+          ? data.ayahNumber.value
+          : this.ayahNumber,
+      tafsirText: data.tafsirText.present
+          ? data.tafsirText.value
+          : this.tafsirText,
+      resourceName: data.resourceName.present
+          ? data.resourceName.value
+          : this.resourceName,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TafsirTextCacheEntry(')
+          ..write('resourceId: $resourceId, ')
+          ..write('chapterId: $chapterId, ')
+          ..write('ayahNumber: $ayahNumber, ')
+          ..write('tafsirText: $tafsirText, ')
+          ..write('resourceName: $resourceName, ')
+          ..write('cachedAt: $cachedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    resourceId,
+    chapterId,
+    ayahNumber,
+    tafsirText,
+    resourceName,
+    cachedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TafsirTextCacheEntry &&
+          other.resourceId == this.resourceId &&
+          other.chapterId == this.chapterId &&
+          other.ayahNumber == this.ayahNumber &&
+          other.tafsirText == this.tafsirText &&
+          other.resourceName == this.resourceName &&
+          other.cachedAt == this.cachedAt);
+}
+
+class TafsirTextCacheCompanion extends UpdateCompanion<TafsirTextCacheEntry> {
+  final Value<int> resourceId;
+  final Value<int> chapterId;
+  final Value<int> ayahNumber;
+  final Value<String> tafsirText;
+  final Value<String> resourceName;
+  final Value<DateTime> cachedAt;
+  final Value<int> rowid;
+  const TafsirTextCacheCompanion({
+    this.resourceId = const Value.absent(),
+    this.chapterId = const Value.absent(),
+    this.ayahNumber = const Value.absent(),
+    this.tafsirText = const Value.absent(),
+    this.resourceName = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TafsirTextCacheCompanion.insert({
+    required int resourceId,
+    required int chapterId,
+    required int ayahNumber,
+    required String tafsirText,
+    required String resourceName,
+    required DateTime cachedAt,
+    this.rowid = const Value.absent(),
+  }) : resourceId = Value(resourceId),
+       chapterId = Value(chapterId),
+       ayahNumber = Value(ayahNumber),
+       tafsirText = Value(tafsirText),
+       resourceName = Value(resourceName),
+       cachedAt = Value(cachedAt);
+  static Insertable<TafsirTextCacheEntry> custom({
+    Expression<int>? resourceId,
+    Expression<int>? chapterId,
+    Expression<int>? ayahNumber,
+    Expression<String>? tafsirText,
+    Expression<String>? resourceName,
+    Expression<DateTime>? cachedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (resourceId != null) 'resource_id': resourceId,
+      if (chapterId != null) 'chapter_id': chapterId,
+      if (ayahNumber != null) 'ayah_number': ayahNumber,
+      if (tafsirText != null) 'tafsir_text': tafsirText,
+      if (resourceName != null) 'resource_name': resourceName,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TafsirTextCacheCompanion copyWith({
+    Value<int>? resourceId,
+    Value<int>? chapterId,
+    Value<int>? ayahNumber,
+    Value<String>? tafsirText,
+    Value<String>? resourceName,
+    Value<DateTime>? cachedAt,
+    Value<int>? rowid,
+  }) {
+    return TafsirTextCacheCompanion(
+      resourceId: resourceId ?? this.resourceId,
+      chapterId: chapterId ?? this.chapterId,
+      ayahNumber: ayahNumber ?? this.ayahNumber,
+      tafsirText: tafsirText ?? this.tafsirText,
+      resourceName: resourceName ?? this.resourceName,
+      cachedAt: cachedAt ?? this.cachedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (resourceId.present) {
+      map['resource_id'] = Variable<int>(resourceId.value);
+    }
+    if (chapterId.present) {
+      map['chapter_id'] = Variable<int>(chapterId.value);
+    }
+    if (ayahNumber.present) {
+      map['ayah_number'] = Variable<int>(ayahNumber.value);
+    }
+    if (tafsirText.present) {
+      map['tafsir_text'] = Variable<String>(tafsirText.value);
+    }
+    if (resourceName.present) {
+      map['resource_name'] = Variable<String>(resourceName.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TafsirTextCacheCompanion(')
+          ..write('resourceId: $resourceId, ')
+          ..write('chapterId: $chapterId, ')
+          ..write('ayahNumber: $ayahNumber, ')
+          ..write('tafsirText: $tafsirText, ')
+          ..write('resourceName: $resourceName, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TranslationTextCacheTable extends TranslationTextCache
+    with TableInfo<$TranslationTextCacheTable, TranslationTextCacheEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TranslationTextCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _resourceIdMeta = const VerificationMeta(
+    'resourceId',
+  );
+  @override
+  late final GeneratedColumn<int> resourceId = GeneratedColumn<int>(
+    'resource_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _chapterIdMeta = const VerificationMeta(
+    'chapterId',
+  );
+  @override
+  late final GeneratedColumn<int> chapterId = GeneratedColumn<int>(
+    'chapter_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ayahNumberMeta = const VerificationMeta(
+    'ayahNumber',
+  );
+  @override
+  late final GeneratedColumn<int> ayahNumber = GeneratedColumn<int>(
+    'ayah_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _translationTextMeta = const VerificationMeta(
+    'translationText',
+  );
+  @override
+  late final GeneratedColumn<String> translationText = GeneratedColumn<String>(
+    'translation_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _resourceNameMeta = const VerificationMeta(
+    'resourceName',
+  );
+  @override
+  late final GeneratedColumn<String> resourceName = GeneratedColumn<String>(
+    'resource_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cachedAtMeta = const VerificationMeta(
+    'cachedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+    'cached_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    resourceId,
+    chapterId,
+    ayahNumber,
+    translationText,
+    resourceName,
+    cachedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'translation_text_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TranslationTextCacheEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('resource_id')) {
+      context.handle(
+        _resourceIdMeta,
+        resourceId.isAcceptableOrUnknown(data['resource_id']!, _resourceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_resourceIdMeta);
+    }
+    if (data.containsKey('chapter_id')) {
+      context.handle(
+        _chapterIdMeta,
+        chapterId.isAcceptableOrUnknown(data['chapter_id']!, _chapterIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_chapterIdMeta);
+    }
+    if (data.containsKey('ayah_number')) {
+      context.handle(
+        _ayahNumberMeta,
+        ayahNumber.isAcceptableOrUnknown(data['ayah_number']!, _ayahNumberMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ayahNumberMeta);
+    }
+    if (data.containsKey('translation_text')) {
+      context.handle(
+        _translationTextMeta,
+        translationText.isAcceptableOrUnknown(
+          data['translation_text']!,
+          _translationTextMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_translationTextMeta);
+    }
+    if (data.containsKey('resource_name')) {
+      context.handle(
+        _resourceNameMeta,
+        resourceName.isAcceptableOrUnknown(
+          data['resource_name']!,
+          _resourceNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_resourceNameMeta);
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(
+        _cachedAtMeta,
+        cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {resourceId, chapterId, ayahNumber};
+  @override
+  TranslationTextCacheEntry map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TranslationTextCacheEntry(
+      resourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}resource_id'],
+      )!,
+      chapterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}chapter_id'],
+      )!,
+      ayahNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ayah_number'],
+      )!,
+      translationText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}translation_text'],
+      )!,
+      resourceName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resource_name'],
+      )!,
+      cachedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cached_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TranslationTextCacheTable createAlias(String alias) {
+    return $TranslationTextCacheTable(attachedDatabase, alias);
+  }
+}
+
+class TranslationTextCacheEntry extends DataClass
+    implements Insertable<TranslationTextCacheEntry> {
+  final int resourceId;
+  final int chapterId;
+  final int ayahNumber;
+  final String translationText;
+  final String resourceName;
+  final DateTime cachedAt;
+  const TranslationTextCacheEntry({
+    required this.resourceId,
+    required this.chapterId,
+    required this.ayahNumber,
+    required this.translationText,
+    required this.resourceName,
+    required this.cachedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['resource_id'] = Variable<int>(resourceId);
+    map['chapter_id'] = Variable<int>(chapterId);
+    map['ayah_number'] = Variable<int>(ayahNumber);
+    map['translation_text'] = Variable<String>(translationText);
+    map['resource_name'] = Variable<String>(resourceName);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    return map;
+  }
+
+  TranslationTextCacheCompanion toCompanion(bool nullToAbsent) {
+    return TranslationTextCacheCompanion(
+      resourceId: Value(resourceId),
+      chapterId: Value(chapterId),
+      ayahNumber: Value(ayahNumber),
+      translationText: Value(translationText),
+      resourceName: Value(resourceName),
+      cachedAt: Value(cachedAt),
+    );
+  }
+
+  factory TranslationTextCacheEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TranslationTextCacheEntry(
+      resourceId: serializer.fromJson<int>(json['resourceId']),
+      chapterId: serializer.fromJson<int>(json['chapterId']),
+      ayahNumber: serializer.fromJson<int>(json['ayahNumber']),
+      translationText: serializer.fromJson<String>(json['translationText']),
+      resourceName: serializer.fromJson<String>(json['resourceName']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'resourceId': serializer.toJson<int>(resourceId),
+      'chapterId': serializer.toJson<int>(chapterId),
+      'ayahNumber': serializer.toJson<int>(ayahNumber),
+      'translationText': serializer.toJson<String>(translationText),
+      'resourceName': serializer.toJson<String>(resourceName),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+    };
+  }
+
+  TranslationTextCacheEntry copyWith({
+    int? resourceId,
+    int? chapterId,
+    int? ayahNumber,
+    String? translationText,
+    String? resourceName,
+    DateTime? cachedAt,
+  }) => TranslationTextCacheEntry(
+    resourceId: resourceId ?? this.resourceId,
+    chapterId: chapterId ?? this.chapterId,
+    ayahNumber: ayahNumber ?? this.ayahNumber,
+    translationText: translationText ?? this.translationText,
+    resourceName: resourceName ?? this.resourceName,
+    cachedAt: cachedAt ?? this.cachedAt,
+  );
+  TranslationTextCacheEntry copyWithCompanion(
+    TranslationTextCacheCompanion data,
+  ) {
+    return TranslationTextCacheEntry(
+      resourceId: data.resourceId.present
+          ? data.resourceId.value
+          : this.resourceId,
+      chapterId: data.chapterId.present ? data.chapterId.value : this.chapterId,
+      ayahNumber: data.ayahNumber.present
+          ? data.ayahNumber.value
+          : this.ayahNumber,
+      translationText: data.translationText.present
+          ? data.translationText.value
+          : this.translationText,
+      resourceName: data.resourceName.present
+          ? data.resourceName.value
+          : this.resourceName,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TranslationTextCacheEntry(')
+          ..write('resourceId: $resourceId, ')
+          ..write('chapterId: $chapterId, ')
+          ..write('ayahNumber: $ayahNumber, ')
+          ..write('translationText: $translationText, ')
+          ..write('resourceName: $resourceName, ')
+          ..write('cachedAt: $cachedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    resourceId,
+    chapterId,
+    ayahNumber,
+    translationText,
+    resourceName,
+    cachedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TranslationTextCacheEntry &&
+          other.resourceId == this.resourceId &&
+          other.chapterId == this.chapterId &&
+          other.ayahNumber == this.ayahNumber &&
+          other.translationText == this.translationText &&
+          other.resourceName == this.resourceName &&
+          other.cachedAt == this.cachedAt);
+}
+
+class TranslationTextCacheCompanion
+    extends UpdateCompanion<TranslationTextCacheEntry> {
+  final Value<int> resourceId;
+  final Value<int> chapterId;
+  final Value<int> ayahNumber;
+  final Value<String> translationText;
+  final Value<String> resourceName;
+  final Value<DateTime> cachedAt;
+  final Value<int> rowid;
+  const TranslationTextCacheCompanion({
+    this.resourceId = const Value.absent(),
+    this.chapterId = const Value.absent(),
+    this.ayahNumber = const Value.absent(),
+    this.translationText = const Value.absent(),
+    this.resourceName = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TranslationTextCacheCompanion.insert({
+    required int resourceId,
+    required int chapterId,
+    required int ayahNumber,
+    required String translationText,
+    required String resourceName,
+    required DateTime cachedAt,
+    this.rowid = const Value.absent(),
+  }) : resourceId = Value(resourceId),
+       chapterId = Value(chapterId),
+       ayahNumber = Value(ayahNumber),
+       translationText = Value(translationText),
+       resourceName = Value(resourceName),
+       cachedAt = Value(cachedAt);
+  static Insertable<TranslationTextCacheEntry> custom({
+    Expression<int>? resourceId,
+    Expression<int>? chapterId,
+    Expression<int>? ayahNumber,
+    Expression<String>? translationText,
+    Expression<String>? resourceName,
+    Expression<DateTime>? cachedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (resourceId != null) 'resource_id': resourceId,
+      if (chapterId != null) 'chapter_id': chapterId,
+      if (ayahNumber != null) 'ayah_number': ayahNumber,
+      if (translationText != null) 'translation_text': translationText,
+      if (resourceName != null) 'resource_name': resourceName,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TranslationTextCacheCompanion copyWith({
+    Value<int>? resourceId,
+    Value<int>? chapterId,
+    Value<int>? ayahNumber,
+    Value<String>? translationText,
+    Value<String>? resourceName,
+    Value<DateTime>? cachedAt,
+    Value<int>? rowid,
+  }) {
+    return TranslationTextCacheCompanion(
+      resourceId: resourceId ?? this.resourceId,
+      chapterId: chapterId ?? this.chapterId,
+      ayahNumber: ayahNumber ?? this.ayahNumber,
+      translationText: translationText ?? this.translationText,
+      resourceName: resourceName ?? this.resourceName,
+      cachedAt: cachedAt ?? this.cachedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (resourceId.present) {
+      map['resource_id'] = Variable<int>(resourceId.value);
+    }
+    if (chapterId.present) {
+      map['chapter_id'] = Variable<int>(chapterId.value);
+    }
+    if (ayahNumber.present) {
+      map['ayah_number'] = Variable<int>(ayahNumber.value);
+    }
+    if (translationText.present) {
+      map['translation_text'] = Variable<String>(translationText.value);
+    }
+    if (resourceName.present) {
+      map['resource_name'] = Variable<String>(resourceName.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TranslationTextCacheCompanion(')
+          ..write('resourceId: $resourceId, ')
+          ..write('chapterId: $chapterId, ')
+          ..write('ayahNumber: $ayahNumber, ')
+          ..write('translationText: $translationText, ')
+          ..write('resourceName: $resourceName, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2874,6 +5522,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AdhkarFavoritesTable adhkarFavorites = $AdhkarFavoritesTable(
     this,
   );
+  late final $QuranReadingProgressCacheTable quranReadingProgressCache =
+      $QuranReadingProgressCacheTable(this);
+  late final $QuranBookmarksTable quranBookmarks = $QuranBookmarksTable(this);
+  late final $DownloadedTafsirsTable downloadedTafsirs =
+      $DownloadedTafsirsTable(this);
+  late final $DownloadedTranslationsTable downloadedTranslations =
+      $DownloadedTranslationsTable(this);
+  late final $TafsirTextCacheTable tafsirTextCache = $TafsirTextCacheTable(
+    this,
+  );
+  late final $TranslationTextCacheTable translationTextCache =
+      $TranslationTextCacheTable(this);
   late final Index quranChapterCacheUpdatedAt = Index(
     'quran_chapter_cache_updated_at',
     'CREATE INDEX quran_chapter_cache_updated_at ON quran_chapter_cache (updated_at)',
@@ -2898,6 +5558,38 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'quran_recitation_cache_updated_at',
     'CREATE INDEX quran_recitation_cache_updated_at ON quran_recitation_cache (updated_at)',
   );
+  late final Index downloadedTafsirsResourceId = Index(
+    'downloaded_tafsirs_resource_id',
+    'CREATE INDEX downloaded_tafsirs_resource_id ON downloaded_tafsirs (resource_id)',
+  );
+  late final Index downloadedTafsirsUpdatedAt = Index(
+    'downloaded_tafsirs_updated_at',
+    'CREATE INDEX downloaded_tafsirs_updated_at ON downloaded_tafsirs (updated_at)',
+  );
+  late final Index downloadedTranslationsResourceId = Index(
+    'downloaded_translations_resource_id',
+    'CREATE INDEX downloaded_translations_resource_id ON downloaded_translations (resource_id)',
+  );
+  late final Index downloadedTranslationsUpdatedAt = Index(
+    'downloaded_translations_updated_at',
+    'CREATE INDEX downloaded_translations_updated_at ON downloaded_translations (updated_at)',
+  );
+  late final Index tafsirTextCacheResourceChapterAyah = Index(
+    'tafsir_text_cache_resource_chapter_ayah',
+    'CREATE INDEX tafsir_text_cache_resource_chapter_ayah ON tafsir_text_cache (resource_id, chapter_id, ayah_number)',
+  );
+  late final Index tafsirTextCacheUpdatedAt = Index(
+    'tafsir_text_cache_updated_at',
+    'CREATE INDEX tafsir_text_cache_updated_at ON tafsir_text_cache (cached_at)',
+  );
+  late final Index translationTextCacheResourceChapterAyah = Index(
+    'translation_text_cache_resource_chapter_ayah',
+    'CREATE INDEX translation_text_cache_resource_chapter_ayah ON translation_text_cache (resource_id, chapter_id, ayah_number)',
+  );
+  late final Index translationTextCacheUpdatedAt = Index(
+    'translation_text_cache_updated_at',
+    'CREATE INDEX translation_text_cache_updated_at ON translation_text_cache (cached_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2909,12 +5601,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     quranCacheMetadata,
     adhkarProgressCache,
     adhkarFavorites,
+    quranReadingProgressCache,
+    quranBookmarks,
+    downloadedTafsirs,
+    downloadedTranslations,
+    tafsirTextCache,
+    translationTextCache,
     quranChapterCacheUpdatedAt,
     quranVerseCacheChapterVerse,
     quranVerseCachePageNumber,
     quranVerseCacheUpdatedAt,
     quranRecitationCacheLanguage,
     quranRecitationCacheUpdatedAt,
+    downloadedTafsirsResourceId,
+    downloadedTafsirsUpdatedAt,
+    downloadedTranslationsResourceId,
+    downloadedTranslationsUpdatedAt,
+    tafsirTextCacheResourceChapterAyah,
+    tafsirTextCacheUpdatedAt,
+    translationTextCacheResourceChapterAyah,
+    translationTextCacheUpdatedAt,
   ];
 }
 
@@ -4432,6 +7138,1459 @@ typedef $$AdhkarFavoritesTableProcessedTableManager =
       AdhkarFavoritesEntry,
       PrefetchHooks Function()
     >;
+typedef $$QuranReadingProgressCacheTableCreateCompanionBuilder =
+    QuranReadingProgressCacheCompanion Function({
+      Value<int> id,
+      required int lastPage,
+      required int lastSurahNumber,
+      required DateTime updatedAt,
+    });
+typedef $$QuranReadingProgressCacheTableUpdateCompanionBuilder =
+    QuranReadingProgressCacheCompanion Function({
+      Value<int> id,
+      Value<int> lastPage,
+      Value<int> lastSurahNumber,
+      Value<DateTime> updatedAt,
+    });
+
+class $$QuranReadingProgressCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $QuranReadingProgressCacheTable> {
+  $$QuranReadingProgressCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastPage => $composableBuilder(
+    column: $table.lastPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSurahNumber => $composableBuilder(
+    column: $table.lastSurahNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$QuranReadingProgressCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $QuranReadingProgressCacheTable> {
+  $$QuranReadingProgressCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastPage => $composableBuilder(
+    column: $table.lastPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSurahNumber => $composableBuilder(
+    column: $table.lastSurahNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$QuranReadingProgressCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $QuranReadingProgressCacheTable> {
+  $$QuranReadingProgressCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get lastPage =>
+      $composableBuilder(column: $table.lastPage, builder: (column) => column);
+
+  GeneratedColumn<int> get lastSurahNumber => $composableBuilder(
+    column: $table.lastSurahNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$QuranReadingProgressCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $QuranReadingProgressCacheTable,
+          QuranReadingProgressEntry,
+          $$QuranReadingProgressCacheTableFilterComposer,
+          $$QuranReadingProgressCacheTableOrderingComposer,
+          $$QuranReadingProgressCacheTableAnnotationComposer,
+          $$QuranReadingProgressCacheTableCreateCompanionBuilder,
+          $$QuranReadingProgressCacheTableUpdateCompanionBuilder,
+          (
+            QuranReadingProgressEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $QuranReadingProgressCacheTable,
+              QuranReadingProgressEntry
+            >,
+          ),
+          QuranReadingProgressEntry,
+          PrefetchHooks Function()
+        > {
+  $$QuranReadingProgressCacheTableTableManager(
+    _$AppDatabase db,
+    $QuranReadingProgressCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$QuranReadingProgressCacheTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$QuranReadingProgressCacheTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$QuranReadingProgressCacheTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> lastPage = const Value.absent(),
+                Value<int> lastSurahNumber = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => QuranReadingProgressCacheCompanion(
+                id: id,
+                lastPage: lastPage,
+                lastSurahNumber: lastSurahNumber,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int lastPage,
+                required int lastSurahNumber,
+                required DateTime updatedAt,
+              }) => QuranReadingProgressCacheCompanion.insert(
+                id: id,
+                lastPage: lastPage,
+                lastSurahNumber: lastSurahNumber,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$QuranReadingProgressCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $QuranReadingProgressCacheTable,
+      QuranReadingProgressEntry,
+      $$QuranReadingProgressCacheTableFilterComposer,
+      $$QuranReadingProgressCacheTableOrderingComposer,
+      $$QuranReadingProgressCacheTableAnnotationComposer,
+      $$QuranReadingProgressCacheTableCreateCompanionBuilder,
+      $$QuranReadingProgressCacheTableUpdateCompanionBuilder,
+      (
+        QuranReadingProgressEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $QuranReadingProgressCacheTable,
+          QuranReadingProgressEntry
+        >,
+      ),
+      QuranReadingProgressEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$QuranBookmarksTableCreateCompanionBuilder =
+    QuranBookmarksCompanion Function({
+      Value<int> id,
+      required int page,
+      required int surahNumber,
+      Value<int?> ayahNumber,
+      Value<String?> label,
+      required DateTime createdAt,
+    });
+typedef $$QuranBookmarksTableUpdateCompanionBuilder =
+    QuranBookmarksCompanion Function({
+      Value<int> id,
+      Value<int> page,
+      Value<int> surahNumber,
+      Value<int?> ayahNumber,
+      Value<String?> label,
+      Value<DateTime> createdAt,
+    });
+
+class $$QuranBookmarksTableFilterComposer
+    extends Composer<_$AppDatabase, $QuranBookmarksTable> {
+  $$QuranBookmarksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get page => $composableBuilder(
+    column: $table.page,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get surahNumber => $composableBuilder(
+    column: $table.surahNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$QuranBookmarksTableOrderingComposer
+    extends Composer<_$AppDatabase, $QuranBookmarksTable> {
+  $$QuranBookmarksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get page => $composableBuilder(
+    column: $table.page,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get surahNumber => $composableBuilder(
+    column: $table.surahNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$QuranBookmarksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $QuranBookmarksTable> {
+  $$QuranBookmarksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get page =>
+      $composableBuilder(column: $table.page, builder: (column) => column);
+
+  GeneratedColumn<int> get surahNumber => $composableBuilder(
+    column: $table.surahNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$QuranBookmarksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $QuranBookmarksTable,
+          QuranBookmarkEntry,
+          $$QuranBookmarksTableFilterComposer,
+          $$QuranBookmarksTableOrderingComposer,
+          $$QuranBookmarksTableAnnotationComposer,
+          $$QuranBookmarksTableCreateCompanionBuilder,
+          $$QuranBookmarksTableUpdateCompanionBuilder,
+          (
+            QuranBookmarkEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $QuranBookmarksTable,
+              QuranBookmarkEntry
+            >,
+          ),
+          QuranBookmarkEntry,
+          PrefetchHooks Function()
+        > {
+  $$QuranBookmarksTableTableManager(
+    _$AppDatabase db,
+    $QuranBookmarksTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$QuranBookmarksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$QuranBookmarksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$QuranBookmarksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> page = const Value.absent(),
+                Value<int> surahNumber = const Value.absent(),
+                Value<int?> ayahNumber = const Value.absent(),
+                Value<String?> label = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => QuranBookmarksCompanion(
+                id: id,
+                page: page,
+                surahNumber: surahNumber,
+                ayahNumber: ayahNumber,
+                label: label,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int page,
+                required int surahNumber,
+                Value<int?> ayahNumber = const Value.absent(),
+                Value<String?> label = const Value.absent(),
+                required DateTime createdAt,
+              }) => QuranBookmarksCompanion.insert(
+                id: id,
+                page: page,
+                surahNumber: surahNumber,
+                ayahNumber: ayahNumber,
+                label: label,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$QuranBookmarksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $QuranBookmarksTable,
+      QuranBookmarkEntry,
+      $$QuranBookmarksTableFilterComposer,
+      $$QuranBookmarksTableOrderingComposer,
+      $$QuranBookmarksTableAnnotationComposer,
+      $$QuranBookmarksTableCreateCompanionBuilder,
+      $$QuranBookmarksTableUpdateCompanionBuilder,
+      (
+        QuranBookmarkEntry,
+        BaseReferences<_$AppDatabase, $QuranBookmarksTable, QuranBookmarkEntry>,
+      ),
+      QuranBookmarkEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$DownloadedTafsirsTableCreateCompanionBuilder =
+    DownloadedTafsirsCompanion Function({
+      Value<int> resourceId,
+      required String name,
+      Value<String?> authorName,
+      Value<String?> slug,
+      Value<String?> languageName,
+      Value<String?> resourceName,
+      required DateTime downloadedAt,
+      required DateTime updatedAt,
+    });
+typedef $$DownloadedTafsirsTableUpdateCompanionBuilder =
+    DownloadedTafsirsCompanion Function({
+      Value<int> resourceId,
+      Value<String> name,
+      Value<String?> authorName,
+      Value<String?> slug,
+      Value<String?> languageName,
+      Value<String?> resourceName,
+      Value<DateTime> downloadedAt,
+      Value<DateTime> updatedAt,
+    });
+
+class $$DownloadedTafsirsTableFilterComposer
+    extends Composer<_$AppDatabase, $DownloadedTafsirsTable> {
+  $$DownloadedTafsirsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get languageName => $composableBuilder(
+    column: $table.languageName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DownloadedTafsirsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DownloadedTafsirsTable> {
+  $$DownloadedTafsirsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get languageName => $composableBuilder(
+    column: $table.languageName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DownloadedTafsirsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DownloadedTafsirsTable> {
+  $$DownloadedTafsirsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get slug =>
+      $composableBuilder(column: $table.slug, builder: (column) => column);
+
+  GeneratedColumn<String> get languageName => $composableBuilder(
+    column: $table.languageName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DownloadedTafsirsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DownloadedTafsirsTable,
+          DownloadedTafsirEntry,
+          $$DownloadedTafsirsTableFilterComposer,
+          $$DownloadedTafsirsTableOrderingComposer,
+          $$DownloadedTafsirsTableAnnotationComposer,
+          $$DownloadedTafsirsTableCreateCompanionBuilder,
+          $$DownloadedTafsirsTableUpdateCompanionBuilder,
+          (
+            DownloadedTafsirEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $DownloadedTafsirsTable,
+              DownloadedTafsirEntry
+            >,
+          ),
+          DownloadedTafsirEntry,
+          PrefetchHooks Function()
+        > {
+  $$DownloadedTafsirsTableTableManager(
+    _$AppDatabase db,
+    $DownloadedTafsirsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DownloadedTafsirsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DownloadedTafsirsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DownloadedTafsirsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> resourceId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> authorName = const Value.absent(),
+                Value<String?> slug = const Value.absent(),
+                Value<String?> languageName = const Value.absent(),
+                Value<String?> resourceName = const Value.absent(),
+                Value<DateTime> downloadedAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => DownloadedTafsirsCompanion(
+                resourceId: resourceId,
+                name: name,
+                authorName: authorName,
+                slug: slug,
+                languageName: languageName,
+                resourceName: resourceName,
+                downloadedAt: downloadedAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> resourceId = const Value.absent(),
+                required String name,
+                Value<String?> authorName = const Value.absent(),
+                Value<String?> slug = const Value.absent(),
+                Value<String?> languageName = const Value.absent(),
+                Value<String?> resourceName = const Value.absent(),
+                required DateTime downloadedAt,
+                required DateTime updatedAt,
+              }) => DownloadedTafsirsCompanion.insert(
+                resourceId: resourceId,
+                name: name,
+                authorName: authorName,
+                slug: slug,
+                languageName: languageName,
+                resourceName: resourceName,
+                downloadedAt: downloadedAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DownloadedTafsirsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DownloadedTafsirsTable,
+      DownloadedTafsirEntry,
+      $$DownloadedTafsirsTableFilterComposer,
+      $$DownloadedTafsirsTableOrderingComposer,
+      $$DownloadedTafsirsTableAnnotationComposer,
+      $$DownloadedTafsirsTableCreateCompanionBuilder,
+      $$DownloadedTafsirsTableUpdateCompanionBuilder,
+      (
+        DownloadedTafsirEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $DownloadedTafsirsTable,
+          DownloadedTafsirEntry
+        >,
+      ),
+      DownloadedTafsirEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$DownloadedTranslationsTableCreateCompanionBuilder =
+    DownloadedTranslationsCompanion Function({
+      Value<int> resourceId,
+      required String name,
+      Value<String?> authorName,
+      Value<String?> slug,
+      Value<String?> languageName,
+      Value<String?> resourceName,
+      required DateTime downloadedAt,
+      required DateTime updatedAt,
+    });
+typedef $$DownloadedTranslationsTableUpdateCompanionBuilder =
+    DownloadedTranslationsCompanion Function({
+      Value<int> resourceId,
+      Value<String> name,
+      Value<String?> authorName,
+      Value<String?> slug,
+      Value<String?> languageName,
+      Value<String?> resourceName,
+      Value<DateTime> downloadedAt,
+      Value<DateTime> updatedAt,
+    });
+
+class $$DownloadedTranslationsTableFilterComposer
+    extends Composer<_$AppDatabase, $DownloadedTranslationsTable> {
+  $$DownloadedTranslationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get languageName => $composableBuilder(
+    column: $table.languageName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DownloadedTranslationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DownloadedTranslationsTable> {
+  $$DownloadedTranslationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get languageName => $composableBuilder(
+    column: $table.languageName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DownloadedTranslationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DownloadedTranslationsTable> {
+  $$DownloadedTranslationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get authorName => $composableBuilder(
+    column: $table.authorName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get slug =>
+      $composableBuilder(column: $table.slug, builder: (column) => column);
+
+  GeneratedColumn<String> get languageName => $composableBuilder(
+    column: $table.languageName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DownloadedTranslationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DownloadedTranslationsTable,
+          DownloadedTranslationEntry,
+          $$DownloadedTranslationsTableFilterComposer,
+          $$DownloadedTranslationsTableOrderingComposer,
+          $$DownloadedTranslationsTableAnnotationComposer,
+          $$DownloadedTranslationsTableCreateCompanionBuilder,
+          $$DownloadedTranslationsTableUpdateCompanionBuilder,
+          (
+            DownloadedTranslationEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $DownloadedTranslationsTable,
+              DownloadedTranslationEntry
+            >,
+          ),
+          DownloadedTranslationEntry,
+          PrefetchHooks Function()
+        > {
+  $$DownloadedTranslationsTableTableManager(
+    _$AppDatabase db,
+    $DownloadedTranslationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DownloadedTranslationsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$DownloadedTranslationsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DownloadedTranslationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> resourceId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> authorName = const Value.absent(),
+                Value<String?> slug = const Value.absent(),
+                Value<String?> languageName = const Value.absent(),
+                Value<String?> resourceName = const Value.absent(),
+                Value<DateTime> downloadedAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => DownloadedTranslationsCompanion(
+                resourceId: resourceId,
+                name: name,
+                authorName: authorName,
+                slug: slug,
+                languageName: languageName,
+                resourceName: resourceName,
+                downloadedAt: downloadedAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> resourceId = const Value.absent(),
+                required String name,
+                Value<String?> authorName = const Value.absent(),
+                Value<String?> slug = const Value.absent(),
+                Value<String?> languageName = const Value.absent(),
+                Value<String?> resourceName = const Value.absent(),
+                required DateTime downloadedAt,
+                required DateTime updatedAt,
+              }) => DownloadedTranslationsCompanion.insert(
+                resourceId: resourceId,
+                name: name,
+                authorName: authorName,
+                slug: slug,
+                languageName: languageName,
+                resourceName: resourceName,
+                downloadedAt: downloadedAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DownloadedTranslationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DownloadedTranslationsTable,
+      DownloadedTranslationEntry,
+      $$DownloadedTranslationsTableFilterComposer,
+      $$DownloadedTranslationsTableOrderingComposer,
+      $$DownloadedTranslationsTableAnnotationComposer,
+      $$DownloadedTranslationsTableCreateCompanionBuilder,
+      $$DownloadedTranslationsTableUpdateCompanionBuilder,
+      (
+        DownloadedTranslationEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $DownloadedTranslationsTable,
+          DownloadedTranslationEntry
+        >,
+      ),
+      DownloadedTranslationEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$TafsirTextCacheTableCreateCompanionBuilder =
+    TafsirTextCacheCompanion Function({
+      required int resourceId,
+      required int chapterId,
+      required int ayahNumber,
+      required String tafsirText,
+      required String resourceName,
+      required DateTime cachedAt,
+      Value<int> rowid,
+    });
+typedef $$TafsirTextCacheTableUpdateCompanionBuilder =
+    TafsirTextCacheCompanion Function({
+      Value<int> resourceId,
+      Value<int> chapterId,
+      Value<int> ayahNumber,
+      Value<String> tafsirText,
+      Value<String> resourceName,
+      Value<DateTime> cachedAt,
+      Value<int> rowid,
+    });
+
+class $$TafsirTextCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $TafsirTextCacheTable> {
+  $$TafsirTextCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get chapterId => $composableBuilder(
+    column: $table.chapterId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tafsirText => $composableBuilder(
+    column: $table.tafsirText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TafsirTextCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $TafsirTextCacheTable> {
+  $$TafsirTextCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get chapterId => $composableBuilder(
+    column: $table.chapterId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tafsirText => $composableBuilder(
+    column: $table.tafsirText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TafsirTextCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TafsirTextCacheTable> {
+  $$TafsirTextCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get chapterId =>
+      $composableBuilder(column: $table.chapterId, builder: (column) => column);
+
+  GeneratedColumn<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tafsirText => $composableBuilder(
+    column: $table.tafsirText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+}
+
+class $$TafsirTextCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TafsirTextCacheTable,
+          TafsirTextCacheEntry,
+          $$TafsirTextCacheTableFilterComposer,
+          $$TafsirTextCacheTableOrderingComposer,
+          $$TafsirTextCacheTableAnnotationComposer,
+          $$TafsirTextCacheTableCreateCompanionBuilder,
+          $$TafsirTextCacheTableUpdateCompanionBuilder,
+          (
+            TafsirTextCacheEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $TafsirTextCacheTable,
+              TafsirTextCacheEntry
+            >,
+          ),
+          TafsirTextCacheEntry,
+          PrefetchHooks Function()
+        > {
+  $$TafsirTextCacheTableTableManager(
+    _$AppDatabase db,
+    $TafsirTextCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TafsirTextCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TafsirTextCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TafsirTextCacheTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> resourceId = const Value.absent(),
+                Value<int> chapterId = const Value.absent(),
+                Value<int> ayahNumber = const Value.absent(),
+                Value<String> tafsirText = const Value.absent(),
+                Value<String> resourceName = const Value.absent(),
+                Value<DateTime> cachedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TafsirTextCacheCompanion(
+                resourceId: resourceId,
+                chapterId: chapterId,
+                ayahNumber: ayahNumber,
+                tafsirText: tafsirText,
+                resourceName: resourceName,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int resourceId,
+                required int chapterId,
+                required int ayahNumber,
+                required String tafsirText,
+                required String resourceName,
+                required DateTime cachedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => TafsirTextCacheCompanion.insert(
+                resourceId: resourceId,
+                chapterId: chapterId,
+                ayahNumber: ayahNumber,
+                tafsirText: tafsirText,
+                resourceName: resourceName,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TafsirTextCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TafsirTextCacheTable,
+      TafsirTextCacheEntry,
+      $$TafsirTextCacheTableFilterComposer,
+      $$TafsirTextCacheTableOrderingComposer,
+      $$TafsirTextCacheTableAnnotationComposer,
+      $$TafsirTextCacheTableCreateCompanionBuilder,
+      $$TafsirTextCacheTableUpdateCompanionBuilder,
+      (
+        TafsirTextCacheEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $TafsirTextCacheTable,
+          TafsirTextCacheEntry
+        >,
+      ),
+      TafsirTextCacheEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$TranslationTextCacheTableCreateCompanionBuilder =
+    TranslationTextCacheCompanion Function({
+      required int resourceId,
+      required int chapterId,
+      required int ayahNumber,
+      required String translationText,
+      required String resourceName,
+      required DateTime cachedAt,
+      Value<int> rowid,
+    });
+typedef $$TranslationTextCacheTableUpdateCompanionBuilder =
+    TranslationTextCacheCompanion Function({
+      Value<int> resourceId,
+      Value<int> chapterId,
+      Value<int> ayahNumber,
+      Value<String> translationText,
+      Value<String> resourceName,
+      Value<DateTime> cachedAt,
+      Value<int> rowid,
+    });
+
+class $$TranslationTextCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $TranslationTextCacheTable> {
+  $$TranslationTextCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get chapterId => $composableBuilder(
+    column: $table.chapterId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get translationText => $composableBuilder(
+    column: $table.translationText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TranslationTextCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $TranslationTextCacheTable> {
+  $$TranslationTextCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get chapterId => $composableBuilder(
+    column: $table.chapterId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get translationText => $composableBuilder(
+    column: $table.translationText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+    column: $table.cachedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TranslationTextCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TranslationTextCacheTable> {
+  $$TranslationTextCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get resourceId => $composableBuilder(
+    column: $table.resourceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get chapterId =>
+      $composableBuilder(column: $table.chapterId, builder: (column) => column);
+
+  GeneratedColumn<int> get ayahNumber => $composableBuilder(
+    column: $table.ayahNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get translationText => $composableBuilder(
+    column: $table.translationText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resourceName => $composableBuilder(
+    column: $table.resourceName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+}
+
+class $$TranslationTextCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TranslationTextCacheTable,
+          TranslationTextCacheEntry,
+          $$TranslationTextCacheTableFilterComposer,
+          $$TranslationTextCacheTableOrderingComposer,
+          $$TranslationTextCacheTableAnnotationComposer,
+          $$TranslationTextCacheTableCreateCompanionBuilder,
+          $$TranslationTextCacheTableUpdateCompanionBuilder,
+          (
+            TranslationTextCacheEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $TranslationTextCacheTable,
+              TranslationTextCacheEntry
+            >,
+          ),
+          TranslationTextCacheEntry,
+          PrefetchHooks Function()
+        > {
+  $$TranslationTextCacheTableTableManager(
+    _$AppDatabase db,
+    $TranslationTextCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TranslationTextCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TranslationTextCacheTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TranslationTextCacheTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> resourceId = const Value.absent(),
+                Value<int> chapterId = const Value.absent(),
+                Value<int> ayahNumber = const Value.absent(),
+                Value<String> translationText = const Value.absent(),
+                Value<String> resourceName = const Value.absent(),
+                Value<DateTime> cachedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TranslationTextCacheCompanion(
+                resourceId: resourceId,
+                chapterId: chapterId,
+                ayahNumber: ayahNumber,
+                translationText: translationText,
+                resourceName: resourceName,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int resourceId,
+                required int chapterId,
+                required int ayahNumber,
+                required String translationText,
+                required String resourceName,
+                required DateTime cachedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => TranslationTextCacheCompanion.insert(
+                resourceId: resourceId,
+                chapterId: chapterId,
+                ayahNumber: ayahNumber,
+                translationText: translationText,
+                resourceName: resourceName,
+                cachedAt: cachedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TranslationTextCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TranslationTextCacheTable,
+      TranslationTextCacheEntry,
+      $$TranslationTextCacheTableFilterComposer,
+      $$TranslationTextCacheTableOrderingComposer,
+      $$TranslationTextCacheTableAnnotationComposer,
+      $$TranslationTextCacheTableCreateCompanionBuilder,
+      $$TranslationTextCacheTableUpdateCompanionBuilder,
+      (
+        TranslationTextCacheEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $TranslationTextCacheTable,
+          TranslationTextCacheEntry
+        >,
+      ),
+      TranslationTextCacheEntry,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4448,4 +8607,22 @@ class $AppDatabaseManager {
       $$AdhkarProgressCacheTableTableManager(_db, _db.adhkarProgressCache);
   $$AdhkarFavoritesTableTableManager get adhkarFavorites =>
       $$AdhkarFavoritesTableTableManager(_db, _db.adhkarFavorites);
+  $$QuranReadingProgressCacheTableTableManager get quranReadingProgressCache =>
+      $$QuranReadingProgressCacheTableTableManager(
+        _db,
+        _db.quranReadingProgressCache,
+      );
+  $$QuranBookmarksTableTableManager get quranBookmarks =>
+      $$QuranBookmarksTableTableManager(_db, _db.quranBookmarks);
+  $$DownloadedTafsirsTableTableManager get downloadedTafsirs =>
+      $$DownloadedTafsirsTableTableManager(_db, _db.downloadedTafsirs);
+  $$DownloadedTranslationsTableTableManager get downloadedTranslations =>
+      $$DownloadedTranslationsTableTableManager(
+        _db,
+        _db.downloadedTranslations,
+      );
+  $$TafsirTextCacheTableTableManager get tafsirTextCache =>
+      $$TafsirTextCacheTableTableManager(_db, _db.tafsirTextCache);
+  $$TranslationTextCacheTableTableManager get translationTextCache =>
+      $$TranslationTextCacheTableTableManager(_db, _db.translationTextCache);
 }

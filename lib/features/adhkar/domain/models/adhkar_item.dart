@@ -8,7 +8,6 @@ class AdhkarItem {
     required this.text,
     required this.source,
     required this.repeatCount,
-    this.audioUrl,
   });
 
   final String id;
@@ -16,7 +15,6 @@ class AdhkarItem {
   final String text;
   final String source;
   final int repeatCount;
-  final String? audioUrl;
 
   factory AdhkarItem.fromJson(Map<String, dynamic> json) {
     return AdhkarItem(
@@ -25,7 +23,6 @@ class AdhkarItem {
       text: json['text'] as String,
       source: json['source'] as String,
       repeatCount: json['repeat_count'] as int,
-      audioUrl: json['audio_url'] as String?,
     );
   }
 
@@ -36,7 +33,6 @@ class AdhkarItem {
       'text': text,
       'source': source,
       'repeat_count': repeatCount,
-      'audio_url': audioUrl,
     };
   }
 
@@ -46,7 +42,6 @@ class AdhkarItem {
     String? text,
     String? source,
     int? repeatCount,
-    String? audioUrl,
   }) {
     return AdhkarItem(
       id: id ?? this.id,
@@ -54,7 +49,6 @@ class AdhkarItem {
       text: text ?? this.text,
       source: source ?? this.source,
       repeatCount: repeatCount ?? this.repeatCount,
-      audioUrl: audioUrl ?? this.audioUrl,
     );
   }
 }
