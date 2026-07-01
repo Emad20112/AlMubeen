@@ -44,6 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 backend/
+packages/qcf_quran_plus/
 /.env
 /env/app.env
 /backend/.env

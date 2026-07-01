@@ -1,7 +1,0 @@
--dontwarn javax.annotation.**
--dontwarn okio.**
--dontwarn okhttp3.**
--keep class javax.annotation.** { *; }
--keep class okio.** { *; }
--keep class okhttp3.** { *; }
--keep class kotlin.Metadata { *; }
