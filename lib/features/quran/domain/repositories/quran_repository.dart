@@ -1,5 +1,6 @@
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
 import 'package:al_mubeen/core/data/data_result.dart';
+import 'package:al_mubeen/core/data/request_abort_handle.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
 import 'package:flutter/foundation.dart';
 
@@ -34,12 +35,14 @@ abstract interface class QuranRepository {
     required int resourceId,
     required int chapterNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   });
 
   Future<DataResult<TafsirText>> getTafsirForChapter({
     required int resourceId,
     required int chapterNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   });
 
   Future<DataResult<TafsirText>> getTafsirForAyah({
@@ -47,6 +50,7 @@ abstract interface class QuranRepository {
     required int chapterNumber,
     required int ayahNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   });
 
   Future<DataResult<List<Translation>>> getTranslations({
@@ -58,12 +62,14 @@ abstract interface class QuranRepository {
     required int resourceId,
     required int chapterNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   });
 
   Future<DataResult<TranslationText>> getTranslationForChapter({
     required int resourceId,
     required int chapterNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   });
 
   Future<DataResult<TranslationText>> getTranslationForAyah({
@@ -71,6 +77,7 @@ abstract interface class QuranRepository {
     required int chapterNumber,
     required int ayahNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   });
 }
 

@@ -22,7 +22,7 @@ class HomeFeatureGrid extends StatelessWidget {
     HomeFeature(
       title: 'استماع القرآن',
       icon: Icons.headphones_outlined,
-      action: HomeFeatureAction.openQuranAudioDownload,
+      action: HomeFeatureAction.openQuranSurahPlayer,
     ),
     HomeFeature(
       title: 'أدعية\nآمل أن يستجيب الله',

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
+import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart';
@@ -82,7 +83,7 @@ class _AdaptiveQuranPageViewState extends State<AdaptiveQuranPageView> {
               data: qcfMediaQuery,
               child: ValueListenableBuilder<bool>(
                 valueListenable: widget.isTajweedListenable,
-                builder: (context, isTajweed, child) {
+                builder: (context, isTajweed, _) {
                   return PageView.builder(
                     controller: widget.pageController,
                     itemCount: _pages.length,
@@ -114,17 +115,17 @@ class _AdaptiveQuranPageViewState extends State<AdaptiveQuranPageView> {
 
                           return ValueListenableBuilder<List<HighlightVerse>>(
                             valueListenable: widget.highlightsListenable,
-                            builder: (context, highlights, child) {
+                            builder: (context, highlights, _) {
                               final pageHighlights = highlights
                                   .where(
                                     (highlight) => highlight.page == pageNumber,
                                   )
                                   .toList(growable: false);
 
-                              return QuranSinglePageWidget(
+                              return _QuranPageWithMetadata(
                                 key: ValueKey('quran_page_$pageNumber'),
                                 page: _pages[index],
-                                pageIndex: pageNumber,
+                                pageNumber: pageNumber,
                                 highlights: pageHighlights,
                                 onLongPress: widget.onLongPress,
                                 pageController: widget.pageController,
@@ -244,4 +245,208 @@ class _QuranPageLoadError extends StatelessWidget {
       ),
     );
   }
+}
+
+class _QuranPageWithMetadata extends StatelessWidget {
+  const _QuranPageWithMetadata({
+    super.key,
+    required this.page,
+    required this.pageNumber,
+    required this.highlights,
+    required this.onLongPress,
+    required this.pageController,
+    required this.isDark,
+    required this.isTajweed,
+    required this.ayahStyle,
+  });
+
+  final QuranPage page;
+  final int pageNumber;
+  final List<HighlightVerse> highlights;
+  final void Function(
+    int surahNumber,
+    int verseNumber,
+    LongPressStartDetails details,
+  )
+  onLongPress;
+  final PageController pageController;
+  final bool isDark;
+  final bool isTajweed;
+  final TextStyle ayahStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final firstAyah = getFirstAyahOnPage(pageNumber);
+    final surahNumber = firstAyah.surah;
+    final juzNumber = math.max(1, getJuzNumber(surahNumber, firstAyah.ayah));
+    final quarterNumber = getQuarterNumber(surahNumber, firstAyah.ayah);
+    final hizbNumber = ((quarterNumber - 1) ~/ 4) + 1;
+    final titleColor = isDark ? AppColors.darkInk : AppColors.ink;
+    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final borderColor = AppColors.maroon800.withValues(
+      alpha: isDark ? 0.22 : 0.14,
+    );
+    final surfaceColor = isDark ? AppColors.darkSurfaceHigh : Colors.white;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : _PageMetadataSizing.pageWidth(context);
+        final availableHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : MediaQuery.sizeOf(context).height;
+        final effectivePageHeight = _PageMetadataSizing.pageHeight(
+          availableHeight,
+        );
+
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Column(
+              children: [
+                const SizedBox(height: 6),
+                SizedBox(
+                  height: _PageMetadataSizing.topBlockHeight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Row(
+                      textDirection: TextDirection.ltr,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            getSurahNameArabic(surahNumber),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
+                                  color: titleColor,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'الجزء ${_toArabicDigits(juzNumber)}، الحزب ${_toArabicDigits(hizbNumber)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(
+                                  color: mutedColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: availableWidth),
+                      child: MediaQuery(
+                        data: MediaQuery.of(context).copyWith(
+                          size: Size(availableWidth, effectivePageHeight),
+                        ),
+                        child: QuranSinglePageWidget(
+                          key: ValueKey('quran_page_$pageNumber'),
+                          page: page,
+                          pageIndex: pageNumber,
+                          highlights: highlights,
+                          onLongPress: onLongPress,
+                          pageController: pageController,
+                          isDark: isDark,
+                          isTajweed: isTajweed,
+                          ayahStyle: ayahStyle,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  height: _PageMetadataSizing.bottomBlockHeight,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: surfaceColor.withValues(
+                          alpha: isDark ? 0.9 : 0.96,
+                        ),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: borderColor),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: isDark ? 0.08 : 0.04,
+                            ),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        _toArabicDigits(pageNumber),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: titleColor,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PageMetadataSizing {
+  static const double topBlockHeight = 40;
+  static const double bottomBlockHeight = 36;
+
+  static double pageWidth(BuildContext context) {
+    return MediaQuery.sizeOf(context).width;
+  }
+
+  static double pageHeight(double totalHeight) {
+    return math.max(0.0, totalHeight - topBlockHeight - bottomBlockHeight - 16);
+  }
+}
+
+String _toArabicDigits(int number) {
+  const digits = {
+    '0': '٠',
+    '1': '١',
+    '2': '٢',
+    '3': '٣',
+    '4': '٤',
+    '5': '٥',
+    '6': '٦',
+    '7': '٧',
+    '8': '٨',
+    '9': '٩',
+  };
+
+  return number
+      .toString()
+      .split('')
+      .map((digit) => digits[digit] ?? digit)
+      .join();
 }

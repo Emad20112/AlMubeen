@@ -31,6 +31,57 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
     );
   }
 
+  @override
+  Future<DataResult<List<QuranAudioFile>>> getSurahAudioFiles({
+    required int chapterNumber,
+    required int recitationId,
+  }) async {
+    final result = await _remoteDataSource.getSurahAudioFiles(
+      recitationId: recitationId,
+      chapterNumber: chapterNumber,
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    );
+
+    return result.when(
+      success: (audioFiles) => _parseSurahAudioFiles(audioFiles),
+      error: DataError.new,
+    );
+  }
+
+  DataResult<List<QuranAudioFile>> _parseSurahAudioFiles(JsonList audioFiles) {
+    try {
+      final List<QuranAudioFile> files = [];
+      for (final value in audioFiles) {
+        if (value is! JsonMap) {
+          throw FormatException(
+            'Expected audio file item to be a JSON object.',
+            value,
+          );
+        }
+        files.add(QuranAudioFileDto.fromJson(value).toDomain());
+      }
+      return DataSuccess(files);
+    } on FormatException catch (error, stackTrace) {
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.parsing,
+          message: 'Unable to parse Quran surah audio files data.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    } on Object catch (error, stackTrace) {
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.parsing,
+          message: 'Unexpected Quran surah audio parsing error.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+  }
+
   DataResult<QuranAudioFile> _parseAudioFile(
     JsonList audioFiles,
     QuranVerseKey verseKey,

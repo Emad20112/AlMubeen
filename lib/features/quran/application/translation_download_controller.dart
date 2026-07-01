@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
+import 'package:al_mubeen/core/data/request_abort_handle.dart';
+import 'package:al_mubeen/features/quran/data/local/translation_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -91,6 +94,9 @@ final class TranslationDownloadState {
 
   bool get isDownloading => status == TranslationDownloadStatus.downloading;
   bool get isPaused => status == TranslationDownloadStatus.paused;
+  bool get isActiveDownload =>
+      status == TranslationDownloadStatus.downloading ||
+      status == TranslationDownloadStatus.paused;
 
   TranslationDownloadState copyWith({
     TranslationDownloadStatus? status,
@@ -127,7 +133,10 @@ final class TranslationDownloadController
 
   bool _isCancelled = false;
   bool _isPaused = false;
+  bool _pauseInterruptRequested = false;
   Completer<void>? _pauseCompleter;
+  RequestAbortHandle? _activeRequestAbortHandle;
+  final Set<int> _sessionDownloadedChapters = <int>{};
 
   @override
   TranslationDownloadState build() {
@@ -137,6 +146,8 @@ final class TranslationDownloadController
   void pauseDownload() {
     if (!state.isDownloading) return;
     _isPaused = true;
+    _pauseInterruptRequested = true;
+    _activeRequestAbortHandle?.abort();
     _pauseCompleter = Completer<void>();
     state = state.copyWith(
       status: TranslationDownloadStatus.paused,
@@ -158,6 +169,8 @@ final class TranslationDownloadController
   void cancelDownload() {
     if (!state.isDownloading && !state.isPaused) return;
     _isCancelled = true;
+    _pauseInterruptRequested = false;
+    _activeRequestAbortHandle?.abort();
     if (_isPaused) {
       _isPaused = false;
       _pauseCompleter?.complete();
@@ -180,6 +193,9 @@ final class TranslationDownloadController
     _isCancelled = false;
     _isPaused = false;
     _pauseCompleter = null;
+    _pauseInterruptRequested = false;
+    _activeRequestAbortHandle = null;
+    _sessionDownloadedChapters.clear();
 
     final localDataSource = ref.read(translationLocalDataSourceProvider);
     final repository = ref.read(quranRepositoryProvider);
@@ -221,24 +237,38 @@ final class TranslationDownloadController
 
     var completedChapters = cachedChapters.length;
     var failures = 0;
+    var chapterIndex = 0;
 
-    for (final chapterNumber in missingChapters) {
+    while (chapterIndex < missingChapters.length) {
+      final chapterNumber = missingChapters[chapterIndex];
+
       if (_isCancelled) {
+        await _discardDownloadedTranslationSession(
+          localDataSource: localDataSource,
+          resourceId: translation.id,
+        );
         state = state.copyWith(
           status: TranslationDownloadStatus.cancelled,
-          message: 'تم إلغاء التنزيل بناءً على طلبك.',
+          message: 'تم إلغاء التنزيل وتم حذف الملفات الجزئية.',
+          clearErrorMessage: true,
         );
         return false;
       }
       if (_isPaused) {
         await _pauseCompleter?.future;
         if (_isCancelled) {
+          await _discardDownloadedTranslationSession(
+            localDataSource: localDataSource,
+            resourceId: translation.id,
+          );
           state = state.copyWith(
             status: TranslationDownloadStatus.cancelled,
-            message: 'تم إلغاء التنزيل بناءً على طلبك.',
+            message: 'تم إلغاء التنزيل وتم حذف الملفات الجزئية.',
+            clearErrorMessage: true,
           );
           return false;
         }
+        continue;
       }
 
       state = state.copyWith(
@@ -249,11 +279,61 @@ final class TranslationDownloadController
         clearErrorMessage: true,
       );
 
+      final abortHandle = RequestAbortHandle();
+      _activeRequestAbortHandle = abortHandle;
       final result = await repository.getTranslationChapterTexts(
         resourceId: translation.id,
         chapterNumber: chapterNumber,
         fetchPolicy: DataFetchPolicy.networkOnly,
+        abortHandle: abortHandle,
       );
+      if (_activeRequestAbortHandle == abortHandle) {
+        _activeRequestAbortHandle = null;
+      }
+
+      final failure = result.failureOrNull;
+      if (failure?.kind == DataFailureKind.cancelled) {
+        if (_isCancelled) {
+          await _discardDownloadedTranslationSession(
+            localDataSource: localDataSource,
+            resourceId: translation.id,
+          );
+          state = state.copyWith(
+            status: TranslationDownloadStatus.cancelled,
+            message: 'تم إلغاء التنزيل وتم حذف الملفات الجزئية.',
+            clearErrorMessage: true,
+          );
+          return false;
+        }
+
+        if (_pauseInterruptRequested) {
+          _pauseInterruptRequested = false;
+          if (_isPaused) {
+            await _pauseCompleter?.future;
+            if (_isCancelled) {
+              await _discardDownloadedTranslationSession(
+                localDataSource: localDataSource,
+                resourceId: translation.id,
+              );
+              state = state.copyWith(
+                status: TranslationDownloadStatus.cancelled,
+                message: 'تم إلغاء التنزيل وتم حذف الملفات الجزئية.',
+                clearErrorMessage: true,
+              );
+              return false;
+            }
+          }
+
+          continue;
+        }
+
+        state = state.copyWith(
+          status: TranslationDownloadStatus.failed,
+          message: 'تعذر متابعة تنزيل الترجمة.',
+          errorMessage: 'تم إيقاف الطلب الجاري بشكل غير متوقع.',
+        );
+        return false;
+      }
 
       final translationTexts = result.valueOrNull;
       if (translationTexts == null || translationTexts.isEmpty) {
@@ -265,6 +345,7 @@ final class TranslationDownloadController
           message: 'تعذر تنزيل ترجمة سورة ${getSurahNameArabic(chapterNumber)}',
           errorMessage: 'لم يتم العثور على نص الترجمة لهذه السورة.',
         );
+        chapterIndex++;
         continue;
       }
 
@@ -273,6 +354,7 @@ final class TranslationDownloadController
         chapterId: chapterNumber,
         translationTexts: translationTexts,
       );
+      _sessionDownloadedChapters.add(chapterNumber);
 
       completedChapters++;
       state = state.copyWith(
@@ -281,6 +363,8 @@ final class TranslationDownloadController
         message: 'تم تنزيل ترجمة سورة ${getSurahNameArabic(chapterNumber)}',
         clearErrorMessage: true,
       );
+
+      chapterIndex++;
     }
 
     final isFullyCached = await localDataSource.isTranslationDownloaded(
@@ -289,6 +373,8 @@ final class TranslationDownloadController
     if (failures == 0 && isFullyCached) {
       await localDataSource.saveDownloadedTranslation(translation);
       ref.invalidate(downloadedTranslationsProvider);
+      _sessionDownloadedChapters.clear();
+      _pauseInterruptRequested = false;
       if (selectOnComplete) {
         ref.read(selectedTranslationProvider.notifier).state = translation.id;
       }
@@ -315,5 +401,22 @@ final class TranslationDownloadController
       errorMessage: 'فشل تنزيل بعض السور. يمكن إعادة المحاولة لاحقًا.',
     );
     return false;
+  }
+
+  Future<void> _discardDownloadedTranslationSession({
+    required TranslationLocalDataSource localDataSource,
+    required int resourceId,
+  }) async {
+    for (final chapterId in _sessionDownloadedChapters) {
+      await localDataSource.deleteTranslationChapterCache(
+        resourceId: resourceId,
+        chapterId: chapterId,
+      );
+    }
+
+    _sessionDownloadedChapters.clear();
+    _pauseInterruptRequested = false;
+    await localDataSource.deleteDownloadedTranslationMetadata(resourceId);
+    ref.invalidate(downloadedTranslationsProvider);
   }
 }

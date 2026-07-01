@@ -16,6 +16,7 @@ import 'package:al_mubeen/features/quran/data/repositories/quran_reciter_reposit
 import 'package:al_mubeen/features/quran/domain/repositories/quran_audio_repository.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -124,6 +125,20 @@ final quranLastSavedPageProvider = FutureProvider<int>((ref) async {
   final entry = await service.getLastPosition();
   return entry?.lastPage ?? 1;
 });
+
+/// Returns the full saved progress entry, or `null` if no progress exists.
+final quranReadingProgressEntryProvider =
+    FutureProvider<QuranReadingProgressEntry?>((ref) async {
+      final service = ref.watch(quranReadingProgressServiceProvider);
+      try {
+        return await service.getLastPosition();
+      } catch (error, stackTrace) {
+        debugPrint(
+          'Failed to load Quran reading progress: $error\n$stackTrace',
+        );
+        return null;
+      }
+    });
 
 /// Provider for fetching the list of available tafsirs
 final tafsirsProvider = FutureProvider<List<Tafsir>>((ref) async {
@@ -731,7 +746,10 @@ TafsirText _findTafsirAyahText(
     }
   }
 
-  return tafsirTexts.first;
+  throw FormatException(
+    'Unable to locate tafsir text for ayah $chapterNumber:$ayahNumber.',
+    {'chapterNumber': chapterNumber, 'ayahNumber': ayahNumber},
+  );
 }
 
 TranslationText _withTranslationResourceName(
@@ -808,5 +826,8 @@ TranslationText _findTranslationAyahText(
     }
   }
 
-  return translationTexts.first;
+  throw FormatException(
+    'Unable to locate translation text for ayah $chapterNumber:$ayahNumber.',
+    {'chapterNumber': chapterNumber, 'ayahNumber': ayahNumber},
+  );
 }

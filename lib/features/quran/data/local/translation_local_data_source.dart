@@ -1,12 +1,14 @@
 import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:drift/drift.dart';
+import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 
 class TranslationLocalDataSource {
   const TranslationLocalDataSource({required AppDatabase database})
     : _database = database;
 
   final AppDatabase _database;
+  static const int _totalChapters = 114;
 
   Future<void> saveDownloadedTranslation(Translation translation) async {
     final now = DateTime.now();
@@ -79,7 +81,7 @@ class TranslationLocalDataSource {
 
   Future<bool> isTranslationDownloaded(int resourceId) async {
     final chapterIds = await getCachedTranslationChapterIds(resourceId);
-    return chapterIds.length >= 114;
+    return chapterIds.length >= _totalChapters;
   }
 
   Future<void> deleteDownloadedTranslation(int resourceId) async {
@@ -95,6 +97,30 @@ class TranslationLocalDataSource {
       DELETE FROM translation_text_cache WHERE resource_id = ?
     ''',
       [resourceId],
+    );
+  }
+
+  /// Delete only the downloaded translation metadata, keeping cached chapters.
+  Future<void> deleteDownloadedTranslationMetadata(int resourceId) async {
+    await _database.customStatement(
+      '''
+      DELETE FROM downloaded_translations WHERE resource_id = ?
+    ''',
+      [resourceId],
+    );
+  }
+
+  /// Delete cached translation text for a specific chapter.
+  Future<void> deleteTranslationChapterCache({
+    required int resourceId,
+    required int chapterId,
+  }) async {
+    await _database.customStatement(
+      '''
+      DELETE FROM translation_text_cache
+      WHERE resource_id = ? AND chapter_id = ?
+    ''',
+      [resourceId, chapterId],
     );
   }
 
@@ -157,6 +183,15 @@ class TranslationLocalDataSource {
       ORDER BY ayah_number ASC
     ''').get();
 
+    if (results.isEmpty) {
+      return <TranslationText>[];
+    }
+
+    final expectedVerseCount = getVerseCount(chapterId);
+    if (results.length < expectedVerseCount) {
+      return <TranslationText>[];
+    }
+
     return results.map((row) {
       return TranslationText(
         resourceId: row.read<int>('resource_id'),
@@ -168,14 +203,23 @@ class TranslationLocalDataSource {
     }).toList();
   }
 
+  /// Get the chapter IDs that are fully cached for this translation.
   Future<Set<int>> getCachedTranslationChapterIds(int resourceId) async {
     final results = await _database.customSelect('''
-      SELECT DISTINCT chapter_id
+      SELECT chapter_id, COUNT(*) AS verse_count
       FROM translation_text_cache
       WHERE resource_id = $resourceId
+      GROUP BY chapter_id
     ''').get();
 
-    return results.map((row) => row.read<int>('chapter_id')).toSet();
+    return results
+        .where((row) {
+          final chapterId = row.read<int>('chapter_id');
+          final cachedVerseCount = row.read<int>('verse_count');
+          return cachedVerseCount >= getVerseCount(chapterId);
+        })
+        .map((row) => row.read<int>('chapter_id'))
+        .toSet();
   }
 
   Future<void> clearTranslationCache(int resourceId) async {

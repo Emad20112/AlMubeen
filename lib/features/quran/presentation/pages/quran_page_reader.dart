@@ -9,9 +9,13 @@ import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/adaptive_quran_page_view.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_audio_player_bar.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_interaction_overlay.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_back_button.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_bottom_panel.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_header.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_search_sheet.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_settings_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_scrim.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/surah_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -206,9 +210,21 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     );
   }
 
-  void _handleSurahSelected(int surahNumber) {
-    final page = getPageNumber(surahNumber, 1);
-    _goToPage(page);
+  Future<void> _openSearchSheet() async {
+    await showQuranReaderSearchSheet(
+      context: context,
+      currentPage: _currentPage.value,
+      onPageSelected: _goToPage,
+    );
+  }
+
+  Future<void> _openSurahPicker() async {
+    final surahNumber = await showSurahPicker(context);
+    if (surahNumber == null) {
+      return;
+    }
+
+    _goToPage(getPageNumber(surahNumber, 1));
     _hideOverlay();
   }
 
@@ -223,18 +239,14 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
           return const SizedBox.shrink();
         }
 
-        final slideOffset =
-            Tween<Offset>(
-                  begin: beginOffset,
-                  end: Offset.zero,
-                )
-                .animate(
-                  CurvedAnimation(
-                    parent: _overlayAnimation,
-                    curve: Curves.easeOutCubic,
-                  ),
-                )
-                .value;
+        final slideOffset = Tween<Offset>(begin: beginOffset, end: Offset.zero)
+            .animate(
+              CurvedAnimation(
+                parent: _overlayAnimation,
+                curve: Curves.easeOutCubic,
+              ),
+            )
+            .value;
 
         final opacity = CurvedAnimation(
           parent: _overlayAnimation,
@@ -331,7 +343,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
           ValueListenableBuilder<int>(
             valueListenable: _currentPage,
-            builder: (context, page, child) {
+            builder: (context, page, _) {
               return Positioned(
                 left: 0,
                 right: 0,
@@ -340,31 +352,41 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                   beginOffset: const Offset(0, 1),
                   child: QuranReaderBottomPanel(
                     currentPage: page,
-                    isTajweedListenable: _isTajweed,
                     onPageSelected: _goToPage,
-                    onCloseOverlay: _hideOverlay,
                   ),
                 ),
               );
             },
           ),
 
-          ValueListenableBuilder<int>(
-            valueListenable: _currentPage,
-            builder: (context, page, child) {
-              return Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: _buildAnimatedOverlay(
-                  beginOffset: const Offset(0, -1),
-                  child: QuranReaderHeader(
-                    currentPage: page,
-                    onSurahSelected: _handleSurahSelected,
-                  ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _buildAnimatedOverlay(
+              beginOffset: const Offset(0, -1),
+              child: QuranReaderHeader(
+                onSearchTapped: _openSearchSheet,
+                onMenuTapped: _openSurahPicker,
+                onSettingsTapped: () => showQuranReaderSettingsSheet(
+                  context: context,
+                  currentPage: _currentPage.value,
+                  isTajweedListenable: _isTajweed,
                 ),
-              );
-            },
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 18,
+            right: 16,
+            child: _buildAnimatedOverlay(
+              beginOffset: const Offset(.35, 0),
+              child: QuranReaderBackButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
           ),
         ],
       ),

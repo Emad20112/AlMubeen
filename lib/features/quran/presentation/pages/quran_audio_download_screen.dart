@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_download_controller.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
@@ -33,9 +34,14 @@ class _QuranAudioDownloadScreenState
   @override
   Widget build(BuildContext context) {
     final recitationsAsync = ref.watch(quranRecitationsProvider);
+    final preferencesAsync = ref.watch(appUserPreferencesProvider);
     final selectedRecitation = ref.watch(selectedQuranRecitationProvider);
     final downloadState = ref.watch(quranAudioDownloadProvider);
     final normalizedQuery = _query.trim().toLowerCase();
+    final preferredReciterId = preferencesAsync.maybeWhen(
+      data: (preferences) => preferences.preferredReciterId,
+      orElse: () => null,
+    );
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -83,6 +89,7 @@ class _QuranAudioDownloadScreenState
                       final activeRecitation = _activeRecitation(
                         visibleRecitations,
                         selectedRecitation,
+                        preferredReciterId,
                       );
 
                       if (selectedRecitation == null) {
@@ -146,6 +153,11 @@ class _QuranAudioDownloadScreenState
                                             )
                                             .state =
                                         recitation;
+                                    ref
+                                        .read(
+                                          appUserPreferencesProvider.notifier,
+                                        )
+                                        .setPreferredReciter(recitation);
                                   },
                                 ),
                                 const SizedBox(height: 14),
@@ -157,7 +169,7 @@ class _QuranAudioDownloadScreenState
                                 _OfflineDownloadCard(
                                   recitation: activeRecitation,
                                   downloadState: downloadState,
-                                  onDownload: downloadState.isDownloading
+                                  onDownload: downloadState.isActiveDownload
                                       ? null
                                       : () {
                                           ref
@@ -194,10 +206,19 @@ class _QuranAudioDownloadScreenState
   QuranRecitation _activeRecitation(
     List<QuranRecitation> recitations,
     QuranRecitation? selectedRecitation,
+    int? preferredReciterId,
   ) {
     if (selectedRecitation != null) {
       for (final recitation in recitations) {
         if (recitation.id == selectedRecitation.id) {
+          return recitation;
+        }
+      }
+    }
+
+    if (preferredReciterId != null) {
+      for (final recitation in recitations) {
+        if (recitation.id == preferredReciterId) {
           return recitation;
         }
       }
@@ -350,6 +371,7 @@ class _RecitationPickerCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           DropdownButtonFormField<int>(
+            key: ValueKey<int>(activeRecitation.id),
             initialValue: activeRecitation.id,
             isExpanded: true,
             decoration: InputDecoration(
@@ -462,7 +484,8 @@ class _OfflineDownloadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDownloading = downloadState.isDownloading;
+    final isDownloading = downloadState.isActiveDownload;
+    final isPaused = downloadState.isPaused;
 
     return _AudioSurface(
       child: Column(
@@ -477,18 +500,18 @@ class _OfflineDownloadCard extends StatelessWidget {
           FilledButton.tonalIcon(
             onPressed: onDownload,
             icon: Icon(
-              isDownloading
+              isPaused
+                  ? Icons.pause_circle_filled_rounded
+                  : isDownloading
                   ? Icons.downloading_rounded
-                  : downloadState.isPaused
-                      ? Icons.pause_circle_filled_rounded
-                      : Icons.cloud_download_outlined,
+                  : Icons.cloud_download_outlined,
             ),
             label: Text(
-              isDownloading
+              isPaused
+                  ? 'تنزيل معلّق'
+                  : isDownloading
                   ? 'يتم الحفظ الآن...'
-                  : downloadState.isPaused
-                      ? 'تنزيل معلّق'
-                      : 'حفظ المصحف بصوت ${_shortRecitationName(recitation)}',
+                  : 'حفظ المصحف بصوت ${_shortRecitationName(recitation)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -564,7 +587,9 @@ class _DownloadStatusCard extends ConsumerWidget {
                 if (state.isDownloading && !state.isPaused)
                   TextButton.icon(
                     onPressed: () {
-                      ref.read(quranAudioDownloadProvider.notifier).pauseDownload();
+                      ref
+                          .read(quranAudioDownloadProvider.notifier)
+                          .pauseDownload();
                     },
                     icon: const Icon(Icons.pause_rounded, size: 18),
                     label: const Text('إيقاف مؤقت'),
@@ -572,7 +597,9 @@ class _DownloadStatusCard extends ConsumerWidget {
                 if (state.isPaused)
                   TextButton.icon(
                     onPressed: () {
-                      ref.read(quranAudioDownloadProvider.notifier).resumeDownload();
+                      ref
+                          .read(quranAudioDownloadProvider.notifier)
+                          .resumeDownload();
                     },
                     icon: const Icon(Icons.play_arrow_rounded, size: 18),
                     label: const Text('استئناف'),
@@ -580,7 +607,9 @@ class _DownloadStatusCard extends ConsumerWidget {
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () {
-                    ref.read(quranAudioDownloadProvider.notifier).cancelDownload();
+                    ref
+                        .read(quranAudioDownloadProvider.notifier)
+                        .cancelDownload();
                   },
                   icon: const Icon(Icons.close_rounded, size: 18),
                   label: const Text('إلغاء'),

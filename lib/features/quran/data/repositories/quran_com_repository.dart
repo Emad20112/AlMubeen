@@ -1,6 +1,7 @@
 import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
 import 'package:al_mubeen/core/data/data_result.dart';
+import 'package:al_mubeen/core/data/request_abort_handle.dart';
 import 'package:al_mubeen/core/data/json_map.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_chapter_dto.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_pagination_dto.dart';
@@ -115,11 +116,13 @@ final class QuranComRepository implements QuranRepository {
     required int resourceId,
     required int chapterNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     final result = await _remoteDataSource.getTafsirChapter(
       chapterNumber: chapterNumber,
       bookId: resourceId,
       fetchPolicy: fetchPolicy,
+      abortHandle: abortHandle,
     );
 
     return result.when(
@@ -154,11 +157,13 @@ final class QuranComRepository implements QuranRepository {
     required int resourceId,
     required int chapterNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     final result = await _remoteDataSource.getTranslationChapter(
       chapterNumber: chapterNumber,
       bookId: resourceId,
       fetchPolicy: fetchPolicy,
+      abortHandle: abortHandle,
     );
 
     return result.when(
@@ -172,11 +177,13 @@ final class QuranComRepository implements QuranRepository {
     required int resourceId,
     required int chapterNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     final result = await getTranslationChapterTexts(
       chapterNumber: chapterNumber,
       resourceId: resourceId,
       fetchPolicy: fetchPolicy,
+      abortHandle: abortHandle,
     );
 
     return result.when(
@@ -197,11 +204,13 @@ final class QuranComRepository implements QuranRepository {
     required int chapterNumber,
     required int ayahNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     final result = await getTranslationChapterTexts(
       chapterNumber: chapterNumber,
       resourceId: resourceId,
       fetchPolicy: fetchPolicy,
+      abortHandle: abortHandle,
     );
 
     return result.when(
@@ -222,11 +231,13 @@ final class QuranComRepository implements QuranRepository {
     required int resourceId,
     required int chapterNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     final result = await getTafsirChapterTexts(
       chapterNumber: chapterNumber,
       resourceId: resourceId,
       fetchPolicy: fetchPolicy,
+      abortHandle: abortHandle,
     );
 
     return result.when(
@@ -247,11 +258,13 @@ final class QuranComRepository implements QuranRepository {
     required int chapterNumber,
     required int ayahNumber,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     final result = await getTafsirChapterTexts(
       chapterNumber: chapterNumber,
       resourceId: resourceId,
       fetchPolicy: fetchPolicy,
+      abortHandle: abortHandle,
     );
 
     return result.when(
@@ -376,7 +389,10 @@ final class QuranComRepository implements QuranRepository {
       }
     }
 
-    return texts.first;
+    throw FormatException(
+      'Unable to locate tafsir text for ayah $chapterNumber:$ayahNumber.',
+      {'resourceId': resourceId, 'chapterNumber': chapterNumber},
+    );
   }
 
   Translation _translationFromJson(Object? value) {
@@ -479,7 +495,10 @@ final class QuranComRepository implements QuranRepository {
       }
     }
 
-    return texts.first;
+    throw FormatException(
+      'Unable to locate translation text for ayah $chapterNumber:$ayahNumber.',
+      {'resourceId': resourceId, 'chapterNumber': chapterNumber},
+    );
   }
 
   int _compareTranslationTexts(TranslationText left, TranslationText right) {

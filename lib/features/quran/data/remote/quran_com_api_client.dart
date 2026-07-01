@@ -6,28 +6,30 @@ import 'package:flutter/foundation.dart';
 
 import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/data/data_result.dart';
+import 'package:al_mubeen/core/data/request_abort_handle.dart';
 import 'package:al_mubeen/core/data/json_map.dart';
 
 abstract interface class QuranComApiClient {
   Future<DataResult<JsonMap>> getJson(
     String path, {
     Map<String, String> queryParameters = const {},
+    RequestAbortHandle? abortHandle,
   });
 
   Future<DataResult<JsonList>> getJsonList(
     String path, {
     Map<String, String> queryParameters = const {},
+    RequestAbortHandle? abortHandle,
   });
 }
 
 final class HttpQuranComApiClient implements QuranComApiClient {
   HttpQuranComApiClient({
-    required Uri baseUri,
+    required this.baseUri,
     HttpClient? httpClient,
     Map<String, String> headers = const {},
     this.requestTimeout = const Duration(seconds: 15),
-  }) : baseUri = baseUri,
-       _httpClient = httpClient ?? HttpClient(),
+  }) : _httpClient = httpClient ?? HttpClient(),
        _headers = Map.unmodifiable(headers);
 
   final Uri baseUri;
@@ -39,6 +41,7 @@ final class HttpQuranComApiClient implements QuranComApiClient {
   Future<DataResult<JsonMap>> getJson(
     String path, {
     Map<String, String> queryParameters = const {},
+    RequestAbortHandle? abortHandle,
   }) async {
     final uri = _resolve(path, queryParameters);
 
@@ -49,12 +52,19 @@ final class HttpQuranComApiClient implements QuranComApiClient {
 
     try {
       final request = await _httpClient.getUrl(uri).timeout(requestTimeout);
+      if (abortHandle?.isAborted == true) {
+        request.abort();
+        return _cancelled(uri);
+      }
+
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       request.headers.set(HttpHeaders.userAgentHeader, 'AlMubeen/1.0');
 
       for (final entry in _headers.entries) {
         request.headers.set(entry.key, entry.value);
       }
+
+      abortHandle?.attach(() => request.abort());
 
       final response = await request.close().timeout(requestTimeout);
       final responseBody = await utf8.decoder
@@ -85,6 +95,10 @@ final class HttpQuranComApiClient implements QuranComApiClient {
 
       return _unwrapBackendMap(decoded, uri);
     } on TimeoutException catch (error, stackTrace) {
+      if (abortHandle?.isAborted == true) {
+        return _cancelled(uri);
+      }
+
       return DataError(
         DataFailure(
           kind: DataFailureKind.timeout,
@@ -95,6 +109,10 @@ final class HttpQuranComApiClient implements QuranComApiClient {
         ),
       );
     } on FormatException catch (error, stackTrace) {
+      if (abortHandle?.isAborted == true) {
+        return _cancelled(uri);
+      }
+
       return DataError(
         DataFailure(
           kind: DataFailureKind.parsing,
@@ -105,6 +123,10 @@ final class HttpQuranComApiClient implements QuranComApiClient {
         ),
       );
     } on Object catch (error, stackTrace) {
+      if (abortHandle?.isAborted == true) {
+        return _cancelled(uri, cause: error, stackTrace: stackTrace);
+      }
+
       return DataError(
         DataFailure(
           kind: DataFailureKind.network,
@@ -114,6 +136,8 @@ final class HttpQuranComApiClient implements QuranComApiClient {
           stackTrace: stackTrace,
         ),
       );
+    } finally {
+      abortHandle?.clear();
     }
   }
 
@@ -121,8 +145,13 @@ final class HttpQuranComApiClient implements QuranComApiClient {
   Future<DataResult<JsonList>> getJsonList(
     String path, {
     Map<String, String> queryParameters = const {},
+    RequestAbortHandle? abortHandle,
   }) async {
-    final result = await getJson(path, queryParameters: queryParameters);
+    final result = await getJson(
+      path,
+      queryParameters: queryParameters,
+      abortHandle: abortHandle,
+    );
     return result.when(
       success: (json) {
         for (final value in json.values) {
@@ -155,11 +184,7 @@ final class HttpQuranComApiClient implements QuranComApiClient {
           : 'Backend request failed.';
 
       return DataError(
-        DataFailure(
-          kind: DataFailureKind.network,
-          message: message,
-          uri: uri,
-        ),
+        DataFailure(kind: DataFailureKind.network, message: message, uri: uri),
       );
     }
 
@@ -239,5 +264,21 @@ final class HttpQuranComApiClient implements QuranComApiClient {
       429 => DataFailureKind.rateLimited,
       _ => DataFailureKind.network,
     };
+  }
+
+  DataError<JsonMap> _cancelled(
+    Uri uri, {
+    Object? cause,
+    StackTrace? stackTrace,
+  }) {
+    return DataError(
+      DataFailure(
+        kind: DataFailureKind.cancelled,
+        message: 'The request was cancelled.',
+        uri: uri,
+        cause: cause,
+        stackTrace: stackTrace,
+      ),
+    );
   }
 }

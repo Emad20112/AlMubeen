@@ -58,7 +58,7 @@ class _TafsirDownloadScreenState extends ConsumerState<TafsirDownloadScreen> {
           if (!downloadedTafsirs.any(
                 (tafsir) => tafsir.id == selectedTafsirId,
               ) &&
-              !downloadState.isDownloading) {
+              !downloadState.isActiveDownload) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) {
                 return;
@@ -123,7 +123,7 @@ class _TafsirDownloadScreenState extends ConsumerState<TafsirDownloadScreen> {
           if (!downloadedTafsirs.any(
                 (tafsir) => tafsir.id == selectedTafsirId,
               ) &&
-              !downloadState.isDownloading) {
+              !downloadState.isActiveDownload) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) {
                 return;
@@ -157,7 +157,7 @@ class _TafsirDownloadScreenState extends ConsumerState<TafsirDownloadScreen> {
               if (!downloadedTafsirs.any(
                     (tafsir) => tafsir.id == selectedTafsirId,
                   ) &&
-                  !downloadState.isDownloading) {
+                  !downloadState.isActiveDownload) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) {
                     return;
@@ -192,7 +192,7 @@ class _TafsirDownloadScreenState extends ConsumerState<TafsirDownloadScreen> {
           }
 
           if (!tafsirs.any((tafsir) => tafsir.id == selectedTafsirId) &&
-              !downloadState.isDownloading) {
+              !downloadState.isActiveDownload) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) {
                 return;
@@ -282,7 +282,7 @@ class _TafsirDownloadScreenState extends ConsumerState<TafsirDownloadScreen> {
             ),
           ),
         ],
-        if (downloadState.isDownloading)
+        if (downloadState.isActiveDownload)
           _TafsirDownloadProgressBanner(state: downloadState),
         _TafsirSearchFilterBar(
           isDark: isDark,
@@ -326,13 +326,18 @@ class _TafsirDownloadScreenState extends ConsumerState<TafsirDownloadScreen> {
                     final isDownloadingCurrent =
                         downloadState.isDownloading &&
                         downloadState.resourceId == tafsir.id;
+                    final isPausedCurrent =
+                        downloadState.isPaused &&
+                        downloadState.resourceId == tafsir.id;
 
                     return _TafsirTile(
                       tafsir: tafsir,
                       isSelected: isSelected,
                       isDownloaded: isDownloaded,
                       isDownloading: isDownloadingCurrent,
-                      downloadProgress: isDownloadingCurrent
+                      isPaused: isPausedCurrent,
+                      downloadProgress:
+                          (isDownloadingCurrent || isPausedCurrent)
                           ? downloadState.progress
                           : null,
                       onTap: () async {
@@ -343,7 +348,7 @@ class _TafsirDownloadScreenState extends ConsumerState<TafsirDownloadScreen> {
                           return;
                         }
 
-                        if (downloadState.isDownloading || downloadState.isPaused) {
+                        if (downloadState.isActiveDownload) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('يوجد تنزيل للتفسير جارٍ بالفعل.'),
@@ -726,7 +731,11 @@ class _TafsirDownloadProgressBanner extends ConsumerWidget {
                 ),
               ),
               if (state.isPaused)
-                Icon(Icons.pause_circle_outline, color: Theme.of(context).colorScheme.error, size: 20)
+                Icon(
+                  Icons.pause_circle_outline,
+                  color: Theme.of(context).colorScheme.error,
+                  size: 20,
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -759,7 +768,9 @@ class _TafsirDownloadProgressBanner extends ConsumerWidget {
               if (state.isDownloading && !state.isPaused)
                 TextButton.icon(
                   onPressed: () {
-                    ref.read(tafsirDownloadControllerProvider.notifier).pauseDownload();
+                    ref
+                        .read(tafsirDownloadControllerProvider.notifier)
+                        .pauseDownload();
                   },
                   icon: const Icon(Icons.pause_rounded, size: 18),
                   label: const Text('إيقاف مؤقت'),
@@ -767,7 +778,9 @@ class _TafsirDownloadProgressBanner extends ConsumerWidget {
               if (state.isPaused)
                 TextButton.icon(
                   onPressed: () {
-                    ref.read(tafsirDownloadControllerProvider.notifier).resumeDownload();
+                    ref
+                        .read(tafsirDownloadControllerProvider.notifier)
+                        .resumeDownload();
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 18),
                   label: const Text('استئناف'),
@@ -775,7 +788,9 @@ class _TafsirDownloadProgressBanner extends ConsumerWidget {
               const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: () {
-                  ref.read(tafsirDownloadControllerProvider.notifier).cancelDownload();
+                  ref
+                      .read(tafsirDownloadControllerProvider.notifier)
+                      .cancelDownload();
                 },
                 icon: const Icon(Icons.close_rounded, size: 18),
                 label: const Text('إلغاء'),
@@ -797,6 +812,7 @@ class _TafsirTile extends StatelessWidget {
     required this.isSelected,
     required this.isDownloaded,
     required this.isDownloading,
+    required this.isPaused,
     required this.downloadProgress,
     required this.onTap,
   });
@@ -805,6 +821,7 @@ class _TafsirTile extends StatelessWidget {
   final bool isSelected;
   final bool isDownloaded;
   final bool isDownloading;
+  final bool isPaused;
   final double? downloadProgress;
   final VoidCallback onTap;
 
@@ -813,7 +830,7 @@ class _TafsirTile extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
     final statusWidgets = <Widget>[];
-    Widget? trailingWidget;
+    Widget trailingWidget = const SizedBox.shrink();
 
     if (isDownloading) {
       statusWidgets.addAll([
@@ -835,6 +852,24 @@ class _TafsirTile extends StatelessWidget {
           height: 24,
           child: CircularProgressIndicator(strokeWidth: 2, color: primaryColor),
         ),
+      );
+    } else if (isPaused) {
+      statusWidgets.addAll([
+        const SizedBox(height: 8),
+        LinearProgressIndicator(value: downloadProgress),
+        const SizedBox(height: 4),
+        Text(
+          'متوقف مؤقتًا',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black54,
+            fontSize: 12,
+          ),
+        ),
+      ]);
+      trailingWidget = Icon(
+        Icons.pause_circle_outline_rounded,
+        color: primaryColor,
+        size: 24,
       );
     } else if (isDownloaded) {
       statusWidgets.addAll([
@@ -860,7 +895,7 @@ class _TafsirTile extends StatelessWidget {
         onPressed: onTap,
       );
     }
-    
+
     if (isSelected && isDownloaded) {
       trailingWidget = Icon(Icons.check_circle, color: primaryColor, size: 24);
     }
@@ -939,7 +974,7 @@ class _TafsirTile extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailingWidget != null) trailingWidget,
+              trailingWidget,
             ],
           ),
         ),

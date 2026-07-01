@@ -7,6 +7,10 @@ abstract interface class QuranAudioRepository {
     required QuranVerseKey verseKey,
     required int recitationId,
   });
+  Future<DataResult<List<QuranAudioFile>>> getSurahAudioFiles({
+    required int chapterNumber,
+    required int recitationId,
+  });
 }
 
 @immutable

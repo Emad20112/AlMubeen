@@ -4,6 +4,7 @@ import 'package:al_mubeen/features/home/presentation/widgets/home_feature.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_page_reader.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_audio_download_screen.dart';
+import 'package:al_mubeen/features/quran/presentation/pages/quran_surah_player_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -128,6 +129,11 @@ class HomeFeatureCard extends ConsumerWidget {
 
     if (feature.action == HomeFeatureAction.openQuranAudioDownload) {
       context.push(QuranAudioDownloadScreen.routePath);
+      return;
+    }
+
+    if (feature.action == HomeFeatureAction.openQuranSurahPlayer) {
+      context.push(QuranSurahPlayerScreen.routePath);
       return;
     }
 

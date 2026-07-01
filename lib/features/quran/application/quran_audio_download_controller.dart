@@ -50,6 +50,9 @@ final class QuranAudioDownloadState {
 
   bool get isDownloading => status == QuranAudioDownloadStatus.downloading;
   bool get isPaused => status == QuranAudioDownloadStatus.paused;
+  bool get isActiveDownload =>
+      status == QuranAudioDownloadStatus.downloading ||
+      status == QuranAudioDownloadStatus.paused;
 
   QuranAudioDownloadState copyWith({
     QuranAudioDownloadStatus? status,

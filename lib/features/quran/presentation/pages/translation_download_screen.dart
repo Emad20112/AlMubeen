@@ -60,7 +60,8 @@ class _TranslationDownloadScreenState
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (selectedTranslationId == null && !downloadState.isDownloading) {
+          if (selectedTranslationId == null &&
+              !downloadState.isActiveDownload) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) {
                 return;
@@ -115,7 +116,8 @@ class _TranslationDownloadScreenState
             );
           }
 
-          if (selectedTranslationId == null && !downloadState.isDownloading) {
+          if (selectedTranslationId == null &&
+              !downloadState.isActiveDownload) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) {
                 return;
@@ -140,7 +142,7 @@ class _TranslationDownloadScreenState
           if (translations.isEmpty) {
             if (downloadedTranslations.isNotEmpty) {
               if (selectedTranslationId == null &&
-                  !downloadState.isDownloading) {
+                  !downloadState.isActiveDownload) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) {
                     return;
@@ -172,7 +174,8 @@ class _TranslationDownloadScreenState
             );
           }
 
-          if (selectedTranslationId == null && !downloadState.isDownloading) {
+          if (selectedTranslationId == null &&
+              !downloadState.isActiveDownload) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) {
                 return;
@@ -259,7 +262,7 @@ class _TranslationDownloadScreenState
             ),
           ),
         ],
-        if (downloadState.isDownloading)
+        if (downloadState.isActiveDownload)
           _TranslationDownloadProgressBanner(state: downloadState),
         _TranslationSearchFilterBar(
           isDark: isDark,
@@ -303,13 +306,18 @@ class _TranslationDownloadScreenState
                     final isDownloadingCurrent =
                         downloadState.isDownloading &&
                         downloadState.resourceId == translation.id;
+                    final isPausedCurrent =
+                        downloadState.isPaused &&
+                        downloadState.resourceId == translation.id;
 
                     return _TranslationTile(
                       translation: translation,
                       isSelected: isSelected,
                       isDownloaded: isDownloaded,
                       isDownloading: isDownloadingCurrent,
-                      downloadProgress: isDownloadingCurrent
+                      isPaused: isPausedCurrent,
+                      downloadProgress:
+                          (isDownloadingCurrent || isPausedCurrent)
                           ? downloadState.progress
                           : null,
                       onTap: () async {
@@ -320,7 +328,7 @@ class _TranslationDownloadScreenState
                           return;
                         }
 
-                        if (downloadState.isDownloading || downloadState.isPaused) {
+                        if (downloadState.isActiveDownload) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('يوجد تنزيل لترجمة جارٍ بالفعل.'),
@@ -668,6 +676,7 @@ class _TranslationEmptyMessage extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _TranslationFallbackSection extends ConsumerWidget {
   const _TranslationFallbackSection({
     required this.isDark,
@@ -692,7 +701,7 @@ class _TranslationFallbackSection extends ConsumerWidget {
 
     if (selectedTranslationId == null &&
         downloadedTranslations.isNotEmpty &&
-        !downloadState.isDownloading) {
+        !downloadState.isActiveDownload) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!context.mounted) {
           return;
@@ -781,7 +790,7 @@ class _TranslationFallbackSection extends ConsumerWidget {
             ),
           ),
         ),
-        if (downloadState.isDownloading)
+        if (downloadState.isActiveDownload)
           _TranslationDownloadProgressBanner(state: downloadState),
         Expanded(
           child: ListView.builder(
@@ -795,6 +804,7 @@ class _TranslationFallbackSection extends ConsumerWidget {
                 isSelected: isSelected,
                 isDownloaded: downloadedTranslationIds.contains(translation.id),
                 isDownloading: false,
+                isPaused: false,
                 downloadProgress: null,
                 onTap: () {
                   ref.read(selectedTranslationProvider.notifier).state =
@@ -848,7 +858,11 @@ class _TranslationDownloadProgressBanner extends ConsumerWidget {
                 ),
               ),
               if (state.isPaused)
-                Icon(Icons.pause_circle_outline, color: Theme.of(context).colorScheme.error, size: 20)
+                Icon(
+                  Icons.pause_circle_outline,
+                  color: Theme.of(context).colorScheme.error,
+                  size: 20,
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -881,7 +895,9 @@ class _TranslationDownloadProgressBanner extends ConsumerWidget {
               if (state.isDownloading && !state.isPaused)
                 TextButton.icon(
                   onPressed: () {
-                    ref.read(translationDownloadControllerProvider.notifier).pauseDownload();
+                    ref
+                        .read(translationDownloadControllerProvider.notifier)
+                        .pauseDownload();
                   },
                   icon: const Icon(Icons.pause_rounded, size: 18),
                   label: const Text('إيقاف مؤقت'),
@@ -889,7 +905,9 @@ class _TranslationDownloadProgressBanner extends ConsumerWidget {
               if (state.isPaused)
                 TextButton.icon(
                   onPressed: () {
-                    ref.read(translationDownloadControllerProvider.notifier).resumeDownload();
+                    ref
+                        .read(translationDownloadControllerProvider.notifier)
+                        .resumeDownload();
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 18),
                   label: const Text('استئناف'),
@@ -897,7 +915,9 @@ class _TranslationDownloadProgressBanner extends ConsumerWidget {
               const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: () {
-                  ref.read(translationDownloadControllerProvider.notifier).cancelDownload();
+                  ref
+                      .read(translationDownloadControllerProvider.notifier)
+                      .cancelDownload();
                 },
                 icon: const Icon(Icons.close_rounded, size: 18),
                 label: const Text('إلغاء'),
@@ -919,6 +939,7 @@ class _TranslationTile extends StatelessWidget {
     required this.isSelected,
     required this.isDownloaded,
     required this.isDownloading,
+    required this.isPaused,
     required this.downloadProgress,
     required this.onTap,
   });
@@ -927,6 +948,7 @@ class _TranslationTile extends StatelessWidget {
   final bool isSelected;
   final bool isDownloaded;
   final bool isDownloading;
+  final bool isPaused;
   final double? downloadProgress;
   final VoidCallback onTap;
 
@@ -935,7 +957,7 @@ class _TranslationTile extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
     final statusWidgets = <Widget>[];
-    Widget? trailingWidget;
+    Widget trailingWidget = const SizedBox.shrink();
 
     if (isDownloading) {
       statusWidgets.addAll([
@@ -957,6 +979,24 @@ class _TranslationTile extends StatelessWidget {
           height: 24,
           child: CircularProgressIndicator(strokeWidth: 2, color: primaryColor),
         ),
+      );
+    } else if (isPaused) {
+      statusWidgets.addAll([
+        const SizedBox(height: 8),
+        LinearProgressIndicator(value: downloadProgress),
+        const SizedBox(height: 4),
+        Text(
+          'متوقف مؤقتًا',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black54,
+            fontSize: 12,
+          ),
+        ),
+      ]);
+      trailingWidget = Icon(
+        Icons.pause_circle_outline_rounded,
+        color: primaryColor,
+        size: 24,
       );
     } else if (isDownloaded) {
       statusWidgets.addAll([
@@ -982,7 +1022,7 @@ class _TranslationTile extends StatelessWidget {
         onPressed: onTap,
       );
     }
-    
+
     if (isSelected && isDownloaded) {
       trailingWidget = Icon(Icons.check_circle, color: primaryColor, size: 24);
     }
@@ -1066,7 +1106,7 @@ class _TranslationTile extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailingWidget != null) trailingWidget,
+              trailingWidget,
             ],
           ),
         ),

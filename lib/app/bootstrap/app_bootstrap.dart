@@ -1,9 +1,7 @@
-import 'dart:async';
-
-import 'package:al_mubeen/app/bootstrap/qcf_font_bootstrap.dart';
+import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
+import 'package:al_mubeen/core/widgets/app_loading_view.dart';
 import 'package:al_mubeen/features/home/presentation/home_page.dart';
-import 'package:al_mubeen/features/quran/data/quran_providers.dart';
-import 'package:flutter/foundation.dart';
+import 'package:al_mubeen/features/onboarding/presentation/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,33 +14,28 @@ class AppBootstrap extends ConsumerStatefulWidget {
 
 class _AppBootstrapState extends ConsumerState<AppBootstrap> {
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      ref.read(qcfFontBootstrapProvider.notifier).start();
-      unawaited(_warmUpQuranCatalogs());
-    });
-  }
-
-  Future<void> _warmUpQuranCatalogs() async {
-    await Future.wait([
-      _ignoreWarmUpFailure(ref.read(quranRecitationsProvider.future), 'القراء'),
-      _ignoreWarmUpFailure(ref.read(translationsProvider.future), 'الترجمات'),
-      _ignoreWarmUpFailure(ref.read(tafsirsProvider.future), 'التفاسير'),
-    ]);
-  }
-
-  Future<void> _ignoreWarmUpFailure<T>(Future<T> future, String label) async {
-    try {
-      await future;
-    } catch (error, stackTrace) {
-      debugPrint('Quran $label warmup failed: $error');
-      debugPrint('$stackTrace');
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return const HomePage();
+    final preferencesAsync = ref.watch(appUserPreferencesProvider);
+
+    return preferencesAsync.when(
+      loading: () => const AppLoadingView(
+        title: 'نُجهّز صفحتك',
+        message: 'نحمّل التفضيلات ونعدّ الموارد الأساسية بهدوء.',
+        progress: 0.6,
+      ),
+      error: (error, stackTrace) {
+        debugPrint(
+          'AppBootstrap: preferences failed to load: $error\n$stackTrace',
+        );
+        return const HomePage();
+      },
+      data: (preferences) {
+        if (!preferences.hasCompletedWelcome) {
+          return const WelcomeScreen();
+        }
+
+        return const HomePage();
+      },
+    );
   }
 }

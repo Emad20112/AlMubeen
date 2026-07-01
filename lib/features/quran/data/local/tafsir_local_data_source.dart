@@ -1,12 +1,14 @@
 import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:drift/drift.dart';
+import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 
 class TafsirLocalDataSource {
   const TafsirLocalDataSource({required AppDatabase database})
     : _database = database;
 
   final AppDatabase _database;
+  static const int _totalChapters = 114;
 
   /// Save a downloaded tafsir metadata
   Future<void> saveDownloadedTafsir(Tafsir tafsir) async {
@@ -83,7 +85,7 @@ class TafsirLocalDataSource {
   /// Check if a tafsir is downloaded
   Future<bool> isTafsirDownloaded(int resourceId) async {
     final chapterIds = await getCachedTafsirChapterIds(resourceId);
-    return chapterIds.length >= 114;
+    return chapterIds.length >= _totalChapters;
   }
 
   /// Delete a downloaded tafsir
@@ -101,6 +103,30 @@ class TafsirLocalDataSource {
       DELETE FROM tafsir_text_cache WHERE resource_id = ?
     ''',
       [resourceId],
+    );
+  }
+
+  /// Delete only the downloaded tafsir metadata, keeping cached chapters.
+  Future<void> deleteDownloadedTafsirMetadata(int resourceId) async {
+    await _database.customStatement(
+      '''
+      DELETE FROM downloaded_tafsirs WHERE resource_id = ?
+    ''',
+      [resourceId],
+    );
+  }
+
+  /// Delete cached tafsir text for a specific chapter.
+  Future<void> deleteTafsirChapterCache({
+    required int resourceId,
+    required int chapterId,
+  }) async {
+    await _database.customStatement(
+      '''
+      DELETE FROM tafsir_text_cache
+      WHERE resource_id = ? AND chapter_id = ?
+    ''',
+      [resourceId, chapterId],
     );
   }
 
@@ -166,6 +192,15 @@ class TafsirLocalDataSource {
       ORDER BY ayah_number ASC
     ''').get();
 
+    if (results.isEmpty) {
+      return <TafsirText>[];
+    }
+
+    final expectedVerseCount = getVerseCount(chapterId);
+    if (results.length < expectedVerseCount) {
+      return <TafsirText>[];
+    }
+
     return results.map((row) {
       return TafsirText(
         resourceId: row.read<int>('resource_id'),
@@ -177,15 +212,23 @@ class TafsirLocalDataSource {
     }).toList();
   }
 
-  /// Get the chapter IDs that already have cached tafsir verses.
+  /// Get the chapter IDs that are fully cached for this tafsir.
   Future<Set<int>> getCachedTafsirChapterIds(int resourceId) async {
     final results = await _database.customSelect('''
-      SELECT DISTINCT chapter_id
+      SELECT chapter_id, COUNT(*) AS verse_count
       FROM tafsir_text_cache
       WHERE resource_id = $resourceId
+      GROUP BY chapter_id
     ''').get();
 
-    return results.map((row) => row.read<int>('chapter_id')).toSet();
+    return results
+        .where((row) {
+          final chapterId = row.read<int>('chapter_id');
+          final cachedVerseCount = row.read<int>('verse_count');
+          return cachedVerseCount >= getVerseCount(chapterId);
+        })
+        .map((row) => row.read<int>('chapter_id'))
+        .toSet();
   }
 
   /// Delete all cached tafsir text for a specific resource

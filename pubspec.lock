@@ -1019,10 +1019,9 @@ packages:
   qcf_quran_plus:
     dependency: "direct main"
     description:
-      name: qcf_quran_plus
-      sha256: a1a3dbe3ce0cdd9298dfc59cc00bb1c0f6405d19fce9cf1bf222588b9555b9ce
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/qcf_quran_plus"
+      relative: true
+    source: path
     version: "0.0.8"
   recase:
     dependency: transitive

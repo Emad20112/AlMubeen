@@ -2,6 +2,7 @@ import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
 import 'package:al_mubeen/core/data/data_result.dart';
 import 'package:al_mubeen/core/data/json_map.dart';
+import 'package:al_mubeen/core/data/request_abort_handle.dart';
 import 'package:al_mubeen/features/quran/data/contracts/quran_data_source.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_api_client.dart';
@@ -11,6 +12,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
     : _apiClient = apiClient;
 
   static const int maxVersesPerPage = 50;
+  static const int maxChapterTextPageSize = 300;
 
   static const _verseFields =
       'text_uthmani,text_uthmani_simple,verse_key,verse_number,'
@@ -158,6 +160,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
     required int ayahNumber,
     required int bookId,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     if (!fetchPolicy.canReadNetwork) {
       return _cacheMiss();
@@ -165,7 +168,11 @@ final class QuranComRemoteDataSource implements QuranDataSource {
 
     return _apiClient.getJson(
       'api/tafsirs/$bookId/chapter/$chapterNumber',
-      queryParameters: {'verse_key': '$chapterNumber:$ayahNumber'},
+      queryParameters: {
+        'verse_key': '$chapterNumber:$ayahNumber',
+        'per_page': '$maxChapterTextPageSize',
+      },
+      abortHandle: abortHandle,
     );
   }
 
@@ -173,18 +180,24 @@ final class QuranComRemoteDataSource implements QuranDataSource {
     required int chapterNumber,
     required int bookId,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     if (!fetchPolicy.canReadNetwork) {
       return _cacheMiss();
     }
 
-    return _apiClient.getJson('api/tafsirs/$bookId/chapter/$chapterNumber');
+    return _apiClient.getJson(
+      'api/tafsirs/$bookId/chapter/$chapterNumber',
+      queryParameters: {'page': '1', 'per_page': '$maxChapterTextPageSize'},
+      abortHandle: abortHandle,
+    );
   }
 
   Future<DataResult<JsonMap>> getTranslationChapter({
     required int chapterNumber,
     required int bookId,
     DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+    RequestAbortHandle? abortHandle,
   }) async {
     if (!fetchPolicy.canReadNetwork) {
       return _cacheMiss();
@@ -195,9 +208,12 @@ final class QuranComRemoteDataSource implements QuranDataSource {
       queryParameters: {
         'resourceId': '$bookId',
         'chapterNumber': '$chapterNumber',
+        'page': '1',
+        'per_page': '$maxChapterTextPageSize',
         'translation_fields':
             'text,resource_name,verse_key,verse_number,chapter_id,resource_id',
       },
+      abortHandle: abortHandle,
     );
   }
 
@@ -225,6 +241,26 @@ final class QuranComRemoteDataSource implements QuranDataSource {
       queryParameters: const {
         'fields': 'id,verse_key,url,format,duration',
         'per_page': '1',
+      },
+    );
+
+    return _readList(result, 'audio_files');
+  }
+
+  Future<DataResult<JsonList>> getSurahAudioFiles({
+    required int recitationId,
+    required int chapterNumber,
+    DataFetchPolicy fetchPolicy = DataFetchPolicy.cacheFirst,
+  }) async {
+    if (!fetchPolicy.canReadNetwork) {
+      return _cacheMiss();
+    }
+
+    final result = await _apiClient.getJson(
+      'api/quran/recitations/$recitationId',
+      queryParameters: {
+        'chapter_number': '$chapterNumber',
+        'fields': 'duration', // Fetch durations as well!
       },
     );
 
