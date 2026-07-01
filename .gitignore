@@ -47,3 +47,4 @@ backend/
 /.env
 /env/app.env
 /backend/.env
+**/build/
