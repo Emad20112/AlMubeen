@@ -64,17 +64,23 @@ final class QuranAudioState {
 }
 
 final class QuranAudioController extends Notifier<QuranAudioState> {
+  static const int _prefetchWindowSize = 5;
+
   late final AudioPlayer _audioPlayer;
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
   String? _loadedKey;
   final Set<String> _prefetchingKeys = <String>{};
+  final Map<String, Uri> _prefetchCache = <String, Uri>{};
+  final List<AyahRef> _bufferedAyahs = <AyahRef>[];
   int _requestId = 0;
+  bool _isAdvancing = false; // حارس منع التخطي المزدوج أثناء الانتقال التلقائي
 
   @override
   QuranAudioState build() {
     _audioPlayer = AudioPlayer();
+    _isAdvancing = false;
     unawaited(_configureAudioSession());
 
     _playerStateSubscription = _audioPlayer.playerStateStream.listen(
@@ -116,60 +122,29 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
           await _audioPlayer.seek(Duration.zero);
         }
         await _audioPlayer.play();
+        unawaited(_prefetchWindowFor(ayahRef, recitationId));
       }
       return;
     }
 
     final reqId = ++_requestId;
-    
+
     state = QuranAudioState(
       currentAyah: ayahRef,
       recitationId: recitationId,
       isLoading: true,
     );
 
-    // Stop current playback to ensure a clean slate and avoid overlapping audio streams
     await _audioPlayer.stop();
     _loadedKey = null;
 
-    debugPrint('🔍 Fetching audio URL for Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}');
-
-    final result = await ref
-        .read(quranAudioRepositoryProvider)
-        .getAyahAudio(
-          verseKey: QuranVerseKey(surah: ayahRef.surah, ayah: ayahRef.ayah),
-          recitationId: recitationId,
-        );
-
-    // If another play request was made while we were fetching, abort this one.
-    if (reqId != _requestId) {
-      debugPrint('⏭️ Audio request cancelled for Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}');
-      return;
-    }
-
-    final audioFile = result.valueOrNull;
-    if (audioFile == null) {
-      debugPrint('❌ Failed to get audio URL: ${result.failureOrNull?.message}');
-      state = QuranAudioState(
-        currentAyah: ayahRef,
-        recitationId: recitationId,
-        errorMessage:
-            result.failureOrNull?.message ?? 'تعذر تجهيز تلاوة هذه الآية.',
-      );
-      return;
-    }
+    debugPrint(
+      '🔍 Building a small audio window for Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}',
+    );
 
     try {
-      debugPrint('✅ Audio URL loaded: ${audioFile.url}');
-      // Use standard URI streaming instead of LockCachingAudioSource to prevent aggressive disk caching & memory leaks
-      final audioSource = AudioSource.uri(audioFile.url);
-      await _audioPlayer.setAudioSource(audioSource);
-      
-      if (reqId != _requestId) return; // Prevent playing if cancelled during setAudioSource
-      
-      _loadedKey = key;
-      await _audioPlayer.play();
-      debugPrint('🔊 Playing audio...');
+      await _playWindow(ayahRef, recitationId);
+      if (reqId != _requestId) return;
     } on Object catch (error) {
       debugPrint('🚨 Quran audio playback error: $error');
       state = QuranAudioState(
@@ -180,42 +155,69 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     }
   }
 
-  /// Prefetch the audio for [ayahRef] and [recitationId] without starting playback.
-  Future<void> prefetchAyah({
-    required AyahRef ayahRef,
-    required int recitationId,
-  }) async {
-    final key = _keyFor(ayahRef, recitationId);
-    if (_loadedKey == key || _prefetchingKeys.contains(key)) {
+  Future<void> _prefetchWindowFor(AyahRef startFrom, int recitationId) async {
+    final window = buildPrefetchWindow(
+      start: startFrom,
+      count: _prefetchWindowSize,
+      nextAyah: _nextAyah,
+    );
+
+    if (window.isEmpty) {
       return;
+    }
+
+    await Future.wait(
+      window.map((ayahRef) => _fetchAyahUri(ayahRef, recitationId)),
+    );
+  }
+
+  Future<Uri> _fetchAyahUri(AyahRef ayahRef, int recitationId) async {
+    final key = _keyFor(ayahRef, recitationId);
+    if (_prefetchCache.containsKey(key)) {
+      return _prefetchCache[key]!;
+    }
+
+    if (_prefetchingKeys.contains(key)) {
+      return _loadAyahUri(ayahRef, recitationId);
     }
 
     _prefetchingKeys.add(key);
     try {
-      final result = await ref
-          .read(quranAudioRepositoryProvider)
-          .getAyahAudio(
-            verseKey: QuranVerseKey(surah: ayahRef.surah, ayah: ayahRef.ayah),
-            recitationId: recitationId,
-          );
-
-      final audioFile = result.valueOrNull;
-      if (audioFile == null) {
-        return;
-      }
-
-      final audioSource = AudioSource.uri(audioFile.url);
-      await _audioPlayer.setAudioSource(audioSource);
-      _loadedKey = key;
-    } on Object catch (_) {
-      // Silently ignore prefetch failures; user can retry by tapping play.
+      debugPrint(
+        '📥 Prefetching next ayah -> Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}',
+      );
+      return await _loadAyahUri(ayahRef, recitationId);
     } finally {
       _prefetchingKeys.remove(key);
     }
   }
 
+  Future<Uri> _loadAyahUri(AyahRef ayahRef, int recitationId) async {
+    final result = await ref
+        .read(quranAudioRepositoryProvider)
+        .getAyahAudio(
+          verseKey: QuranVerseKey(surah: ayahRef.surah, ayah: ayahRef.ayah),
+          recitationId: recitationId,
+        );
+
+    final audioFile = result.valueOrNull;
+    if (audioFile == null) {
+      throw StateError(
+        result.failureOrNull?.message ??
+            'Unable to fetch audio for ayah ${ayahRef.ayah}.',
+      );
+    }
+
+    final key = _keyFor(ayahRef, recitationId);
+    _prefetchCache[key] = audioFile.url;
+    debugPrint(
+      '💾 Prefetched and cached -> Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}',
+    );
+    return audioFile.url;
+  }
+
   Future<void> stop() async {
-    _requestId++; // Cancel any pending play requests
+    _requestId++;
     debugPrint('⏹️ Stopping audio completely.');
     await _audioPlayer.stop();
     _loadedKey = null;
@@ -244,18 +246,74 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     );
 
     if (completed) {
+      if (_isAdvancing) {
+        debugPrint('⏳ Blocked duplicate completion event.');
+        return;
+      }
+
+      _isAdvancing = true;
+
       debugPrint('🏁 Audio playback completed. Advancing to next Ayah.');
       final current = state.currentAyah;
       final recId = state.recitationId;
 
       if (current != null && recId != null) {
-        final next = _nextAyah(current);
-        if (next != null) {
-          unawaited(playOrToggleAyah(ayahRef: next, recitationId: recId));
+        final nextWindowStart = _bufferedAyahs.isNotEmpty
+            ? _nextAyah(_bufferedAyahs.last)
+            : _nextAyah(current);
+        if (nextWindowStart != null) {
+          unawaited(
+            _playWindow(nextWindowStart, recId).then((_) {
+              _isAdvancing = false;
+            }),
+          );
         } else {
-          unawaited(stop());
+          stop().then((_) => _isAdvancing = false);
         }
+      } else {
+        _isAdvancing = false;
       }
+    }
+  }
+
+  Future<void> _playWindow(AyahRef startAyah, int recitationId) async {
+    final window =
+        <AyahRef>[startAyah] +
+        buildPrefetchWindow(
+          start: startAyah,
+          count: _prefetchWindowSize - 1,
+          nextAyah: _nextAyah,
+        );
+
+    if (window.isEmpty) {
+      return;
+    }
+
+    final uris = await Future.wait(
+      window.map((ayahRef) => _fetchAyahUri(ayahRef, recitationId)),
+    );
+
+    final sources = uris.map((uri) => AudioSource.uri(uri)).toList();
+    await _audioPlayer.setAudioSource(
+      ConcatenatingAudioSource(children: sources),
+      initialIndex: 0,
+    );
+
+    _bufferedAyahs
+      ..clear()
+      ..addAll(window);
+
+    _loadedKey = _keyFor(startAyah, recitationId);
+    state = state.copyWith(
+      currentAyah: startAyah,
+      recitationId: recitationId,
+      isLoading: false,
+    );
+    await _audioPlayer.play();
+
+    final nextWindowStart = _nextAyah(window.last);
+    if (nextWindowStart != null) {
+      unawaited(_prefetchWindowFor(nextWindowStart, recitationId));
     }
   }
 
@@ -277,4 +335,24 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   String _keyFor(AyahRef ayahRef, int recitationId) {
     return '$recitationId:${ayahRef.surah}:${ayahRef.ayah}';
   }
+}
+
+List<AyahRef> buildPrefetchWindow({
+  required AyahRef start,
+  required int count,
+  required AyahRef? Function(AyahRef) nextAyah,
+}) {
+  final window = <AyahRef>[];
+  AyahRef? current = start;
+
+  for (int i = 0; i < count; i++) {
+    final next = nextAyah(current!);
+    if (next == null) {
+      break;
+    }
+    window.add(next);
+    current = next;
+  }
+
+  return window;
 }

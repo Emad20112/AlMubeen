@@ -244,7 +244,10 @@ final class QuranComRemoteDataSource implements QuranDataSource {
       },
     );
 
-    return _readList(result, 'audio_files');
+    return result.when(
+      success: (json) => _readListOrSingle(json, 'audio_files', 'audio_file'),
+      error: DataError.new,
+    );
   }
 
   Future<DataResult<JsonList>> getSurahAudioFiles({
@@ -257,14 +260,17 @@ final class QuranComRemoteDataSource implements QuranDataSource {
     }
 
     final result = await _apiClient.getJson(
-      'api/quran/recitations/$recitationId',
+      'api/chapter-reciters/$recitationId/chapter/$chapterNumber',
       queryParameters: {
         'chapter_number': '$chapterNumber',
         'fields': 'duration', // Fetch durations as well!
       },
     );
 
-    return _readList(result, 'audio_files');
+    return result.when(
+      success: (json) => _readListOrSingle(json, 'audio_files', 'audio_file'),
+      error: DataError.new,
+    );
   }
 
   DataResult<JsonMap> _readObject(DataResult<JsonMap> result, String key) {
@@ -293,15 +299,41 @@ final class QuranComRemoteDataSource implements QuranDataSource {
         if (value is JsonList) {
           return DataSuccess(value);
         }
+        if (value is JsonMap) {
+          return DataSuccess([value]);
+        }
 
         return DataError(
           DataFailure(
             kind: DataFailureKind.invalidResponse,
-            message: 'Expected "$key" to be a JSON list.',
+            message: 'Expected "$key" to be a JSON list or object.',
           ),
         );
       },
       error: DataError.new,
+    );
+  }
+
+  DataResult<JsonList> _readListOrSingle(
+    JsonMap json,
+    String listKey,
+    String singleKey,
+  ) {
+    final listValue = json[listKey];
+    if (listValue is JsonList) {
+      return DataSuccess(listValue);
+    }
+
+    final singleValue = json[singleKey];
+    if (singleValue is JsonMap) {
+      return DataSuccess([singleValue]);
+    }
+
+    return DataError(
+      DataFailure(
+        kind: DataFailureKind.invalidResponse,
+        message: 'Expected "$listKey" or "$singleKey" to be present.',
+      ),
     );
   }
 

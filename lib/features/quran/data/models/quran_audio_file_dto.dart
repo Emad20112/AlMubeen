@@ -13,10 +13,28 @@ final class QuranAudioFileDto {
     this.id,
   });
 
-  factory QuranAudioFileDto.fromJson(JsonMap json) {
+  factory QuranAudioFileDto.fromJson(
+    JsonMap json, {
+    QuranVerseKey? fallbackVerseKey,
+  }) {
+    final verseKeyValue = _stringValue(json['verse_key']);
+    final resolvedVerseKey = verseKeyValue != null
+        ? QuranVerseKey.parse(verseKeyValue)
+        : fallbackVerseKey;
+
+    if (resolvedVerseKey == null) {
+      throw FormatException('Missing verse_key for audio entry.', json);
+    }
+
+    final audioUrlValue =
+        _stringValue(json['url']) ?? _stringValue(json['audio_url']);
+    if (audioUrlValue == null || audioUrlValue.isEmpty) {
+      throw FormatException('Missing audio url for audio entry.', json);
+    }
+
     return QuranAudioFileDto(
-      verseKey: QuranVerseKey.parse(_requiredString(json, 'verse_key')),
-      url: _audioUrl(_requiredString(json, 'url')),
+      verseKey: resolvedVerseKey,
+      url: _audioUrl(audioUrlValue),
       duration: _intValue(json['duration']),
       format: _stringValue(json['format']),
       id: _intValue(json['id']),
@@ -47,7 +65,7 @@ final class QuranAudioFileDto {
     if (value.startsWith('//')) {
       return Uri.parse('https:$value');
     }
-    if (value.startsWith('mirrors.quranicaudio.com') || 
+    if (value.startsWith('mirrors.quranicaudio.com') ||
         value.startsWith('audio.qurancdn.com')) {
       return Uri.parse('https://$value');
     }

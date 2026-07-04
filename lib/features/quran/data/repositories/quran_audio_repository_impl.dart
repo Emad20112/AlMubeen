@@ -43,12 +43,15 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
     );
 
     return result.when(
-      success: (audioFiles) => _parseSurahAudioFiles(audioFiles),
+      success: (audioFiles) => _parseSurahAudioFiles(audioFiles, chapterNumber),
       error: DataError.new,
     );
   }
 
-  DataResult<List<QuranAudioFile>> _parseSurahAudioFiles(JsonList audioFiles) {
+  DataResult<List<QuranAudioFile>> _parseSurahAudioFiles(
+    JsonList audioFiles,
+    int chapterNumber,
+  ) {
     try {
       final List<QuranAudioFile> files = [];
       for (final value in audioFiles) {
@@ -58,7 +61,12 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
             value,
           );
         }
-        files.add(QuranAudioFileDto.fromJson(value).toDomain());
+        files.add(
+          QuranAudioFileDto.fromJson(
+            value,
+            fallbackVerseKey: QuranVerseKey(surah: chapterNumber, ayah: 1),
+          ).toDomain(),
+        );
       }
       return DataSuccess(files);
     } on FormatException catch (error, stackTrace) {

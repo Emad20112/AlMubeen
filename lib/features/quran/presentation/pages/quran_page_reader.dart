@@ -239,18 +239,19 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
           return const SizedBox.shrink();
         }
 
-        final slideOffset = Tween<Offset>(begin: beginOffset, end: Offset.zero)
-            .animate(
-              CurvedAnimation(
-                parent: _overlayAnimation,
-                curve: Curves.easeOutCubic,
-              ),
-            )
-            .value;
+        final animation = CurvedAnimation(
+          parent: _overlayAnimation,
+          curve: Curves.easeOutQuint,
+        );
+
+        final slideOffset = Tween<Offset>(
+          begin: beginOffset,
+          end: Offset.zero,
+        ).animate(animation).value;
 
         final opacity = CurvedAnimation(
           parent: _overlayAnimation,
-          curve: Curves.easeOut,
+          curve: Curves.easeInOutCubic,
         ).value;
 
         return FractionalTranslation(
@@ -311,6 +312,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
         fit: StackFit.expand,
         children: [
           Positioned.fill(
+            // Ensure taps hit the scrim overlay first when visible.
             child: GestureDetector(
               onTap: _toggleOverlay,
               behavior: HitTestBehavior.translucent,
@@ -338,7 +340,12 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
             left: 0,
             right: 0,
             bottom: 0,
-            child: AyahAudioPlayerBar(bottomInset: audioBottomInset),
+            child: AnimatedPadding(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(bottom: (audioBottomInset - 60.0)),
+              child: AyahAudioPlayerBar(bottomInset: audioBottomInset),
+            ),
           ),
 
           ValueListenableBuilder<int>(
@@ -378,9 +385,9 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
           ),
           Positioned(
             top: MediaQuery.paddingOf(context).top + 18,
-            right: 16,
+            left: 16,
             child: _buildAnimatedOverlay(
-              beginOffset: const Offset(.35, 0),
+              beginOffset: const Offset(-.35, 0),
               child: QuranReaderBackButton(
                 onPressed: () {
                   Navigator.of(context).pop();

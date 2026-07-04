@@ -22,8 +22,7 @@ class QuranSurahPlayerScreen extends ConsumerStatefulWidget {
       _QuranSurahPlayerScreenState();
 }
 
-class _QuranSurahPlayerScreenState
-    extends ConsumerState<QuranSurahPlayerScreen>
+class _QuranSurahPlayerScreenState extends ConsumerState<QuranSurahPlayerScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animController;
   late final Animation<double> _fadeIn;
@@ -76,8 +75,7 @@ class _QuranSurahPlayerScreenState
       orElse: () => null,
     );
 
-    final accentColor =
-        isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+    final accentColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
     final bgGradient = isDark
         ? const [Color(0xFF1A1210), Color(0xFF241815), Color(0xFF1A1210)]
         : const [Color(0xFFF6F0E5), Color(0xFFFFFCF3), Color(0xFFF6F0E5)];
@@ -121,8 +119,9 @@ class _QuranSurahPlayerScreenState
                       accentColor: accentColor,
                       onChanged: (recitation) {
                         ref
-                            .read(selectedQuranRecitationProvider.notifier)
-                            .state = recitation;
+                                .read(selectedQuranRecitationProvider.notifier)
+                                .state =
+                            recitation;
                         ref
                             .read(appUserPreferencesProvider.notifier)
                             .setPreferredReciter(recitation);
@@ -159,32 +158,6 @@ class _QuranSurahPlayerScreenState
                       playerState: playerState,
                       isDark: isDark,
                       accentColor: accentColor,
-                    ),
-                  ),
-
-                  // ── Ayah counter ──
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'الآية ${_toArabicNum(playerState.currentAyah)}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: accentColor.withValues(alpha: 0.7),
-                          ),
-                        ),
-                        Text(
-                          'من ${_toArabicNum(playerState.totalAyahs)}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: accentColor.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
 
@@ -400,20 +373,24 @@ class _ReciterChooser extends StatelessWidget {
               decoration: BoxDecoration(
                 color: accentColor.withValues(alpha: isDark ? 0.1 : 0.06),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: accentColor.withValues(alpha: 0.15),
-                ),
+                border: Border.all(color: accentColor.withValues(alpha: 0.15)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<int>(
                   value: activeRecitation?.id,
                   isExpanded: true,
-                  icon: Icon(Icons.unfold_more_rounded,
-                      color: accentColor, size: 20),
-                  dropdownColor:
-                      isDark ? AppColors.darkSurfaceHigh : AppColors.parchmentLight,
+                  icon: Icon(
+                    Icons.unfold_more_rounded,
+                    color: accentColor,
+                    size: 20,
+                  ),
+                  dropdownColor: isDark
+                      ? AppColors.darkSurfaceHigh
+                      : AppColors.parchmentLight,
                   style: TextStyle(
-                    color: isDark ? AppColors.parchmentLight : AppColors.maroon800,
+                    color: isDark
+                        ? AppColors.parchmentLight
+                        : AppColors.maroon800,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -506,51 +483,62 @@ class _AyahSeekBar extends ConsumerWidget {
     final posMs = playerState.totalPosition.inMilliseconds.toDouble();
     final durMs = playerState.totalDuration.inMilliseconds.toDouble();
     final maxVal = durMs > 0 ? durMs : 1.0;
+    final remaining = durMs > 0
+        ? (playerState.totalDuration - playerState.totalPosition).isNegative
+              ? Duration.zero
+              : (playerState.totalDuration - playerState.totalPosition)
+        : Duration.zero;
 
     return Column(
       children: [
-        SliderTheme(
-          data: SliderThemeData(
-            trackHeight: 4,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-            activeTrackColor: accentColor,
-            inactiveTrackColor: accentColor.withValues(alpha: 0.18),
-            thumbColor: accentColor,
-            overlayColor: accentColor.withValues(alpha: 0.12),
-          ),
-          child: Slider(
-            value: posMs.clamp(0, maxVal),
-            max: maxVal,
-            onChanged: (val) {
-              ref
-                  .read(quranSurahPlayerProvider.notifier)
-                  .seekTo(Duration(milliseconds: val.toInt()));
-            },
+        Directionality(
+          textDirection: TextDirection.rtl,
+          child: SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 4,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+              activeTrackColor: accentColor,
+              inactiveTrackColor: accentColor.withValues(alpha: 0.18),
+              thumbColor: accentColor,
+              overlayColor: accentColor.withValues(alpha: 0.12),
+            ),
+            child: Slider(
+              value: posMs.clamp(0, maxVal),
+              max: maxVal,
+              onChanged: (val) {
+                ref
+                    .read(quranSurahPlayerProvider.notifier)
+                    .seekTo(Duration(milliseconds: val.toInt()));
+              },
+            ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _formatDuration(playerState.totalPosition),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: accentColor.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w600,
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatDuration(playerState.totalPosition),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: accentColor.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              Text(
-                _formatDuration(playerState.totalDuration),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: accentColor.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w600,
+                Text(
+                  '-${_formatDuration(remaining)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: accentColor.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -688,8 +676,7 @@ class _RepeatAndSleepRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(quranSurahPlayerProvider.notifier);
-    final mutedColor =
-        isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -709,7 +696,9 @@ class _RepeatAndSleepRow extends ConsumerWidget {
           _FeatureChip(
             icon: Icons.bedtime_outlined,
             label: playerState.sleepTimerSettings.isActive
-                ? _formatRemaining(playerState.sleepTimerRemaining ?? Duration.zero)
+                ? _formatRemaining(
+                    playerState.sleepTimerRemaining ?? Duration.zero,
+                  )
                 : 'مؤقت',
             isActive: playerState.sleepTimerSettings.isActive,
             accentColor: accentColor,
@@ -830,7 +819,9 @@ class _SurahChooserButton extends ConsumerWidget {
           ),
           style: FilledButton.styleFrom(
             backgroundColor: accentColor,
-            foregroundColor: isDark ? AppColors.maroon900 : AppColors.parchmentLight,
+            foregroundColor: isDark
+                ? AppColors.maroon900
+                : AppColors.parchmentLight,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
@@ -846,15 +837,15 @@ class _SurahChooserButton extends ConsumerWidget {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => SurahListSheet(
-        currentSurah: playerState.currentSurah,
-      ),
+      builder: (_) => SurahListSheet(currentSurah: playerState.currentSurah),
     ).then((surahNumber) {
       if (surahNumber != null && activeRecitation != null) {
-        ref.read(quranSurahPlayerProvider.notifier).playSurah(
-          surahNumber: surahNumber,
-          recitationId: activeRecitation!.id,
-        );
+        ref
+            .read(quranSurahPlayerProvider.notifier)
+            .playSurah(
+              surahNumber: surahNumber,
+              recitationId: activeRecitation!.id,
+            );
       }
     });
   }
@@ -878,12 +869,16 @@ String _recitationLabel(QuranRecitation recitation) {
 
 String _toArabicNum(int number) {
   const digits = {
-    '0': '٠', '1': '١', '2': '٢', '3': '٣', '4': '٤',
-    '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩',
+    '0': '٠',
+    '1': '١',
+    '2': '٢',
+    '3': '٣',
+    '4': '٤',
+    '5': '٥',
+    '6': '٦',
+    '7': '٧',
+    '8': '٨',
+    '9': '٩',
   };
-  return number
-      .toString()
-      .split('')
-      .map((d) => digits[d] ?? d)
-      .join();
+  return number.toString().split('').map((d) => digits[d] ?? d).join();
 }

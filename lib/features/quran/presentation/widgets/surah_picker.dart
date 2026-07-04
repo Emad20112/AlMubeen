@@ -177,7 +177,7 @@ class _SurahPickerBody extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
             itemBuilder: (context, index) {
-              return _SurahTile(surahNumber: index + 1);
+              return SurahPickerTile(surahNumber: index + 1);
             },
             separatorBuilder: (context, index) => const SizedBox(height: 8),
             itemCount: totalSurahCount,
@@ -188,9 +188,9 @@ class _SurahPickerBody extends StatelessWidget {
             ? 2
             : 3;
         final spacing = width >= AdaptiveBreakpoints.expandedMinWidth
-            ? 14.0
-            : 12.0;
-        final itemExtent = 78.0 + (math.max(textScale, 1.0) - 1) * 36;
+            ? 12.0
+            : 10.0;
+        final itemExtent = 64.0 + (math.max(textScale, 1.0) - 1) * 8;
 
         return GridView.builder(
           padding: const EdgeInsets.all(16),
@@ -201,7 +201,7 @@ class _SurahPickerBody extends StatelessWidget {
             mainAxisExtent: itemExtent,
           ),
           itemBuilder: (context, index) {
-            return _SurahTile(surahNumber: index + 1);
+            return SurahPickerTile(surahNumber: index + 1);
           },
           itemCount: totalSurahCount,
         );
@@ -210,8 +210,8 @@ class _SurahPickerBody extends StatelessWidget {
   }
 }
 
-class _SurahTile extends StatelessWidget {
-  const _SurahTile({required this.surahNumber});
+class SurahPickerTile extends StatelessWidget {
+  const SurahPickerTile({required this.surahNumber, super.key});
 
   final int surahNumber;
 
@@ -221,58 +221,81 @@ class _SurahTile extends StatelessWidget {
     final tileColor = isDark ? AppColors.darkSurfaceHigh : AppColors.parchment;
     final titleColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
     final metaColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final accentColor = isDark ? AppColors.maroon700 : AppColors.maroon800;
     final surahName = getSurahNameArabic(surahNumber);
     final ayahCount = getVerseCount(surahNumber);
     final pageNumber = getPageNumber(surahNumber, 1);
-    final revelation = getPlaceOfRevelation(surahNumber) == 'Makkah'
-        ? 'مكية'
-        : 'مدنية';
+    final isMeccan = getPlaceOfRevelation(surahNumber) == 'Makkah';
+    final revelation = isMeccan ? 'مكية' : 'مدنية';
+    final icon = _surahIconFor(surahNumber, isMeccan: isMeccan);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => Navigator.of(context).pop(surahNumber),
         child: Ink(
           decoration: BoxDecoration(
             color: tileColor,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: metaColor.withValues(alpha: 0.24)),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: accentColor.withValues(alpha: 0.16)),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withValues(alpha: isDark ? 0.08 : 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                _SurahNumberBadge(number: surahNumber),
-                const SizedBox(width: 12),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, size: 18, color: accentColor),
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
                         surahName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: titleColor,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: titleColor,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
-                        '$revelation • $ayahCount آية • صفحة $pageNumber',
+                        '$revelation • $ayahCount آية • ص$pageNumber',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         softWrap: false,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelMedium?.copyWith(color: metaColor),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: metaColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(width: 8),
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: _SurahNumberBadge(number: surahNumber),
                 ),
               ],
             ),
@@ -281,6 +304,14 @@ class _SurahTile extends StatelessWidget {
       ),
     );
   }
+}
+
+IconData _surahIconFor(int surahNumber, {required bool isMeccan}) {
+  if (isMeccan) {
+    return Icons.waves_rounded;
+  }
+
+  return Icons.mosque_rounded;
 }
 
 class _SurahNumberBadge extends StatelessWidget {

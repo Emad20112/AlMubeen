@@ -150,11 +150,12 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
       if (index != null && state.currentSurahAudios.isNotEmpty) {
         final ayahNum = index + 1;
         state = state.copyWith(currentAyah: ayahNum);
+        _syncPlaybackProgress();
       }
     });
     _positionSub = _player.positionStream.listen((pos) {
       state = state.copyWith(position: pos);
-      _recalculateTotalPosition();
+      _syncPlaybackProgress(localPosition: pos);
     });
     _durationSub = _player.durationStream.listen((dur) {
       if (dur != null) {
@@ -227,10 +228,10 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
   /// Jump to a specific ayah number within the current surah.
   Future<void> jumpToAyah(int ayahNumber) async {
     if (ayahNumber < 1 || ayahNumber > state.totalAyahs) return;
-    
+
     final recId = state.recitationId;
     if (recId == null) return;
-    
+
     if (_loadedKey == '$recId:${state.currentSurah}') {
       await _player.seek(Duration.zero, index: ayahNumber - 1);
     } else {
@@ -241,10 +242,12 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
   /// Seek within the surah globally (across all ayahs).
   Future<void> seekTo(Duration globalPosition) async {
     if (state.currentSurahAudios.isEmpty) return;
-    
+
     Duration accumulated = Duration.zero;
     for (int i = 0; i < state.currentSurahAudios.length; i++) {
-      final fileDuration = Duration(seconds: state.currentSurahAudios[i].duration ?? 0);
+      final fileDuration = Duration(
+        seconds: state.currentSurahAudios[i].duration ?? 0,
+      );
       if (globalPosition < accumulated + fileDuration) {
         final localOffset = globalPosition - accumulated;
         await _player.seek(localOffset, index: i);
@@ -252,9 +255,9 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
       }
       accumulated += fileDuration;
     }
-    
+
     await _player.seek(
-      Duration(seconds: state.currentSurahAudios.last.duration ?? 0), 
+      Duration(seconds: state.currentSurahAudios.last.duration ?? 0),
       index: state.currentSurahAudios.length - 1,
     );
   }
@@ -303,7 +306,10 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
 
     final deadline = DateTime.now().add(duration);
     state = state.copyWith(
-      sleepTimerSettings: SleepTimerSettings(isActive: true, duration: duration),
+      sleepTimerSettings: SleepTimerSettings(
+        isActive: true,
+        duration: duration,
+      ),
       sleepTimerRemaining: duration,
     );
 
@@ -381,10 +387,7 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
 
     final result = await ref
         .read(quranAudioRepositoryProvider)
-        .getSurahAudioFiles(
-          chapterNumber: surah,
-          recitationId: recitationId,
-        );
+        .getSurahAudioFiles(chapterNumber: surah, recitationId: recitationId);
 
     if (reqId != _requestId) return;
 
@@ -420,7 +423,7 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
       _updateLoopMode(state.repeatMode);
 
       if (reqId != _requestId) return;
-      
+
       _loadedKey = key;
       await _player.play();
     } on Object catch (error) {
@@ -433,18 +436,30 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
   }
 
   void _recalculateTotalPosition() {
+    _syncPlaybackProgress();
+  }
+
+  void _syncPlaybackProgress({Duration? localPosition}) {
     if (state.currentSurahAudios.isEmpty) return;
+
     final currentIndex = _player.currentIndex ?? 0;
-    
-    Duration accumulated = Duration.zero;
+    var accumulated = Duration.zero;
     for (int i = 0; i < currentIndex; i++) {
       if (i < state.currentSurahAudios.length) {
-        accumulated += Duration(seconds: state.currentSurahAudios[i].duration ?? 0);
+        accumulated += Duration(
+          seconds: state.currentSurahAudios[i].duration ?? 0,
+        );
       }
     }
-    
-    final total = accumulated + state.position;
-    state = state.copyWith(totalPosition: total);
+
+    final resolvedPosition = localPosition ?? state.position;
+    final total = accumulated + resolvedPosition;
+    final totalDuration = state.currentSurahAudios.fold<Duration>(
+      Duration.zero,
+      (sum, file) => sum + Duration(seconds: file.duration ?? 0),
+    );
+
+    state = state.copyWith(totalPosition: total, totalDuration: totalDuration);
   }
 
   void _onPlayerState(PlayerState playerState) {

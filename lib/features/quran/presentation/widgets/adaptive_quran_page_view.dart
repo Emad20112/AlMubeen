@@ -311,40 +311,33 @@ class _QuranPageWithMetadata extends StatelessWidget {
                   height: _PageMetadataSizing.topBlockHeight,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Row(
-                      textDirection: TextDirection.ltr,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(
-                          child: Text(
-                            getSurahNameArabic(surahNumber),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(
-                                  color: titleColor,
-                                  fontWeight: FontWeight.w900,
-                                ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6.0),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              getSurahNameArabic(surahNumber),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    color: titleColor,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14,
+                                  ),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'الجزء ${_toArabicDigits(juzNumber)}، الحزب ${_toArabicDigits(hizbNumber)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.end,
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(
-                                  color: mutedColor,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                        ),
+                        const SizedBox(height: 2),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 2),
                 Expanded(
                   child: Center(
                     child: ConstrainedBox(
@@ -368,46 +361,72 @@ class _QuranPageWithMetadata extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 2),
                 SizedBox(
                   height: _PageMetadataSizing.bottomBlockHeight,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 14),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: surfaceColor.withValues(
-                          alpha: isDark ? 0.9 : 0.96,
-                        ),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: borderColor),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(
-                              alpha: isDark ? 0.08 : 0.04,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'الجزء ${_toArabicDigits(juzNumber)}، الحزب ${_toArabicDigits(hizbNumber)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.start,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(
+                                      color: mutedColor,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                    ),
+                              ),
                             ),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: surfaceColor.withValues(
+                                alpha: isDark ? 0.9 : 0.96,
+                              ),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: borderColor),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.08 : 0.04,
+                                  ),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              _toArabicDigits(pageNumber),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    color: titleColor,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 13,
+                                  ),
+                            ),
                           ),
                         ],
-                      ),
-                      child: Text(
-                        _toArabicDigits(pageNumber),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: titleColor,
-                          fontWeight: FontWeight.w900,
-                        ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
               ],
             ),
           ),
@@ -418,8 +437,8 @@ class _QuranPageWithMetadata extends StatelessWidget {
 }
 
 class _PageMetadataSizing {
-  static const double topBlockHeight = 40;
-  static const double bottomBlockHeight = 36;
+  static const double topBlockHeight = 48;
+  static const double bottomBlockHeight = 30;
 
   static double pageWidth(BuildContext context) {
     return MediaQuery.sizeOf(context).width;
