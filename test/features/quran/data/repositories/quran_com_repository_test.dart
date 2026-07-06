@@ -5,7 +5,9 @@ import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/core/data/json_map.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_reciter_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
+import 'package:al_mubeen/core/data/request_abort_handle.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_api_client.dart';
+
 import 'package:al_mubeen/features/quran/data/remote/quran_com_remote_data_source.dart';
 import 'package:al_mubeen/features/quran/data/repositories/quran_audio_repository_impl.dart';
 import 'package:al_mubeen/features/quran/data/repositories/quran_com_repository.dart';
@@ -54,14 +56,14 @@ void main() {
       final client = _FakeQuranComApiClient({
         'api/verses/2:255': const DataSuccess({
           'verse': {
-          'id': 262,
-          'verse_key': '2:255',
-          'verse_number': 255,
-          'page_number': 42,
-          'juz_number': 3,
-          'hizb_number': 5,
-          'rub_el_hizb_number': 19,
-          'text_uthmani': 'اللَّهُ لَا إِلَـٰهَ إِلَّا هُوَ',
+            'id': 262,
+            'verse_key': '2:255',
+            'verse_number': 255,
+            'page_number': 42,
+            'juz_number': 3,
+            'hizb_number': 5,
+            'rub_el_hizb_number': 19,
+            'text_uthmani': 'اللَّهُ لَا إِلَـٰهَ إِلَّا هُوَ',
           },
         }),
       });
@@ -86,14 +88,14 @@ void main() {
       final client = _FakeQuranComApiClient({
         'api/chapters/2/verses': const DataSuccess({
           'verses': [
-          {
-            'id': 8,
-            'verse_key': '2:1',
-            'verse_number': 1,
-            'page_number': 2,
-            'juz_number': 1,
-            'text_uthmani': 'الم',
-          },
+            {
+              'id': 8,
+              'verse_key': '2:1',
+              'verse_number': 1,
+              'page_number': 2,
+              'juz_number': 1,
+              'text_uthmani': 'الم',
+            },
           ],
           'pagination': {
             'current_page': 1,
@@ -332,6 +334,7 @@ final class _FakeQuranComApiClient implements QuranComApiClient {
   Future<DataResult<JsonMap>> getJson(
     String path, {
     Map<String, String> queryParameters = const {},
+    RequestAbortHandle? abortHandle,
   }) async {
     requests.add(
       _RecordedRequest(
@@ -371,6 +374,7 @@ final class _FakeQuranComApiClient implements QuranComApiClient {
   Future<DataResult<JsonList>> getJsonList(
     String path, {
     Map<String, String> queryParameters = const {},
+    RequestAbortHandle? abortHandle,
   }) async {
     requests.add(
       _RecordedRequest(

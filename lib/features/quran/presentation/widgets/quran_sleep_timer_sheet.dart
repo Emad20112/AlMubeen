@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/features/quran/application/quran_surah_player_controller.dart';
+import 'package:al_mubeen/features/quran/application/quran_surah_player_provider.dart';
+
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +33,7 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
           _selectedDuration = playerState.sleepTimerSettings.duration!;
         });
       }
-      
+
       final prefs = ref.read(appUserPreferencesProvider).value;
       if (prefs != null && prefs.recentSleepTimers.isNotEmpty) {
         setState(() {
@@ -53,16 +55,18 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
 
   Future<void> _saveRecentTimer(Duration duration) async {
     if (duration.inSeconds == 0) return;
-    
-    ref.read(appUserPreferencesProvider.notifier).addRecentSleepTimer(duration.inSeconds);
-    
+
+    ref
+        .read(appUserPreferencesProvider.notifier)
+        .addRecentSleepTimer(duration.inSeconds);
+
     final recent = List<Duration>.from(_recentTimers);
     recent.remove(duration);
     recent.insert(0, duration);
     if (recent.length > 5) {
       recent.removeLast();
     }
-    
+
     setState(() {
       _recentTimers = recent;
     });
@@ -72,11 +76,11 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
   Widget build(BuildContext context) {
     final playerState = ref.watch(quranSurahPlayerProvider);
     final isActive = playerState.sleepTimerSettings.isActive;
-    
+
     // For iOS-like dark theme
     final bgColor = const Color(0xFF000000);
     final surfaceColor = const Color(0xFF1C1C1E);
-    
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Container(
@@ -122,16 +126,14 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                     const SizedBox(width: 60), // Balance
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Picker
                 SizedBox(
                   height: 216,
                   child: CupertinoTheme(
-                    data: const CupertinoThemeData(
-                      brightness: Brightness.dark,
-                    ),
+                    data: const CupertinoThemeData(brightness: Brightness.dark),
                     child: CupertinoTimerPicker(
                       mode: CupertinoTimerPickerMode.hms,
                       initialTimerDuration: _selectedDuration,
@@ -143,9 +145,9 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,16 +155,20 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                     // Cancel/Stop button
                     _CircleButton(
                       label: 'إلغاء',
-                      color: isActive ? Colors.red.withOpacity(0.2) : const Color(0xFF333333),
+                      color: isActive
+                          ? Colors.red.withOpacity(0.2)
+                          : const Color(0xFF333333),
                       textColor: isActive ? Colors.red : Colors.white70,
                       onTap: () {
                         if (isActive) {
-                          ref.read(quranSurahPlayerProvider.notifier).cancelSleepTimer();
+                          ref
+                              .read(quranSurahPlayerProvider.notifier)
+                              .cancelSleepTimer();
                         }
                         Navigator.pop(context);
                       },
                     ),
-                    
+
                     // Start button
                     _CircleButton(
                       label: isActive ? 'تحديث' : 'بدء',
@@ -170,7 +176,9 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                       textColor: const Color(0xFF4CDB5F), // Bright Green
                       onTap: () {
                         if (_selectedDuration.inSeconds > 0) {
-                          ref.read(quranSurahPlayerProvider.notifier).startSleepTimer(_selectedDuration);
+                          ref
+                              .read(quranSurahPlayerProvider.notifier)
+                              .startSleepTimer(_selectedDuration);
                           _saveRecentTimer(_selectedDuration);
                         }
                         Navigator.pop(context);
@@ -178,9 +186,9 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Settings Block
                 Container(
                   decoration: BoxDecoration(
@@ -190,27 +198,47 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                   child: Column(
                     children: [
                       ListTile(
-                        title: const Text('تسمية المؤقت', style: TextStyle(color: Colors.white)),
-                        trailing: const Text('مؤقت النوم', style: TextStyle(color: Colors.white54)),
+                        title: const Text(
+                          'تسمية المؤقت',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        trailing: const Text(
+                          'مؤقت النوم',
+                          style: TextStyle(color: Colors.white54),
+                        ),
                       ),
-                      const Divider(color: Colors.white12, height: 1, indent: 16),
+                      const Divider(
+                        color: Colors.white12,
+                        height: 1,
+                        indent: 16,
+                      ),
                       ListTile(
-                        title: const Text('عند انتهاء المؤقت', style: TextStyle(color: Colors.white)),
+                        title: const Text(
+                          'عند انتهاء المؤقت',
+                          style: TextStyle(color: Colors.white),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('إيقاف المشغّل', style: TextStyle(color: Colors.white54)),
+                            const Text(
+                              'إيقاف المشغّل',
+                              style: TextStyle(color: Colors.white54),
+                            ),
                             const SizedBox(width: 4),
-                            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.white.withOpacity(0.3)),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color: Colors.white.withOpacity(0.3),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Recents
                 if (_recentTimers.isNotEmpty) ...[
                   const Padding(
@@ -225,14 +253,19 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                     ),
                   ),
                   const Divider(color: Colors.white12, height: 1),
-                  
+
                   for (final duration in _recentTimers)
                     Column(
                       children: [
                         ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           onTap: () {
-                            ref.read(quranSurahPlayerProvider.notifier).startSleepTimer(duration);
+                            ref
+                                .read(quranSurahPlayerProvider.notifier)
+                                .startSleepTimer(duration);
                             _saveRecentTimer(duration);
                             Navigator.pop(context);
                           },
@@ -246,10 +279,17 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                           ),
                           trailing: CircleAvatar(
                             backgroundColor: const Color(0xFF1B401D),
-                            child: const Icon(Icons.play_arrow_rounded, color: Color(0xFF4CDB5F)),
+                            child: const Icon(
+                              Icons.play_arrow_rounded,
+                              color: Color(0xFF4CDB5F),
+                            ),
                           ),
                         ),
-                        const Divider(color: Colors.white12, height: 1, indent: 8),
+                        const Divider(
+                          color: Colors.white12,
+                          height: 1,
+                          indent: 8,
+                        ),
                       ],
                     ),
                 ],
@@ -289,10 +329,7 @@ class _CircleButton extends StatelessWidget {
       child: Container(
         width: 86,
         height: 86,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-        ),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
         child: Center(
           child: Text(
             label,

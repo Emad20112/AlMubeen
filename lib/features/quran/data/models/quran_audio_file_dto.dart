@@ -63,20 +63,27 @@ final class QuranAudioFileDto {
 
   static Uri _audioUrl(String value) {
     if (value.startsWith('//')) {
-      return Uri.parse('https:$value');
+      final uri = Uri.parse('https:$value');
+      debugPrint('QuranAudioFileDto: protocol-relative URL -> $uri');
+      return uri;
     }
     if (value.startsWith('mirrors.quranicaudio.com') ||
         value.startsWith('audio.qurancdn.com')) {
-      return Uri.parse('https://$value');
+      final uri = Uri.parse('https://$value');
+      debugPrint('QuranAudioFileDto: host-only URL -> $uri');
+      return uri;
     }
 
     final uri = Uri.parse(value);
     if (uri.hasScheme) {
+      debugPrint('QuranAudioFileDto: absolute URL -> $uri');
       return uri;
     }
 
     final path = value.startsWith('/') ? value.substring(1) : value;
-    return _audioBaseUri.resolve(path);
+    final resolved = _audioBaseUri.resolve(path);
+    debugPrint('QuranAudioFileDto: relative path "$value" resolved to $resolved');
+    return resolved;
   }
 
   static String _requiredString(JsonMap json, String key) {

@@ -4,10 +4,12 @@ import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_download_controller.dart';
 import 'package:al_mubeen/features/quran/application/quran_surah_player_controller.dart';
+import 'package:al_mubeen/features/quran/application/quran_surah_player_provider.dart';
+
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
-import 'package:al_mubeen/features/quran/presentation/widgets/quran_sleep_timer_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/surah_list_sheet.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/surah_player_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart';
@@ -92,7 +94,7 @@ class _QuranSurahPlayerScreenState extends ConsumerState<QuranSurahPlayerScreen>
             ),
           ),
           child: SafeArea(
-            child: FadeTransition(
+            child: FadeTransition(  
               opacity: _fadeIn,
               child: Column(
                 children: [
@@ -151,31 +153,12 @@ class _QuranSurahPlayerScreenState extends ConsumerState<QuranSurahPlayerScreen>
                       ),
                     ),
 
-                  // ── Progress / seek bar ──
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _AyahSeekBar(
-                      playerState: playerState,
-                      isDark: isDark,
-                      accentColor: accentColor,
-                    ),
-                  ),
-
                   const SizedBox(height: 8),
 
-                  // ── Control buttons ──
-                  _PlayerControls(
+                  // ── Player controls (seek bar, playback, repeat & sleep) ──
+                  SurahPlayerControls(
                     playerState: playerState,
                     activeRecitation: activeRecitation,
-                    isDark: isDark,
-                    accentColor: accentColor,
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // ── Repeat & Sleep ──
-                  _RepeatAndSleepRow(
-                    playerState: playerState,
                     isDark: isDark,
                     accentColor: accentColor,
                   ),
@@ -458,329 +441,6 @@ class _DownloadReciterButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Seek bar ───────────────────────────────────────────────────
-
-class _AyahSeekBar extends ConsumerWidget {
-  const _AyahSeekBar({
-    required this.playerState,
-    required this.isDark,
-    required this.accentColor,
-  });
-
-  final SurahPlayerState playerState;
-  final bool isDark;
-  final Color accentColor;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final posMs = playerState.totalPosition.inMilliseconds.toDouble();
-    final durMs = playerState.totalDuration.inMilliseconds.toDouble();
-    final maxVal = durMs > 0 ? durMs : 1.0;
-    final remaining = durMs > 0
-        ? (playerState.totalDuration - playerState.totalPosition).isNegative
-              ? Duration.zero
-              : (playerState.totalDuration - playerState.totalPosition)
-        : Duration.zero;
-
-    return Column(
-      children: [
-        Directionality(
-          textDirection: TextDirection.rtl,
-          child: SliderTheme(
-            data: SliderThemeData(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-              activeTrackColor: accentColor,
-              inactiveTrackColor: accentColor.withValues(alpha: 0.18),
-              thumbColor: accentColor,
-              overlayColor: accentColor.withValues(alpha: 0.12),
-            ),
-            child: Slider(
-              value: posMs.clamp(0, maxVal),
-              max: maxVal,
-              onChanged: (val) {
-                ref
-                    .read(quranSurahPlayerProvider.notifier)
-                    .seekTo(Duration(milliseconds: val.toInt()));
-              },
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _formatDuration(playerState.totalPosition),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: accentColor.withValues(alpha: 0.6),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  '-${_formatDuration(remaining)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: accentColor.withValues(alpha: 0.6),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Player controls ────────────────────────────────────────────
-
-class _PlayerControls extends ConsumerWidget {
-  const _PlayerControls({
-    required this.playerState,
-    required this.activeRecitation,
-    required this.isDark,
-    required this.accentColor,
-  });
-
-  final SurahPlayerState playerState;
-  final QuranRecitation? activeRecitation;
-  final bool isDark;
-  final Color accentColor;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(quranSurahPlayerProvider.notifier);
-    final iconColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Previous
-        IconButton(
-          onPressed: () => controller.previousAyah(),
-          icon: Icon(Icons.skip_previous_rounded, size: 36, color: iconColor),
-        ),
-        const SizedBox(width: 16),
-        // Play / Pause
-        _PlayPauseButton(
-          isPlaying: playerState.isPlaying,
-          isLoading: playerState.isLoading,
-          accentColor: accentColor,
-          isDark: isDark,
-          onTap: () {
-            if (playerState.recitationId != null) {
-              controller.togglePlayPause();
-            } else if (activeRecitation != null) {
-              controller.playSurah(
-                surahNumber: playerState.currentSurah,
-                recitationId: activeRecitation!.id,
-              );
-            }
-          },
-        ),
-        const SizedBox(width: 16),
-        // Next
-        IconButton(
-          onPressed: () => controller.nextAyah(),
-          icon: Icon(Icons.skip_next_rounded, size: 36, color: iconColor),
-        ),
-      ],
-    );
-  }
-}
-
-class _PlayPauseButton extends StatelessWidget {
-  const _PlayPauseButton({
-    required this.isPlaying,
-    required this.isLoading,
-    required this.accentColor,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  final bool isPlaying;
-  final bool isLoading;
-  final Color accentColor;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [const Color(0xFFD8B457), const Color(0xFFB8943A)]
-                : [AppColors.maroon700, AppColors.maroon900],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withValues(alpha: 0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: isLoading
-            ? const Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  color: Colors.white,
-                ),
-              )
-            : Icon(
-                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                size: 38,
-                color: Colors.white,
-              ),
-      ),
-    );
-  }
-}
-
-// ─── Repeat & Sleep row ─────────────────────────────────────────
-
-class _RepeatAndSleepRow extends ConsumerWidget {
-  const _RepeatAndSleepRow({
-    required this.playerState,
-    required this.isDark,
-    required this.accentColor,
-  });
-
-  final SurahPlayerState playerState;
-  final bool isDark;
-  final Color accentColor;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(quranSurahPlayerProvider.notifier);
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Repeat button
-          _FeatureChip(
-            icon: _repeatIcon(playerState.repeatMode),
-            label: _repeatLabel(playerState.repeatMode),
-            isActive: playerState.repeatMode != SurahRepeatMode.off,
-            accentColor: accentColor,
-            mutedColor: mutedColor,
-            onTap: () => controller.cycleRepeatMode(),
-          ),
-          // Sleep timer
-          _FeatureChip(
-            icon: Icons.bedtime_outlined,
-            label: playerState.sleepTimerSettings.isActive
-                ? _formatRemaining(
-                    playerState.sleepTimerRemaining ?? Duration.zero,
-                  )
-                : 'مؤقت',
-            isActive: playerState.sleepTimerSettings.isActive,
-            accentColor: accentColor,
-            mutedColor: mutedColor,
-            onTap: () => _showSleepTimerSheet(context, ref),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatRemaining(Duration d) {
-    if (d.inHours > 0) {
-      return '${d.inHours}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
-    }
-    return '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
-  }
-
-  void _showSleepTimerSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const QuranSleepTimerSheet(),
-    );
-  }
-
-  IconData _repeatIcon(SurahRepeatMode mode) => switch (mode) {
-    SurahRepeatMode.off => Icons.repeat_rounded,
-    SurahRepeatMode.ayah => Icons.repeat_one_rounded,
-    SurahRepeatMode.surah => Icons.repeat_rounded,
-  };
-
-  String _repeatLabel(SurahRepeatMode mode) => switch (mode) {
-    SurahRepeatMode.off => 'تكرار',
-    SurahRepeatMode.ayah => 'تكرار الآية',
-    SurahRepeatMode.surah => 'تكرار السورة',
-  };
-}
-
-class _FeatureChip extends StatelessWidget {
-  const _FeatureChip({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.accentColor,
-    required this.mutedColor,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final Color accentColor;
-  final Color mutedColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isActive ? accentColor : mutedColor;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-            ],
           ),
         ),
       ),

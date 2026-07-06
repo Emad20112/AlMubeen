@@ -1,7 +1,7 @@
+import 'package:al_mubeen/app/bootstrap/app_bootstrap.dart';
 import 'package:al_mubeen/app/theme/app_theme.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
-import 'package:al_mubeen/features/home/presentation/home_page.dart';
-import 'package:al_mubeen/features/onboarding/presentation/welcome_screen.dart';
+import 'package:al_mubeen/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +21,7 @@ class _InMemoryPreferencesStore extends AppUserPreferencesStore {
 }
 
 void main() {
-  testWidgets('home page shows welcome for first-time users', (tester) async {
+  testWidgets('shows onboarding screen for first-time users', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -37,13 +37,13 @@ void main() {
               child: child ?? const SizedBox.shrink(),
             );
           },
-          home: const HomePage(),
+          home: const AppBootstrap(),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(WelcomeScreen), findsOneWidget);
-    expect(find.text('ابدأ الآن', skipOffstage: false), findsOneWidget);
+    expect(find.byType(OnboardingScreen), findsOneWidget);
+    expect(find.text('التالي', skipOffstage: false), findsWidgets);
   });
 }

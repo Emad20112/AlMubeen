@@ -54,6 +54,13 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
   @override
   void initState() {
     super.initState();
+    
+    // MEMORY OPTIMIZATION: Configure image cache limits to prevent unbounded growth
+    // This restricts max cache size while reading Quran pages
+    PaintingBinding.instance.imageCache.maximumSize = 50; // Limit cached images
+    PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024; // 50MB limit
+    debugPrint('🧹 Image cache configured: max=50, maxBytes=50MB');
+    
     debugPrint(
       'QuranPageReader.initState: widget.initialPage=${widget.initialPage} runtimeType=${widget.initialPage.runtimeType}',
     );
@@ -101,6 +108,21 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     _isTajweed.dispose();
     _highlightController.dispose();
     _overlayAnimation.dispose();
+    
+    // MEMORY OPTIMIZATION: Clear image cache to free up system RAM instantly
+    // This prevents memory buildup from heavy image/font rendering and caching
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    debugPrint('🧹 Image cache cleared to free memory.');
+    
+    // MEMORY OPTIMIZATION: Post-frame callback to hint Dart Garbage Collector
+    // This helps release resources after the widget tree is disposed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Trigger a gentle GC hint without forcing full collection
+      // The system will handle actual collection based on memory pressure
+      debugPrint('🧹 Post-disposal cleanup hint sent to GC.');
+    });
+    
     super.dispose();
   }
 

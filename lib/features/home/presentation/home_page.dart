@@ -10,7 +10,6 @@ import 'package:al_mubeen/features/home/presentation/widgets/home_reading_contin
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
-import 'package:al_mubeen/features/onboarding/presentation/welcome_screen.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 
 class HomePage extends ConsumerWidget {
@@ -37,10 +36,6 @@ class HomePage extends ConsumerWidget {
         );
       },
       data: (preferences) {
-        if (!preferences.hasCompletedWelcome) {
-          return const WelcomeScreen();
-        }
-
         final progressAsync = ref.watch(quranReadingProgressEntryProvider);
         if (progressAsync.isLoading) {
           return const AppLoadingView(

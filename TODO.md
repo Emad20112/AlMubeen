@@ -1,18 +1,18 @@
-# TODO
+## TODO - Quran Surah Player Slider Fix
 
-## HomePage UI / متابعة القراءة
-- [ ] تعديل `lib/features/home/presentation/home_page.dart` ليصبح: (HomeHeader + بطاقة متابعة القراءة متصلة بصريًا أسفل الهيدر).
-- [ ] إنشاء Widget لبطاقة `متابعة القراءة` داخل `lib/features/home/presentation/widgets/` (حسب الهوية، Card/InkWell/BoxShadow/BorderRadius وبدعم TextScaler).
-- [ ] ربط البطاقة بآخر موضع محفوظ عبر `quranReadingProgressServiceProvider`.
-- [ ] إظهار "بدء التلاوة" بدل "متابعة القراءة" إذا لم تتوفر بيانات (مثلاً عند عدم وجود entry أو قيمة أولية).
+- [ ] Update `QuranSurahPlayerController`:
+  - [ ] Add cached prefix durations for current batch to compute `totalPosition` efficiently.
+  - [ ] Fix `_syncPlaybackProgress` to avoid repeated heavy calculations and guard against double state updates.
+  - [ ] Ensure `currentAyah` updates only when index changes.
+  - [ ] Ensure `totalDuration` is computed once from the 5 loaded ayahs.
 
-## تجربة المستخدم الجديد (Onboarding / First run)
-- [ ] إنشاء شاشة ترحيب بسيطة: اسم التطبيق + رسالة + زر "ابدأ الآن".
-- [ ] إنشاء صفحة/حالة إعدادات أولية: نمط العرض (فاتح/داكن) + حجم الخط + قارئ افتراضي + تفعيل المتابعة التلقائية + تفعيل وضع الاستماع السهل.
-- [ ] تجهيز منطق تحديد "مستخدم جديد" بناءً على توفر بيانات محفوظة (آخر صفحة/تفضيلات/قارئ/سجل متابعة).
-- [ ] إضافة مسارات (routes) لـ onboarding والانتقال من HomePage.
+- [ ] Update `QuranSurahPlayerScreen` seek bar widget:
+  - [ ] Remove elapsed/remaining time display.
+  - [ ] Show current ayah number text from `playerState.currentAyah`.
+  - [ ] Keep Slider value/max based on `totalPosition/totalDuration`.
 
-## تحقق/اختبار
-- [ ] التأكد من عدم حدوث Overflow ويدعم TextScaling.
-- [ ] تشغيل `flutter analyze` و `flutter test` (أو `flutter run` إذا متاح).
+- [ ] Verification:
+  - [ ] Hot restart and verify Slider movement.
+  - [ ] Verify seeking updates current ayah text correctly.
+  - [ ] Verify max value uses current batch total duration.
 

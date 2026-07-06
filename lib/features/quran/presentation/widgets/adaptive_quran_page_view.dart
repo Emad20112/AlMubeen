@@ -35,12 +35,23 @@ class AdaptiveQuranPageView extends StatefulWidget {
 }
 
 class _AdaptiveQuranPageViewState extends State<AdaptiveQuranPageView> {
-  late final List<QuranPage> _pages = _loadPages();
+  static final GetPage _pageProcessor = GetPage();
+  static bool _warmupDone = false;
   final Map<int, Future<void>> _fontFutures = {};
 
-  static List<QuranPage> _loadPages() {
-    final processor = GetPage()..getQuran(totalPagesCount);
-    return List<QuranPage>.unmodifiable(processor.staticPages);
+  static void _ensurePagesWarm() {
+    if (_warmupDone) return;
+    _warmupDone = true;
+    _pageProcessor.getQuran(totalPagesCount);
+  }
+
+  QuranPage? _pageFor(int pageNumber) {
+    _ensurePagesWarm();
+    final pages = _pageProcessor.staticPages;
+    if (pages.length == totalPagesCount) {
+      return pages[pageNumber - 1];
+    }
+    return null;
   }
 
   Future<void> _fontFutureFor(int pageNumber) {
@@ -48,7 +59,6 @@ class _AdaptiveQuranPageViewState extends State<AdaptiveQuranPageView> {
       if (QcfFontLoader.isFontLoaded(pageNumber)) {
         return Future<void>.value();
       }
-
       return QcfFontLoader.ensureFontLoaded(pageNumber);
     });
   }
@@ -86,23 +96,28 @@ class _AdaptiveQuranPageViewState extends State<AdaptiveQuranPageView> {
                 builder: (context, isTajweed, _) {
                   return PageView.builder(
                     controller: widget.pageController,
-                    itemCount: _pages.length,
+                    itemCount: totalPagesCount,
                     allowImplicitScrolling: false,
                     onPageChanged: (index) {
                       widget.onPageChanged(index + 1);
                     },
                     itemBuilder: (context, index) {
                       final pageNumber = index + 1;
+                      final page = _pageFor(pageNumber);
+
+                      if (page == null) {
+                        return _QuranPageLoading(pageNumber: pageNumber);
+                      }
 
                       return FutureBuilder<void>(
                         future: _fontFutureFor(pageNumber),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState !=
+                        builder: (context, fontSnapshot) {
+                          if (fontSnapshot.connectionState !=
                               ConnectionState.done) {
                             return _QuranPageLoading(pageNumber: pageNumber);
                           }
 
-                          if (snapshot.hasError) {
+                          if (fontSnapshot.hasError) {
                             return _QuranPageLoadError(
                               pageNumber: pageNumber,
                               onRetry: () {
@@ -124,7 +139,7 @@ class _AdaptiveQuranPageViewState extends State<AdaptiveQuranPageView> {
 
                               return _QuranPageWithMetadata(
                                 key: ValueKey('quran_page_$pageNumber'),
-                                page: _pages[index],
+                                page: page,
                                 pageNumber: pageNumber,
                                 highlights: pageHighlights,
                                 onLongPress: widget.onLongPress,
@@ -247,7 +262,7 @@ class _QuranPageLoadError extends StatelessWidget {
   }
 }
 
-class _QuranPageWithMetadata extends StatelessWidget {
+class _QuranPageWithMetadata extends StatefulWidget {
   const _QuranPageWithMetadata({
     super.key,
     required this.page,
@@ -275,18 +290,31 @@ class _QuranPageWithMetadata extends StatelessWidget {
   final TextStyle ayahStyle;
 
   @override
+  State<_QuranPageWithMetadata> createState() => _QuranPageWithMetadataState();
+}
+
+// MEMORY OPTIMIZATION: Use AutomaticKeepAliveClientMixin to prevent unnecessary rebuilds
+// This keeps the heavy Quran page widget alive when off-screen, avoiding expensive re-renders
+// when navigating back and forth between pages
+class _QuranPageWithMetadataState extends State<_QuranPageWithMetadata>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
-    final firstAyah = getFirstAyahOnPage(pageNumber);
+    super.build(context); // Required by AutomaticKeepAliveClientMixin
+    final firstAyah = getFirstAyahOnPage(widget.pageNumber);
     final surahNumber = firstAyah.surah;
     final juzNumber = math.max(1, getJuzNumber(surahNumber, firstAyah.ayah));
     final quarterNumber = getQuarterNumber(surahNumber, firstAyah.ayah);
     final hizbNumber = ((quarterNumber - 1) ~/ 4) + 1;
-    final titleColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final titleColor = widget.isDark ? AppColors.darkInk : AppColors.ink;
+    final mutedColor = widget.isDark ? AppColors.parchmentMuted : AppColors.maroon700;
     final borderColor = AppColors.maroon800.withValues(
-      alpha: isDark ? 0.22 : 0.14,
+      alpha: widget.isDark ? 0.22 : 0.14,
     );
-    final surfaceColor = isDark ? AppColors.darkSurfaceHigh : Colors.white;
+    final surfaceColor = widget.isDark ? AppColors.darkSurfaceHigh : Colors.white;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -346,16 +374,21 @@ class _QuranPageWithMetadata extends StatelessWidget {
                         data: MediaQuery.of(context).copyWith(
                           size: Size(availableWidth, effectivePageHeight),
                         ),
-                        child: QuranSinglePageWidget(
-                          key: ValueKey('quran_page_$pageNumber'),
-                          page: page,
-                          pageIndex: pageNumber,
-                          highlights: highlights,
-                          onLongPress: onLongPress,
-                          pageController: pageController,
-                          isDark: isDark,
-                          isTajweed: isTajweed,
-                          ayahStyle: ayahStyle,
+                        // MEMORY OPTIMIZATION: RepaintBoundary isolates complex vector/font painting
+                        // from the rest of the UI (top/bottom bars, audio controller, timers)
+                        // This prevents unnecessary repaints of the heavy Quran page rendering
+                        child: RepaintBoundary(
+                          child: QuranSinglePageWidget(
+                            key: ValueKey('quran_page_${widget.pageNumber}'),
+                            page: widget.page,
+                            pageIndex: widget.pageNumber,
+                            highlights: widget.highlights,
+                            onLongPress: widget.onLongPress,
+                            pageController: widget.pageController,
+                            isDark: widget.isDark,
+                            isTajweed: widget.isTajweed,
+                            ayahStyle: widget.ayahStyle,
+                          ),
                         ),
                       ),
                     ),
@@ -395,14 +428,14 @@ class _QuranPageWithMetadata extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: surfaceColor.withValues(
-                                alpha: isDark ? 0.9 : 0.96,
+                                alpha: widget.isDark ? 0.9 : 0.96,
                               ),
                               borderRadius: BorderRadius.circular(999),
                               border: Border.all(color: borderColor),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withValues(
-                                    alpha: isDark ? 0.08 : 0.04,
+                                    alpha: widget.isDark ? 0.08 : 0.04,
                                   ),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
@@ -410,7 +443,7 @@ class _QuranPageWithMetadata extends StatelessWidget {
                               ],
                             ),
                             child: Text(
-                              _toArabicDigits(pageNumber),
+                              _toArabicDigits(widget.pageNumber),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleSmall

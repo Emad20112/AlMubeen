@@ -224,6 +224,36 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     state = const QuranAudioState();
   }
 
+  Future<void> seekForward({int seconds = 10}) async {
+    final currentPosition = _audioPlayer.position;
+    final newPosition = currentPosition + Duration(seconds: seconds);
+    final duration = _audioPlayer.duration;
+    
+    if (duration != null && newPosition > duration) {
+      await _audioPlayer.seek(duration);
+    } else {
+      await _audioPlayer.seek(newPosition);
+    }
+    debugPrint('⏩ Seeked forward $seconds seconds');
+  }
+
+  Future<void> seekBackward({int seconds = 10}) async {
+    final currentPosition = _audioPlayer.position;
+    final newPosition = currentPosition - Duration(seconds: seconds);
+    
+    if (newPosition < Duration.zero) {
+      await _audioPlayer.seek(Duration.zero);
+    } else {
+      await _audioPlayer.seek(newPosition);
+    }
+    debugPrint('⏪ Seeked backward $seconds seconds');
+  }
+
+  Future<void> seekTo(Duration position) async {
+    await _audioPlayer.seek(position);
+    debugPrint('🎯 Seeked to position: $position');
+  }
+
   Future<void> _configureAudioSession() async {
     try {
       final session = await AudioSession.instance;

@@ -34,113 +34,157 @@ class AyahAudioPlayerBar extends ConsumerWidget {
         child: Padding(
           padding: EdgeInsets.only(bottom: bottomInset, left: 16, right: 16),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(24),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
+                  horizontal: 16,
+                  vertical: 12,
                 ),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? const Color(0xFF191513).withValues(alpha: 0.9)
-                      : const Color(0xFFF7F4EB).withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(28),
+                      ? const Color(0xFF191513).withValues(alpha: 0.92)
+                      : const Color(0xFFF7F4EB).withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.white.withValues(alpha: 0.48),
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.5),
                     width: 1.2,
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _PlayButton(
-                      isLoading: audioState.isLoading,
-                      isPlaying: audioState.isPlaying,
+                    // Progress slider and time display
+                    _AudioProgress(
+                      audioState: audioState,
                       primaryColor: primaryColor,
-                      onTap: () {
-                        if (audioState.recitationId != null) {
-                          ref
-                              .read(quranAudioControllerProvider.notifier)
-                              .playOrToggleAyah(
-                                ayahRef: currentAyah,
-                                recitationId: audioState.recitationId!,
-                              );
-                        }
+                      onSeek: (position) {
+                        ref
+                            .read(quranAudioControllerProvider.notifier)
+                            .seekTo(position);
                       },
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => _showListeningOptionsSheet(
-                          context,
-                          ref,
-                          audioState,
+                    const SizedBox(height: 12),
+                    // Playback controls
+                    Row(
+                      children: [
+                        // Rewind button (-10s)
+                        _SeekButton(
+                          icon: Icons.replay_10_rounded,
+                          label: '-10',
+                          primaryColor: primaryColor,
+                          onTap: () {
+                            ref
+                                .read(quranAudioControllerProvider.notifier)
+                                .seekBackward(seconds: 10);
+                          },
                         ),
-                        borderRadius: BorderRadius.circular(18),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'سورة ${getSurahNameArabic(currentAyah.surah)}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                    ),
-                              ),
-                              const SizedBox(height: 3),
-                              Row(
+                        const SizedBox(width: 16),
+                        // Play/Pause button
+                        _PlayButton(
+                          isLoading: audioState.isLoading,
+                          isPlaying: audioState.isPlaying,
+                          primaryColor: primaryColor,
+                          onTap: () {
+                            if (audioState.recitationId != null) {
+                              ref
+                                  .read(quranAudioControllerProvider.notifier)
+                                  .playOrToggleAyah(
+                                    ayahRef: currentAyah,
+                                    recitationId: audioState.recitationId!,
+                                  );
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 16),
+                        // Forward button (+10s)
+                        _SeekButton(
+                          icon: Icons.forward_10_rounded,
+                          label: '+10',
+                          primaryColor: primaryColor,
+                          onTap: () {
+                            ref
+                                .read(quranAudioControllerProvider.notifier)
+                                .seekForward(seconds: 10);
+                          },
+                        ),
+                        const Spacer(),
+                        // Surah info and options
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => _showListeningOptionsSheet(
+                              context,
+                              ref,
+                              audioState,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Flexible(
-                                    child: Text(
-                                      recitationLabel,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withValues(alpha: 0.72),
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
+                                  Text(
+                                    'سورة ${getSurahNameArabic(currentAyah.surah)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.titleSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w900,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                        ),
                                   ),
-                                  const SizedBox(width: 6),
-                                  Icon(
-                                    Icons.headphones_rounded,
-                                    size: 16,
-                                    color: primaryColor,
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          recitationLabel,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(alpha: 0.7),
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.headphones_rounded,
+                                        size: 14,
+                                        color: primaryColor,
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: () =>
-                          _showListeningOptionsSheet(context, ref, audioState),
-                      icon: Icon(
-                        Icons.expand_less_rounded,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      tooltip: 'خيارات الاستماع',
-                      visualDensity: VisualDensity.compact,
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () =>
+                              _showListeningOptionsSheet(context, ref, audioState),
+                          icon: Icon(
+                            Icons.expand_less_rounded,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          tooltip: 'خيارات الاستماع',
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.all(8),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -222,13 +266,13 @@ class _PlayButton extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isLoading) {
       return Container(
-        width: 44,
-        height: 44,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
-          color: primaryColor.withValues(alpha: 0.1),
+          color: primaryColor.withValues(alpha: 0.12),
           shape: BoxShape.circle,
         ),
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         child: CircularProgressIndicator(strokeWidth: 2.4, color: primaryColor),
       );
     }
@@ -239,19 +283,150 @@ class _PlayButton extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Container(
-          width: 44,
-          height: 44,
+          width: 52,
+          height: 52,
           decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.12),
+            color: primaryColor.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Icon(
             isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
             color: primaryColor,
-            size: 26,
+            size: 28,
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SeekButton extends StatelessWidget {
+  const _SeekButton({
+    required this.icon,
+    required this.label,
+    required this.primaryColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color primaryColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: primaryColor.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: primaryColor,
+                size: 22,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: primaryColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AudioProgress extends StatelessWidget {
+  const _AudioProgress({
+    required this.audioState,
+    required this.primaryColor,
+    required this.onSeek,
+  });
+
+  final QuranAudioState audioState;
+  final Color primaryColor;
+  final ValueChanged<Duration> onSeek;
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final position = audioState.position;
+    final duration = audioState.duration;
+    final progress = duration.inMilliseconds > 0
+        ? position.inMilliseconds / duration.inMilliseconds
+        : 0.0;
+
+    return Column(
+      children: [
+        SliderTheme(
+          data: SliderThemeData(
+            trackHeight: 4,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+            activeTrackColor: primaryColor,
+            inactiveTrackColor: primaryColor.withValues(alpha: 0.3),
+            thumbColor: primaryColor,
+            overlayColor: primaryColor.withValues(alpha: 0.2),
+          ),
+          child: Slider(
+            value: progress.clamp(0.0, 1.0),
+            onChanged: (value) {
+              if (duration.inMilliseconds > 0) {
+                final newPosition = Duration(
+                  milliseconds: (value * duration.inMilliseconds).round(),
+                );
+                onSeek(newPosition);
+              }
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _formatDuration(position),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                _formatDuration(duration),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
