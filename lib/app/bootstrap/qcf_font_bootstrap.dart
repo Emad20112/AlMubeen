@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 
 final qcfFontBootstrapProvider =
     NotifierProvider<QcfFontBootstrapController, QcfFontBootstrapState>(
@@ -42,8 +41,6 @@ class QcfFontBootstrapState {
 }
 
 class QcfFontBootstrapController extends Notifier<QcfFontBootstrapState> {
-  Future<void>? _warmupTask;
-
   @override
   QcfFontBootstrapState build() {
     return const QcfFontBootstrapState.idle();
@@ -54,27 +51,7 @@ class QcfFontBootstrapController extends Notifier<QcfFontBootstrapState> {
       return Future<void>.value();
     }
 
-    if (_warmupTask != null) {
-      return Future<void>.value();
-    }
-
     state = const QcfFontBootstrapState.ready();
-    _warmupTask = _warmUpOpeningPages();
     return Future<void>.value();
-  }
-
-  Future<void> _warmUpOpeningPages() async {
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-
-      for (var page = 1; page <= 12; page++) {
-        await QcfFontLoader.ensureFontLoaded(page);
-        await Future<void>.delayed(const Duration(milliseconds: 12));
-      }
-    } catch (error) {
-      debugPrint('QCF opening font warmup failed: $error');
-    } finally {
-      _warmupTask = null;
-    }
   }
 }

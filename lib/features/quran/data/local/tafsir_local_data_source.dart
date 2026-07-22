@@ -1,7 +1,7 @@
 import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:drift/drift.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 class TafsirLocalDataSource {
   const TafsirLocalDataSource({required AppDatabase database})
@@ -58,6 +58,35 @@ class TafsirLocalDataSource {
             resourceName: Value(tafsirText.resourceName),
             cachedAt: Value(now),
           ),
+      ]);
+    });
+  }
+
+  /// Save all chapters of tafsir in a single database transaction (fast batch).
+  Future<void> saveAllTafsirTexts({
+    required int resourceId,
+    required Map<int, List<TafsirText>> chapterTexts,
+  }) async {
+    if (chapterTexts.isEmpty) {
+      return;
+    }
+
+    final now = DateTime.now();
+    await _database.batch((batch) {
+      batch.insertAllOnConflictUpdate(_database.tafsirTextCache, [
+        for (final entry in chapterTexts.entries)
+          for (final tafsirText in entry.value)
+            TafsirTextCacheCompanion(
+              resourceId: Value(resourceId),
+              chapterId: Value(entry.key),
+              ayahNumber: Value(
+                tafsirText.verseNumber ??
+                    _ayahNumberFromVerseKey(tafsirText.verseKey),
+              ),
+              tafsirText: Value(tafsirText.text),
+              resourceName: Value(tafsirText.resourceName),
+              cachedAt: Value(now),
+            ),
       ]);
     });
   }

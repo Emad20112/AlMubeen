@@ -1,447 +1,206 @@
-import 'dart:ui';
-
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/widgets/network_error_banner.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
+import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 
-class AyahAudioPlayerBar extends ConsumerWidget {
-  const AyahAudioPlayerBar({this.bottomInset = 60, super.key});
-
-  final double bottomInset;
+class AyahAudioErrorBanner extends ConsumerWidget {
+  const AyahAudioErrorBanner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final audioState = ref.watch(quranAudioControllerProvider);
-    final currentAyah = audioState.currentAyah;
+    final audioState = ref.watch(
+      quranAudioControllerProvider.select(
+        (state) => (
+          currentAyah: state.currentAyah,
+          recitationId: state.recitationId,
+          errorMessage: state.errorMessage,
+        ),
+      ),
+    );
 
-    if (currentAyah == null) {
+    if (audioState.currentAyah == null || audioState.errorMessage == null) {
       return const SizedBox.shrink();
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon700;
-    final recitationLabel = _recitationLabelForState(ref, audioState);
-
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: SafeArea(
-        bottom: true,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: bottomInset, left: 16, right: 16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF191513).withValues(alpha: 0.92)
-                      : const Color(0xFFF7F4EB).withValues(alpha: 0.94),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.white.withValues(alpha: 0.5),
-                    width: 1.2,
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Progress slider and time display
-                    _AudioProgress(
-                      audioState: audioState,
-                      primaryColor: primaryColor,
-                      onSeek: (position) {
-                        ref
-                            .read(quranAudioControllerProvider.notifier)
-                            .seekTo(position);
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    // Playback controls
-                    Row(
-                      children: [
-                        // Rewind button (-10s)
-                        _SeekButton(
-                          icon: Icons.replay_10_rounded,
-                          label: '-10',
-                          primaryColor: primaryColor,
-                          onTap: () {
-                            ref
-                                .read(quranAudioControllerProvider.notifier)
-                                .seekBackward(seconds: 10);
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        // Play/Pause button
-                        _PlayButton(
-                          isLoading: audioState.isLoading,
-                          isPlaying: audioState.isPlaying,
-                          primaryColor: primaryColor,
-                          onTap: () {
-                            if (audioState.recitationId != null) {
-                              ref
-                                  .read(quranAudioControllerProvider.notifier)
-                                  .playOrToggleAyah(
-                                    ayahRef: currentAyah,
-                                    recitationId: audioState.recitationId!,
-                                  );
-                            }
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        // Forward button (+10s)
-                        _SeekButton(
-                          icon: Icons.forward_10_rounded,
-                          label: '+10',
-                          primaryColor: primaryColor,
-                          onTap: () {
-                            ref
-                                .read(quranAudioControllerProvider.notifier)
-                                .seekForward(seconds: 10);
-                          },
-                        ),
-                        const Spacer(),
-                        // Surah info and options
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => _showListeningOptionsSheet(
-                              context,
-                              ref,
-                              audioState,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'سورة ${getSurahNameArabic(currentAyah.surah)}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.titleSmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w900,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          recitationLabel,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(alpha: 0.7),
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.headphones_rounded,
-                                        size: 14,
-                                        color: primaryColor,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: () =>
-                              _showListeningOptionsSheet(context, ref, audioState),
-                          icon: Icon(
-                            Icons.expand_less_rounded,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          tooltip: 'خيارات الاستماع',
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(8),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _recitationLabelForState(WidgetRef ref, QuranAudioState audioState) {
-    final recitationsAsync = ref.watch(quranRecitationsProvider);
-    final preferredReciterId = ref
-        .watch(appUserPreferencesProvider)
-        .maybeWhen(
-          data: (preferences) => preferences.preferredReciterId,
-          orElse: () => null,
-        );
-
-    return recitationsAsync.maybeWhen(
-      data: (recitations) {
-        if (recitations.isEmpty) {
-          return 'اختر القارئ';
-        }
-
-        QuranRecitation activeRecitation = recitations.first;
-        if (audioState.recitationId != null) {
-          for (final recitation in recitations) {
-            if (recitation.id == audioState.recitationId) {
-              activeRecitation = recitation;
-              break;
-            }
-          }
-        } else if (preferredReciterId != null) {
-          for (final recitation in recitations) {
-            if (recitation.id == preferredReciterId) {
-              activeRecitation = recitation;
-              break;
-            }
-          }
-        }
-
-        return _recitationLabel(activeRecitation);
-      },
-      orElse: () => 'جاري تحميل القراء...',
-    );
-  }
-
-  Future<void> _showListeningOptionsSheet(
-    BuildContext context,
-    WidgetRef ref,
-    QuranAudioState audioState,
-  ) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _ListeningOptionsSheet(audioState: audioState),
-    );
-  }
-}
-
-class _PlayButton extends StatelessWidget {
-  const _PlayButton({
-    required this.isLoading,
-    required this.isPlaying,
-    required this.primaryColor,
-    required this.onTap,
-  });
-
-  final bool isLoading;
-  final bool isPlaying;
-  final Color primaryColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          color: primaryColor.withValues(alpha: 0.12),
-          shape: BoxShape.circle,
-        ),
-        padding: const EdgeInsets.all(12),
-        child: CircularProgressIndicator(strokeWidth: 2.4, color: primaryColor),
-      );
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-            color: primaryColor,
-            size: 28,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SeekButton extends StatelessWidget {
-  const _SeekButton({
-    required this.icon,
-    required this.label,
-    required this.primaryColor,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color primaryColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                color: primaryColor,
-                size: 22,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AudioProgress extends StatelessWidget {
-  const _AudioProgress({
-    required this.audioState,
-    required this.primaryColor,
-    required this.onSeek,
-  });
-
-  final QuranAudioState audioState;
-  final Color primaryColor;
-  final ValueChanged<Duration> onSeek;
-
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final position = audioState.position;
-    final duration = audioState.duration;
-    final progress = duration.inMilliseconds > 0
-        ? position.inMilliseconds / duration.inMilliseconds
-        : 0.0;
-
-    return Column(
-      children: [
-        SliderTheme(
-          data: SliderThemeData(
-            trackHeight: 4,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-            activeTrackColor: primaryColor,
-            inactiveTrackColor: primaryColor.withValues(alpha: 0.3),
-            thumbColor: primaryColor,
-            overlayColor: primaryColor.withValues(alpha: 0.2),
-          ),
-          child: Slider(
-            value: progress.clamp(0.0, 1.0),
-            onChanged: (value) {
-              if (duration.inMilliseconds > 0) {
-                final newPosition = Duration(
-                  milliseconds: (value * duration.inMilliseconds).round(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: NetworkErrorBanner(
+        compact: true,
+        message: audioState.errorMessage,
+        onRetry: () {
+          if (audioState.recitationId != null) {
+            ref.read(quranAudioControllerProvider.notifier).playOrToggleAyah(
+                  ayahRef: audioState.currentAyah!,
+                  recitationId: audioState.recitationId!,
                 );
-                onSeek(newPosition);
-              }
-            },
-          ),
+          }
+        },
+      ),
+    );
+  }
+}
+
+class AyahRightAudioControls extends ConsumerWidget {
+  const AyahRightAudioControls({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasAudio = ref.watch(
+      quranAudioControllerProvider.select(
+        (state) => state.currentAyah != null,
+      ),
+    );
+
+    if (!hasAudio) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _CompactIconButton(
+          icon: Icons.stop_rounded,
+          tooltip: 'إيقاف',
+          primaryColor: primaryColor,
+          onTap: () {
+            ref.read(quranAudioControllerProvider.notifier).stop();
+          },
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _formatDuration(position),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                _formatDuration(duration),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+        const SizedBox(width: 2),
+        _CompactIconButton(
+          icon: Icons.forward_10_rounded,
+          tooltip: 'تقديم',
+          primaryColor: primaryColor,
+          onTap: () {
+            ref
+                .read(quranAudioControllerProvider.notifier)
+                .seekForward(seconds: 10);
+          },
         ),
       ],
     );
   }
 }
 
-class _ListeningOptionsSheet extends ConsumerWidget {
-  const _ListeningOptionsSheet({required this.audioState});
+class AyahLeftAudioControls extends ConsumerWidget {
+  const AyahLeftAudioControls({super.key});
 
-  final QuranAudioState audioState;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioState = ref.watch(
+      quranAudioControllerProvider.select(
+        (state) => (
+          currentAyah: state.currentAyah,
+          recitationId: state.recitationId,
+        ),
+      ),
+    );
+
+    if (audioState.currentAyah == null) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _CompactIconButton(
+          icon: Icons.replay_10_rounded,
+          tooltip: 'تأخير',
+          primaryColor: primaryColor,
+          onTap: () {
+            ref
+                .read(quranAudioControllerProvider.notifier)
+                .seekBackward(seconds: 10);
+          },
+        ),
+        const SizedBox(width: 2),
+        _CompactIconButton(
+          icon: Icons.headphones_rounded,
+          tooltip: 'القارئ',
+          primaryColor: primaryColor,
+          onTap: () => _showListeningOptionsSheet(
+            context,
+            currentAyah: audioState.currentAyah!,
+            recitationId: audioState.recitationId,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Future<void> _showListeningOptionsSheet(
+    BuildContext context, {
+    required AyahRef currentAyah,
+    required int? recitationId,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ListeningOptionsSheet(
+        currentAyah: currentAyah,
+        recitationId: recitationId,
+      ),
+    );
+  }
+}
+
+class _CompactIconButton extends StatelessWidget {
+  const _CompactIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.primaryColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final Color primaryColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 26,
+            height: 26,
+            decoration: const BoxDecoration(shape: BoxShape.circle),
+            child: Icon(icon, color: primaryColor, size: 17),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ListeningOptionsSheet extends ConsumerWidget {
+  const _ListeningOptionsSheet({
+    required this.currentAyah,
+    required this.recitationId,
+  });
+
+  final AyahRef currentAyah;
+  final int? recitationId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark
-        ? AppColors.darkSurface
-        : AppColors.parchmentLight;
+    final surfaceColor =
+        isDark ? AppColors.darkSurface : AppColors.parchmentLight;
     final titleColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
     final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
     final preferencesAsync = ref.watch(appUserPreferencesProvider);
@@ -512,7 +271,9 @@ class _ListeningOptionsSheet extends ConsumerWidget {
                           children: [
                             Text(
                               'خيارات الاستماع',
-                              style: Theme.of(context).textTheme.titleLarge
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
                                   ?.copyWith(
                                     color: titleColor,
                                     fontWeight: FontWeight.w900,
@@ -521,7 +282,9 @@ class _ListeningOptionsSheet extends ConsumerWidget {
                             const SizedBox(height: 2),
                             Text(
                               'اختر القارئ وفعّل وضع الاستماع السهل.',
-                              style: Theme.of(context).textTheme.bodySmall
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
                                   ?.copyWith(color: mutedColor),
                             ),
                           ],
@@ -539,15 +302,16 @@ class _ListeningOptionsSheet extends ConsumerWidget {
                     title: Text(
                       'وضع الاستماع السهل',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: titleColor,
-                        fontWeight: FontWeight.w800,
-                      ),
+                            color: titleColor,
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
                     subtitle: Text(
                       'يحافظ على إبقاء التشغيل مريحًا وبسيطًا.',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: mutedColor),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: mutedColor),
                     ),
                     value: easyListeningMode,
                     onChanged: (value) {
@@ -560,34 +324,40 @@ class _ListeningOptionsSheet extends ConsumerWidget {
                   Text(
                     'القراء',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: titleColor,
-                      fontWeight: FontWeight.w900,
-                    ),
+                          color: titleColor,
+                          fontWeight: FontWeight.w900,
+                        ),
                   ),
                   const SizedBox(height: 8),
-                  ref
-                      .watch(quranRecitationsProvider)
-                      .when(
+                  ref.watch(quranRecitationsProvider).when(
                         loading: () => const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                            ),
+                          ),
                         ),
                         error: (error, stackTrace) => Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
                           child: Text(
                             'تعذر تحميل قائمة القراء.',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(color: mutedColor),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: mutedColor),
                           ),
                         ),
                         data: (recitations) {
                           if (recitations.isEmpty) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 24),
                               child: Text(
                                 'لا توجد قراءات متاحة الآن.',
-                                style: Theme.of(context).textTheme.bodyMedium
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
                                     ?.copyWith(color: mutedColor),
                               ),
                             );
@@ -598,36 +368,31 @@ class _ListeningOptionsSheet extends ConsumerWidget {
                               for (final recitation in recitations) ...[
                                 _ListeningRecitationTile(
                                   recitation: recitation,
-                                  isSelected:
-                                      audioState.recitationId ==
-                                          recitation.id ||
-                                      (audioState.recitationId == null &&
-                                          preferredReciterId == recitation.id),
+                                  isSelected: recitationId == recitation.id ||
+                                      (recitationId == null &&
+                                          preferredReciterId ==
+                                              recitation.id),
                                   onTap: () async {
                                     ref
                                             .read(
                                               selectedQuranRecitationProvider
                                                   .notifier,
                                             )
-                                            .state =
-                                        recitation;
+                                            .state = recitation;
                                     await ref
                                         .read(
                                           appUserPreferencesProvider.notifier,
                                         )
                                         .setPreferredReciter(recitation);
 
-                                    if (audioState.currentAyah != null) {
-                                      await ref
-                                          .read(
-                                            quranAudioControllerProvider
-                                                .notifier,
-                                          )
-                                          .playOrToggleAyah(
-                                            ayahRef: audioState.currentAyah!,
-                                            recitationId: recitation.id,
-                                          );
-                                    }
+                                    await ref
+                                        .read(
+                                          quranAudioControllerProvider.notifier,
+                                        )
+                                        .playOrToggleAyah(
+                                          ayahRef: currentAyah,
+                                          recitationId: recitation.id,
+                                        );
 
                                     if (context.mounted) {
                                       Navigator.of(context).pop();
@@ -710,9 +475,9 @@ class _ListeningRecitationTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: titleColor,
-                        fontWeight: FontWeight.w800,
-                      ),
+                            color: titleColor,
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -721,9 +486,10 @@ class _ListeningRecitationTile extends StatelessWidget {
                           : 'مناسب للتشغيل السريع والهادئ',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: mutedColor),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: mutedColor),
                     ),
                   ],
                 ),

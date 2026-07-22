@@ -8,6 +8,8 @@ class AdhkarCategory {
     required this.subtitle,
     required this.iconKey,
     required this.count,
+    this.arabicTitle,
+    this.priority = 99,
   });
 
   final String id;
@@ -15,6 +17,8 @@ class AdhkarCategory {
   final String subtitle;
   final String iconKey;
   final int count;
+  final String? arabicTitle;
+  final int priority;
 
   factory AdhkarCategory.fromJson(Map<String, dynamic> json) {
     return AdhkarCategory(
@@ -23,6 +27,8 @@ class AdhkarCategory {
       subtitle: json['subtitle'] as String,
       iconKey: json['icon_key'] as String,
       count: json['count'] as int,
+      arabicTitle: json['arabic_title'] as String?,
+      priority: json['priority'] as int? ?? 99,
     );
   }
 
@@ -33,6 +39,8 @@ class AdhkarCategory {
       'subtitle': subtitle,
       'icon_key': iconKey,
       'count': count,
+      'arabic_title': arabicTitle,
+      'priority': priority,
     };
   }
 
@@ -42,6 +50,8 @@ class AdhkarCategory {
     String? subtitle,
     String? iconKey,
     int? count,
+    String? arabicTitle,
+    int? priority,
   }) {
     return AdhkarCategory(
       id: id ?? this.id,
@@ -49,6 +59,8 @@ class AdhkarCategory {
       subtitle: subtitle ?? this.subtitle,
       iconKey: iconKey ?? this.iconKey,
       count: count ?? this.count,
+      arabicTitle: arabicTitle ?? this.arabicTitle,
+      priority: priority ?? this.priority,
     );
   }
 }

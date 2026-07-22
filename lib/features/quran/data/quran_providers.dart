@@ -2,12 +2,13 @@ import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/core/config/app_config.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
 import 'package:al_mubeen/core/database/app_database_provider.dart';
+import 'package:al_mubeen/features/quran/application/default_tafsir_seed_service.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_bookmark_service.dart';
-import 'package:al_mubeen/features/quran/data/local/quran_reading_progress.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_reciter_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_resource_catalog_storage.dart';
-import 'package:al_mubeen/features/quran/data/local/translation_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/local/tafsir_local_data_source.dart';
+import 'package:al_mubeen/features/quran/data/local/tafsir_muyassar_asset_data_source.dart';
+import 'package:al_mubeen/features/quran/data/local/translation_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_api_client.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_remote_data_source.dart';
 import 'package:al_mubeen/features/quran/data/repositories/quran_audio_repository_impl.dart';
@@ -16,7 +17,7 @@ import 'package:al_mubeen/features/quran/data/repositories/quran_reciter_reposit
 import 'package:al_mubeen/features/quran/domain/repositories/quran_audio_repository.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
-import 'package:flutter/foundation.dart';
+import 'package:al_mubeen/features/quran/domain/tafsir_defaults.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -51,6 +52,11 @@ final tafsirLocalDataSourceProvider = Provider<TafsirLocalDataSource>((ref) {
   return TafsirLocalDataSource(database: ref.watch(appDatabaseProvider));
 });
 
+final tafsirMuyassarAssetDataSourceProvider =
+    Provider<TafsirMuyassarAssetDataSource>((ref) {
+      return TafsirMuyassarAssetDataSource();
+    });
+
 final translationLocalDataSourceProvider = Provider<TranslationLocalDataSource>(
   (ref) {
     return TranslationLocalDataSource(database: ref.watch(appDatabaseProvider));
@@ -63,7 +69,14 @@ final quranResourceCatalogStorageProvider =
     });
 
 final downloadedTafsirsProvider = FutureProvider<List<Tafsir>>((ref) async {
-  return ref.watch(tafsirLocalDataSourceProvider).getDownloadedTafsirs();
+  try {
+    final downloadedTafsirs = await ref
+        .watch(tafsirLocalDataSourceProvider)
+        .getDownloadedTafsirs();
+    return _prependBuiltInDefaultTafsir(downloadedTafsirs);
+  } catch (_) {
+    return const <Tafsir>[defaultBuiltInTafsir];
+  }
 });
 
 final downloadedTranslationsProvider = FutureProvider<List<Translation>>((
@@ -78,6 +91,16 @@ final quranReciterRepositoryProvider = Provider<QuranReciterRepository>((ref) {
   return QuranReciterRepositoryImpl(
     remoteDataSource: ref.watch(quranComRemoteDataSourceProvider),
     localDataSource: ref.watch(quranReciterLocalDataSourceProvider),
+  );
+});
+
+final defaultTafsirSeedServiceProvider = Provider<DefaultTafsirSeedService>((
+  ref,
+) {
+  return DefaultTafsirSeedService(
+    localDataSource: ref.watch(tafsirLocalDataSourceProvider),
+    assetDataSource: ref.watch(tafsirMuyassarAssetDataSourceProvider),
+    onSeedCompleted: () => ref.invalidate(downloadedTafsirsProvider),
   );
 });
 
@@ -104,13 +127,6 @@ final selectedQuranRecitationProvider = StateProvider<QuranRecitation?>(
   (ref) => null,
 );
 
-final quranReadingProgressServiceProvider =
-    Provider<QuranReadingProgressService>((ref) {
-      return QuranReadingProgressService(
-        database: ref.watch(appDatabaseProvider),
-      );
-    });
-
 final quranBookmarkServiceProvider = Provider<QuranBookmarkService>((ref) {
   return QuranBookmarkService(database: ref.watch(appDatabaseProvider));
 });
@@ -118,27 +134,6 @@ final quranBookmarkServiceProvider = Provider<QuranBookmarkService>((ref) {
 final quranBookmarksProvider = StreamProvider<List<QuranBookmarkEntry>>((ref) {
   return ref.watch(quranBookmarkServiceProvider).watchAll();
 });
-
-/// Returns the last saved page number, or 1 (Al-Fatiha) if no progress exists.
-final quranLastSavedPageProvider = FutureProvider<int>((ref) async {
-  final service = ref.watch(quranReadingProgressServiceProvider);
-  final entry = await service.getLastPosition();
-  return entry?.lastPage ?? 1;
-});
-
-/// Returns the full saved progress entry, or `null` if no progress exists.
-final quranReadingProgressEntryProvider =
-    FutureProvider<QuranReadingProgressEntry?>((ref) async {
-      final service = ref.watch(quranReadingProgressServiceProvider);
-      try {
-        return await service.getLastPosition();
-      } catch (error, stackTrace) {
-        debugPrint(
-          'Failed to load Quran reading progress: $error\n$stackTrace',
-        );
-        return null;
-      }
-    });
 
 /// Provider for fetching the list of available tafsirs
 final tafsirsProvider = FutureProvider<List<Tafsir>>((ref) async {
@@ -238,6 +233,21 @@ final tafsirChapterProvider =
         );
       }
 
+      if (params.resourceId == defaultTafsirResourceId) {
+        final builtInTexts = await _loadBuiltInTafsirChapterTexts(
+          ref: ref,
+          chapterNumber: params.chapterNumber,
+        );
+        if (builtInTexts.isNotEmpty) {
+          return _combineTafsirChapterTexts(
+            builtInTexts,
+            chapterNumber: params.chapterNumber,
+            resourceName:
+                displayResourceName ?? builtInTexts.first.resourceName,
+          );
+        }
+      }
+
       final result = await ref
           .watch(quranRepositoryProvider)
           .getTafsirChapterTexts(
@@ -290,6 +300,23 @@ final tafsirAyahProvider =
           cachedTafsir,
           displayResourceName ?? cachedTafsir.resourceName,
         );
+      }
+
+      if (params.resourceId == defaultTafsirResourceId) {
+        final builtInTexts = await _loadBuiltInTafsirChapterTexts(
+          ref: ref,
+          chapterNumber: params.chapterNumber,
+        );
+        if (builtInTexts.isNotEmpty) {
+          return _withResourceName(
+            _findTafsirAyahText(
+              builtInTexts,
+              chapterNumber: params.chapterNumber,
+              ayahNumber: params.ayahNumber,
+            ),
+            displayResourceName ?? builtInTexts.first.resourceName,
+          );
+        }
       }
 
       // If not in cache, fetch from network
@@ -434,7 +461,46 @@ final translationAyahProvider =
     });
 
 /// Provider for the currently selected tafsir (defaults to Tafsir Muyassar - ID 16)
-final selectedTafsirProvider = StateProvider<int>((ref) => 16);
+final selectedTafsirProvider = StateProvider<int>(
+  (ref) => defaultTafsirResourceId,
+);
+
+List<Tafsir> _prependBuiltInDefaultTafsir(List<Tafsir> tafsirs) {
+  return <Tafsir>[
+    defaultBuiltInTafsir,
+    ...tafsirs.where((tafsir) => tafsir.id != defaultTafsirResourceId),
+  ];
+}
+
+Future<List<TafsirText>> _loadBuiltInTafsirChapterTexts({
+  required Ref ref,
+  required int chapterNumber,
+}) async {
+  final localDataSource = ref.watch(tafsirLocalDataSourceProvider);
+  final assetDataSource = ref.watch(tafsirMuyassarAssetDataSourceProvider);
+  final chapterTexts = await assetDataSource.getChapterTexts(chapterNumber);
+  if (chapterTexts.isEmpty) {
+    return const <TafsirText>[];
+  }
+
+  await localDataSource.saveTafsirTexts(
+    resourceId: defaultTafsirResourceId,
+    chapterId: chapterNumber,
+    tafsirTexts: chapterTexts,
+  );
+  await _syncBuiltInTafsirMetadata(ref, localDataSource);
+  return chapterTexts;
+}
+
+Future<void> _syncBuiltInTafsirMetadata(
+  Ref ref,
+  TafsirLocalDataSource localDataSource,
+) async {
+  if (await localDataSource.isTafsirDownloaded(defaultTafsirResourceId)) {
+    await localDataSource.saveDownloadedTafsir(defaultBuiltInTafsir);
+    ref.invalidate(downloadedTafsirsProvider);
+  }
+}
 
 Future<List<Tafsir>> _fetchTafsirsCatalog({
   required Ref ref,
@@ -581,6 +647,10 @@ Tafsir _mergeTafsir(Tafsir? arabicTafsir, Tafsir? englishTafsir) {
 }
 
 Future<String?> _resolveTafsirDisplayName(Ref ref, int resourceId) async {
+  if (resourceId == defaultTafsirResourceId) {
+    return defaultBuiltInTafsir.name;
+  }
+
   try {
     final tafsirs = await ref.watch(tafsirsProvider.future);
     for (final tafsir in tafsirs) {

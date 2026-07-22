@@ -48,6 +48,74 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
     );
   }
 
+  @override
+  Future<DataResult<Uri>> getChapterAudioUrl({
+    required int reciterId,
+    required int surahNumber,
+  }) async {
+    final result = await _remoteDataSource.getChapterRecitation(
+      reciterId: reciterId,
+      surahNumber: surahNumber,
+    );
+
+    return result.when(
+      success: (json) {
+        try {
+          final audioFile = json['audio_file'];
+          if (audioFile is! JsonMap) {
+            return DataError(
+              const DataFailure(
+                kind: DataFailureKind.invalidResponse,
+                message: 'Expected "audio_file" to be a JSON object.',
+              ),
+            );
+          }
+
+          final audioUrlValue =
+              audioFile['audio_url']?.toString().trim() ??
+              audioFile['url']?.toString().trim();
+
+          if (audioUrlValue == null || audioUrlValue.isEmpty) {
+            return DataError(
+              const DataFailure(
+                kind: DataFailureKind.notFound,
+                message: 'No audio_url found in chapter recitation response.',
+              ),
+            );
+          }
+
+          final url = _resolveAudioUrl(audioUrlValue);
+          return DataSuccess(url);
+        } on Object catch (error, stackTrace) {
+          return DataError(
+            DataFailure(
+              kind: DataFailureKind.parsing,
+              message: 'Failed to parse chapter recitation response.',
+              cause: error,
+              stackTrace: stackTrace,
+            ),
+          );
+        }
+      },
+      error: DataError.new,
+    );
+  }
+
+  static Uri _resolveAudioUrl(String value) {
+    if (value.startsWith('//')) {
+      return Uri.parse('https:$value');
+    }
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return Uri.parse(value);
+    }
+    if (value.startsWith('mirrors.quranicaudio.com') ||
+        value.startsWith('audio.qurancdn.com')) {
+      return Uri.parse('https://$value');
+    }
+    final path = value.startsWith('/') ? value.substring(1) : value;
+    return Uri.parse('https://mirrors.quranicaudio.com/$path');
+  }
+
   DataResult<List<QuranAudioFile>> _parseSurahAudioFiles(
     JsonList audioFiles,
     int chapterNumber,

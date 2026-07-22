@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 @immutable
 class AyahRef {

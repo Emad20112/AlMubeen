@@ -4,6 +4,6 @@ import 'quran_surah_player_controller.dart';
 
 /// Riverpod provider used by the UI widgets for the Surah player.
 final quranSurahPlayerProvider =
-    NotifierProvider<QuranSurahPlayerController, SurahPlayerState>(
+    NotifierProvider.autoDispose<QuranSurahPlayerController, SurahPlayerState>(
       QuranSurahPlayerController.new,
     );

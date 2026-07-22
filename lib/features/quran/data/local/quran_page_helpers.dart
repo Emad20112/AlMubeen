@@ -1,9 +1,133 @@
 import 'package:flutter/foundation.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 /// Helper functions for Quran page-related calculations that are not
-/// directly available in the qcf_quran_plus package.
+/// directly available in the qcf_quran package.
+
+// ---------------------------------------------------------------------------
+// Lightweight Arabic-digit converter (avoids repeated string splits/maps)
+// ---------------------------------------------------------------------------
+const _kArabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+
+/// Converts an integer to its Arabic-digit string representation.
+/// E.g. 123 → '١٢٣'
+String convertToArabicDigits(int number) {
+  if (number == 0) return _kArabicDigits[0];
+  final buf = StringBuffer();
+  final s = number.toString();
+  for (var i = 0; i < s.length; i++) {
+    buf.write(_kArabicDigits[s.codeUnitAt(i) - 0x30]);
+  }
+  return buf.toString();
+}
+
+// ---------------------------------------------------------------------------
+// Pre-computed page metadata cache (built once, O(1) lookup thereafter)
+// ---------------------------------------------------------------------------
+
+/// Holds pre-computed metadata for a single Mushaf page.
+@immutable
+class PageMetadata {
+  const PageMetadata({
+    required this.surahNameArabic,
+    required this.juzHizbText,
+  });
+
+  /// Placeholder used while the list is being populated.
+  const PageMetadata._empty()
+      : surahNameArabic = '',
+        juzHizbText = '';
+
+  /// The Arabic name of the primary surah on this page.
+  final String surahNameArabic;
+
+  /// Formatted "الجزء … الحزب …" string for the page header.
+  final String juzHizbText;
+}
+
+/// Lazily-initialized, process-wide cache for page metadata.
+///
+/// Metadata is computed on-demand per page instead of all 604 at once,
+/// preventing main-thread blocking on first access.
+class QuranPageMetadataCache {
+  QuranPageMetadataCache._();
+
+  static final QuranPageMetadataCache instance = QuranPageMetadataCache._();
+
+  final Map<int, PageMetadata> _cache = {};
+
+  /// Returns the cached metadata for [pageNumber] (1-based, clamped).
+  PageMetadata forPage(int pageNumber) {
+    final idx = (pageNumber - 1).clamp(0, totalPagesCount - 1);
+    return _cache.putIfAbsent(idx, () => _buildOne(idx + 1));
+  }
+
+  /// Builds metadata for a single page (~microseconds).
+  static PageMetadata _buildOne(int page) {
+    final surah = getSurahNumberFromPage(page);
+    final surahName = getSurahNameArabic(surah);
+
+    final first = getFirstAyahOnPage(page);
+    final juz = getJuzNumber(first.surah, first.ayah);
+    final quarter = getQuarterNumber(first.surah, first.ayah);
+    final hizb = ((quarter - 1) ~/ 4) + 1;
+
+    return PageMetadata(
+      surahNameArabic: surahName,
+      juzHizbText:
+          'الجزء ${convertToArabicDigits(juz)}  الحزب ${convertToArabicDigits(hizb)}',
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pre-computed surah metadata (name, page, verse count) for search & lists
+// ---------------------------------------------------------------------------
+
+/// Holds pre-computed metadata for a single surah, useful for search and picker
+/// screens where we iterate all 114 surahs on every keystroke.
+@immutable
+class SurahMetadata {
+  const SurahMetadata({
+    required this.number,
+    required this.nameArabic,
+    required this.firstPage,
+    required this.verseCount,
+  });
+
+  final int number;
+  final String nameArabic;
+  final int firstPage;
+  final int verseCount;
+}
+
+/// Lazily-built list of all 114 surahs. Construction is ~1 ms.
+class QuranSurahMetadataCache {
+  QuranSurahMetadataCache._();
+
+  static final QuranSurahMetadataCache instance = QuranSurahMetadataCache._();
+
+  late final List<SurahMetadata> _surahs = _buildAll();
+
+  List<SurahMetadata> get all => _surahs;
+
+  static List<SurahMetadata> _buildAll() {
+    return List<SurahMetadata>.generate(totalSurahCount, (i) {
+      final num = i + 1;
+      return SurahMetadata(
+        number: num,
+        nameArabic: getSurahNameArabic(num),
+        firstPage: getPageNumber(num, 1),
+        verseCount: getVerseCount(num),
+      );
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Raw helpers (still used by the cache builder and by AudioController etc.)
+// ---------------------------------------------------------------------------
 
 /// Returns the surah number for a given page number.
 /// If the page contains multiple surahs, returns the first one.
@@ -13,77 +137,12 @@ int getSurahNumberFromPage(int pageNumber) {
     if (pageData.isEmpty) return 1;
 
     final first = pageData.first;
-
-    // Common simple case: an integer surah number
-    if (first is int) return first;
-    if (first is double) return first.toInt();
-    if (first is String) return int.tryParse(first) ?? 1;
-
-    // If the element is a Map, try common keys
-    if (first is Map) {
-      for (final key in [
-        'surah',
-        'surahNumber',
-        'surah_number',
-        'chapter',
-        'chapterNumber',
-        'chapter_number',
-        'sura',
-      ]) {
-        if (first.containsKey(key)) {
-          final v = first[key];
-          if (v is int) return v;
-          if (v is double) return v.toInt();
-          if (v is String) return int.tryParse(v) ?? 1;
-        }
-      }
-
-      // If the map only has one value, and it's numeric, use it
-      if (first.values.length == 1) {
-        final v = first.values.first;
-        if (v is int) return v;
-        if (v is double) return v.toInt();
-        if (v is String) return int.tryParse(v) ?? 1;
-      }
+    if (first is Map && first.containsKey('surah')) {
+      final v = first['surah'];
+      if (v is int) return v;
+      if (v is double) return v.toInt();
+      if (v is String) return int.tryParse(v) ?? 1;
     }
-
-    // Try dynamic property access for potential library objects.
-    // We avoid advanced reflection and instead try common patterns safely.
-    try {
-      final dyn = first as dynamic;
-      for (final prop in [
-        'surah',
-        'chapter',
-        'sura',
-        'surahNumber',
-        'chapterNumber',
-      ]) {
-        // If object provides toJson(), call it and inspect the map.
-        try {
-          final maybeMap = dyn.toJson();
-          if (maybeMap is Map && maybeMap.containsKey(prop)) {
-            final val = maybeMap[prop];
-            if (val is int) return val;
-            if (val is double) return val.toInt();
-            if (val is String) return int.tryParse(val) ?? 1;
-          }
-        } catch (_) {}
-
-        // If the dynamic object itself behaves like a Map, check directly.
-        try {
-          if (dyn is Map && dyn.containsKey(prop)) {
-            final val = dyn[prop];
-            if (val is int) return val;
-            if (val is double) return val.toInt();
-            if (val is String) return int.tryParse(val) ?? 1;
-          }
-        } catch (_) {}
-      }
-    } catch (_) {}
-
-    // Last resort: attempt to parse the string representation
-    final parsed = int.tryParse(first.toString());
-    if (parsed != null) return parsed;
   } catch (e, st) {
     debugPrint('getSurahNumberFromPage failed for page=$pageNumber: $e\n$st');
   }
@@ -111,4 +170,11 @@ AyahRef getFirstAyahOnPage(int pageNumber) {
     surah: getSurahNumberFromPage(pageNumber),
     ayah: 1,
   );
+}
+
+/// Returns the Rub' al-Hizb (quarter) number (1-240) for a given surah and verse.
+int getQuarterNumber(int surahNumber, int verseNumber) {
+  final juzNum = getJuzNumber(surahNumber, verseNumber);
+  if (juzNum < 1) return 1;
+  return ((juzNum - 1) * 8) + 1;
 }

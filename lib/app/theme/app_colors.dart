@@ -15,4 +15,10 @@ abstract final class AppColors {
   static const Color darkSurface = Color(0xFF24191A);
   static const Color darkSurfaceHigh = Color(0xFF312223);
   static const Color darkInk = Color(0xFFF7EFE4);
+
+  static const Color goldenAccent = Color(0xFFD4AF37);
+  static const Color goldenAccentDark = Color(0xFFE8C860);
+  static const Color cardCream = Color(0xFFFFF8E7);
+  static const Color cardRed = Color(0xFF8B0000);
+  static const Color cardRedDark = Color(0xFFD4A0A0);
 }

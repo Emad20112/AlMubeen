@@ -1,7 +1,7 @@
 import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:drift/drift.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 class TranslationLocalDataSource {
   const TranslationLocalDataSource({required AppDatabase database})

@@ -10,7 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Future<void> showQuranReaderSettingsSheet({
   required BuildContext context,
   required int currentPage,
-  required ValueNotifier<bool> isTajweedListenable,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -20,7 +19,6 @@ Future<void> showQuranReaderSettingsSheet({
     builder: (_) => _QuranReaderSettingsSheet(
       parentContext: context,
       currentPage: currentPage,
-      isTajweedListenable: isTajweedListenable,
     ),
   );
 }
@@ -29,12 +27,10 @@ class _QuranReaderSettingsSheet extends ConsumerStatefulWidget {
   const _QuranReaderSettingsSheet({
     required this.parentContext,
     required this.currentPage,
-    required this.isTajweedListenable,
   });
 
   final BuildContext parentContext;
   final int currentPage;
-  final ValueNotifier<bool> isTajweedListenable;
 
   @override
   ConsumerState<_QuranReaderSettingsSheet> createState() =>
@@ -93,7 +89,7 @@ class _QuranReaderSettingsSheetState
         : Icons.dark_mode_rounded;
     final buttonLabel = isDark ? 'فاتح' : 'داكن';
     final fontScale = (_draftFontScale ?? preferences.fontScale)
-        .clamp(0.9, 1.25)
+        .clamp(0.55, 1.25)
         .toDouble();
 
     return Container(
@@ -298,9 +294,9 @@ class _QuranReaderSettingsSheetState
                               ),
                               Slider(
                                 value: fontScale,
-                                min: 0.9,
+                                min: 0.55,
                                 max: 1.25,
-                                divisions: 7,
+                                divisions: 14,
                                 label: '${(fontScale * 100).round()}%',
                                 activeColor: AppColors.maroon800,
                                 inactiveColor: AppColors.maroon800.withValues(
@@ -312,7 +308,7 @@ class _QuranReaderSettingsSheetState
                                 onChangeEnd: (value) {
                                   setState(() => _draftFontScale = null);
                                   preferencesNotifier.setFontScale(
-                                    value.clamp(0.9, 1.25).toDouble(),
+                                    value.clamp(0.55, 1.25).toDouble(),
                                   );
                                 },
                               ),
@@ -430,27 +426,6 @@ class _QuranReaderSettingsSheetState
                                 spacing: tileSpacing,
                                 runSpacing: tileSpacing,
                                 children: [
-                                  SizedBox(
-                                    width: tileWidth,
-                                    child: ValueListenableBuilder<bool>(
-                                      valueListenable:
-                                          widget.isTajweedListenable,
-                                      builder: (context, isTajweed, _) {
-                                        return _ToggleActionCard(
-                                          icon: Icons.auto_awesome_rounded,
-                                          title: 'تفعيل التجويد',
-                                          subtitle:
-                                              'عرض ألوان التجويد على صفحات المصحف',
-                                          accentColor: const Color(0xFF2F7A6B),
-                                          value: isTajweed,
-                                          onChanged: (value) {
-                                            widget.isTajweedListenable.value =
-                                                value;
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
                                   if (_isPageBookmarked != null)
                                     SizedBox(
                                       width: tileWidth,

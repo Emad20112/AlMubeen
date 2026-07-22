@@ -1,25 +1,28 @@
 import 'dart:async';
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
 import 'package:al_mubeen/features/quran/application/quran_highlight_controller.dart';
+import 'package:al_mubeen/features/quran/data/models/highlight_verse.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
-import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
-import 'package:al_mubeen/features/quran/presentation/widgets/adaptive_quran_page_view.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_audio_player_bar.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_interaction_overlay.dart';
-import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_back_button.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_bookmarks_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_bottom_panel.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_header.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_icon_nav_bar.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_search_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_settings_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_scrim.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/surah_picker.dart';
+import 'package:al_mubeen/features/quran/presentation/pages/quran_more_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:go_router/go_router.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 class QuranPageReader extends ConsumerStatefulWidget {
   const QuranPageReader({
@@ -38,11 +41,12 @@ class QuranPageReader extends ConsumerStatefulWidget {
 }
 
 class _QuranPageReaderState extends ConsumerState<QuranPageReader>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final PageController _pageController;
   late final ValueNotifier<int> _currentPage;
-  late final ValueNotifier<bool> _isTajweed;
   late final QuranHighlightController _highlightController;
+  Timer? _saveProgressDebounce;
+  int? _lastPersistedPage;
 
   /// Controls the header/footer overlay visibility.
   late final AnimationController _overlayAnimation;
@@ -54,16 +58,8 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
   @override
   void initState() {
     super.initState();
-    
-    // MEMORY OPTIMIZATION: Configure image cache limits to prevent unbounded growth
-    // This restricts max cache size while reading Quran pages
-    PaintingBinding.instance.imageCache.maximumSize = 50; // Limit cached images
-    PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024; // 50MB limit
-    debugPrint('🧹 Image cache configured: max=50, maxBytes=50MB');
-    
-    debugPrint(
-      'QuranPageReader.initState: widget.initialPage=${widget.initialPage} runtimeType=${widget.initialPage.runtimeType}',
-    );
+    WidgetsBinding.instance.addObserver(this);
+
     late final int initialPage;
     try {
       initialPage = widget.initialPage.clamp(1, totalPagesCount).toInt();
@@ -76,7 +72,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
     _pageController = PageController(initialPage: initialPage - 1);
     _currentPage = ValueNotifier<int>(initialPage);
-    _isTajweed = ValueNotifier<bool>(true);
+    _lastPersistedPage = initialPage;
     _highlightController = QuranHighlightController();
     _overlayAnimation = AnimationController(
       vsync: this,
@@ -92,64 +88,55 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
         );
       });
     }
-
-    unawaited(QcfFontLoader.preloadPages(initialPage, radius: 3));
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _saveCurrentProgress(initialPage);
-    });
   }
 
   @override
   void dispose() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    WidgetsBinding.instance.removeObserver(this);
+    _saveProgressDebounce?.cancel();
+    unawaited(_persistCurrentPage(_currentPage.value));
     _pageController.dispose();
     _currentPage.dispose();
-    _isTajweed.dispose();
     _highlightController.dispose();
     _overlayAnimation.dispose();
-    
-    // MEMORY OPTIMIZATION: Clear image cache to free up system RAM instantly
-    // This prevents memory buildup from heavy image/font rendering and caching
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
-    debugPrint('🧹 Image cache cleared to free memory.');
-    
-    // MEMORY OPTIMIZATION: Post-frame callback to hint Dart Garbage Collector
-    // This helps release resources after the widget tree is disposed
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Trigger a gentle GC hint without forcing full collection
-      // The system will handle actual collection based on memory pressure
-      debugPrint('🧹 Post-disposal cleanup hint sent to GC.');
-    });
-    
+
     super.dispose();
   }
 
   void _handlePageChanged(int page) {
     _currentPage.value = page;
-    unawaited(QcfFontLoader.preloadPages(page, radius: 3));
-    _saveCurrentProgress(page);
+    _schedulePersistCurrentPage(page);
   }
 
-  void _saveCurrentProgress(int page) {
-    final surahNumber = getSurahNumberFromPage(page);
-    ref
-        .read(quranReadingProgressServiceProvider)
-        .savePosition(page: page, surahNumber: surahNumber);
-  }
-
-  void _goToPage(int page) {
+  Future<void> _goToPage(int page) async {
     final boundedPage = page.clamp(1, totalPagesCount).toInt();
     if (boundedPage == _currentPage.value) {
       return;
     }
 
-    _pageController.animateToPage(
-      boundedPage - 1,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    );
+    final pageDifference = (boundedPage - _currentPage.value).abs();
+
+    if (pageDifference > 2) {
+      if (mounted) {
+        _pageController.jumpToPage(boundedPage - 1);
+      }
+      _schedulePersistCurrentPage(boundedPage);
+    } else {
+      _pageController.animateToPage(
+        boundedPage - 1,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      unawaited(_persistCurrentPage(_currentPage.value));
+    }
   }
 
   void _toggleOverlay() {
@@ -172,17 +159,185 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     _toggleOverlay();
   }
 
+  void _schedulePersistCurrentPage(int page) {
+    _saveProgressDebounce?.cancel();
+    _saveProgressDebounce = Timer(const Duration(milliseconds: 900), () {
+      unawaited(_persistCurrentPage(page));
+    });
+  }
+
+  Future<void> _persistCurrentPage(int page) async {
+    if (_lastPersistedPage == page) {
+      return;
+    }
+
+    _lastPersistedPage = page;
+    await ref.read(appUserPreferencesProvider.notifier).setLastQuranPage(page);
+  }
+
   Color _highlightColor(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
         ? const Color(0xFFD8B457).withValues(alpha: 0.42)
         : AppColors.maroon700.withValues(alpha: 0.18);
   }
 
-  /// Sync highlight and page position to the currently-playing ayah.
-  void _syncAudioHighlight(QuranAudioState audioState) {
-    final currentAyah = audioState.currentAyah;
+  // --- Quran page header/footer helpers ---
 
-    if (currentAyah == null || !audioState.isPlaying) {
+  // Pre-computed cache: built once, used on every page build.
+  static final QuranPageMetadataCache _pageMeta =
+      QuranPageMetadataCache.instance;
+
+  // --- Quran page header/footer helpers ---
+
+  Widget _buildPageView(
+    BuildContext context,
+    List<HighlightVerse> highlights,
+    bool isDark,
+    double fontScale,
+  ) {
+    const headerHeight = 38.0;
+    const footerHeight = 24.0;
+
+    // Convert highlights list to a Map keyed by (surah, verse) for O(1) lookup.
+    final Map<(int, int), Color> highlightMap = highlights.isEmpty
+        ? const {}
+        : {for (final h in highlights) (h.surah, h.verseNumber): h.color};
+
+    Color? getVerseHighlight(int surah, int verse) =>
+        highlightMap.isEmpty ? null : highlightMap[(surah, verse)];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Compute verseHeight so 15 Mushaf lines fit the screen exactly.
+        // QcfPage internally adds padding: top 38 + bottom 24 = 62 px.
+        final availableHeight = constraints.maxHeight;
+        const int linesPerPage = 15;
+        const double internalPadding = 62.0;
+        final fontSize = getFontSize(1, context);
+
+        // Screen-adaptive scaling: reference width is 390px (standard phone).
+        // Smaller phones get smaller fonts, larger tablets get larger fonts.
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final screenAdaptiveFactor = (screenWidth / 390).clamp(0.82, 1.18);
+
+        // The Madina Mushaf layout cannot handle horizontal wrapping.
+        // We tightly clamp the fontScale for the Mushaf text to prevent
+        // lines from breaking, while letting the full fontScale apply
+        // to Tafsir/Translations via the global text scaler.
+        final safeFontScale = (fontScale * screenAdaptiveFactor).clamp(
+          0.55,
+          1.15,
+        );
+        final effectiveFontSize = fontSize * safeFontScale;
+
+        final computedVerseHeight =
+            (availableHeight - internalPadding) /
+            (linesPerPage * effectiveFontSize);
+
+        final baseTheme = isDark ? QcfThemeData.dark() : const QcfThemeData();
+        final theme = baseTheme.copyWith(verseHeight: computedVerseHeight);
+
+        return PageView.builder(
+          controller: _pageController,
+          scrollDirection: Axis.horizontal,
+          itemCount: totalPagesCount,
+          onPageChanged: _handlePageChanged,
+          itemBuilder: (context, index) {
+            final pageNumber = index + 1;
+            final meta = _pageMeta.forPage(pageNumber);
+            final textColor = isDark
+                ? const Color(0xFFE0E0E0)
+                : const Color(0xFF3A3A3A);
+
+            return Stack(
+              children: [
+                RepaintBoundary(
+                  child: QcfPage(
+                    pageNumber: pageNumber,
+                    verseBackgroundColor: getVerseHighlight,
+                    onLongPressDown: (surah, verse, details) =>
+                        _handleLongPress(surah, verse, details),
+                    theme: theme,
+                    sp: safeFontScale,
+                  ),
+                ),
+                // Header: Juz/Hizb (right) & Surah name (left)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: headerHeight,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          Text(
+                            meta.juzHizbText,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                              height: 1.2,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            meta.surahNameArabic,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Footer: Page number (right side)
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: footerHeight,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          Text(
+                            convertToArabicDigits(pageNumber),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                              height: 1.2,
+                            ),
+                          ),
+                          const Spacer(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Sync highlight and page position to the currently-playing ayah.
+  void _syncAudioHighlight({
+    required AyahRef? currentAyah,
+    required bool isPlaying,
+  }) {
+    if (currentAyah == null || !isPlaying) {
       // Audio stopped – clear the audio-driven highlight.
       if (_lastSyncedAyah != null) {
         _lastSyncedAyah = null;
@@ -240,6 +395,21 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     );
   }
 
+  Future<void> _openBookmarksSheet() async {
+    await showQuranBookmarksSheet(
+      context: context,
+      currentPage: _currentPage.value,
+      onPageSelected: _goToPage,
+    );
+  }
+
+  Future<void> _openSettingsSheet() async {
+    await showQuranReaderSettingsSheet(
+      context: context,
+      currentPage: _currentPage.value,
+    );
+  }
+
   Future<void> _openSurahPicker() async {
     final surahNumber = await showSurahPicker(context);
     if (surahNumber == null) {
@@ -288,45 +458,65 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
   @override
   Widget build(BuildContext context) {
     // Listen to audio state changes and sync the highlight / page.
-    ref.listen<QuranAudioState>(quranAudioControllerProvider, (previous, next) {
-      _syncAudioHighlight(next);
+    ref.listen(
+      quranAudioControllerProvider.select(
+        (state) => (
+          currentAyah: state.currentAyah,
+          isPlaying: state.isPlaying,
+          errorMessage: state.errorMessage,
+        ),
+      ),
+      (previous, next) {
+        _syncAudioHighlight(
+          currentAyah: next.currentAyah,
+          isPlaying: next.isPlaying,
+        );
 
-      // Show elegant snackbar if there's an error (e.g., no internet)
-      if (next.errorMessage != null &&
-          next.errorMessage != previous?.errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.wifi_off_rounded, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    next.errorMessage!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+        // Show elegant snackbar if there's an error (e.g., no internet)
+        if (next.errorMessage != null &&
+            next.errorMessage != previous?.errorMessage) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.wifi_off_rounded, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      next.errorMessage!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 4),
             ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    });
+          );
+        }
+      },
+    );
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final audioBottomInset = _isOverlayVisible
-        ? kQuranReaderBottomPanelHeight + 16
-        : 60.0;
+    final iconNavBarOffset = kQuranReaderIconNavBarHeight +
+        MediaQuery.of(context).padding.bottom;
+
+    final fontScale = ref.watch(
+      appUserPreferencesProvider.select(
+        (preferences) => preferences.maybeWhen(
+          data: (value) => value.fontScale,
+          orElse: () => const AppUserPreferences.initial().fontScale,
+        ),
+      ),
+    );
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkScaffold : AppColors.parchment,
@@ -337,15 +527,24 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
             // Ensure taps hit the scrim overlay first when visible.
             child: GestureDetector(
               onTap: _toggleOverlay,
-              behavior: HitTestBehavior.translucent,
+              behavior: HitTestBehavior.opaque,
               child: SafeArea(
                 top: false,
-                child: AdaptiveQuranPageView(
-                  pageController: _pageController,
-                  highlightsListenable: _highlightController,
-                  isTajweedListenable: _isTajweed,
-                  onPageChanged: _handlePageChanged,
-                  onLongPress: _handleLongPress,
+                child: MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: TextScaler.linear(1)),
+                  child: ValueListenableBuilder<List<HighlightVerse>>(
+                    valueListenable: _highlightController,
+                    builder: (context, highlights, _) {
+                      return _buildPageView(
+                        context,
+                        highlights,
+                        isDark,
+                        fontScale,
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -358,30 +557,28 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
             ),
           ),
 
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: AnimatedPadding(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              padding: EdgeInsets.only(bottom: (audioBottomInset - 60.0)),
-              child: AyahAudioPlayerBar(bottomInset: audioBottomInset),
-            ),
-          ),
-
           ValueListenableBuilder<int>(
             valueListenable: _currentPage,
             builder: (context, page, _) {
               return Positioned(
                 left: 0,
                 right: 0,
-                bottom: 0,
-                child: _buildAnimatedOverlay(
-                  beginOffset: const Offset(0, 1),
-                  child: QuranReaderBottomPanel(
-                    currentPage: page,
-                    onPageSelected: _goToPage,
+                bottom: iconNavBarOffset,
+                child: RepaintBoundary(
+                  child: _buildAnimatedOverlay(
+                    beginOffset: const Offset(0, 1),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const AyahAudioErrorBanner(),
+                        QuranReaderBottomPanel(
+                          currentPage: page,
+                          onPageSelected: _goToPage,
+                          rightControls: const AyahRightAudioControls(),
+                          leftControls: const AyahLeftAudioControls(),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -389,31 +586,42 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
           ),
 
           Positioned(
-            top: 0,
             left: 0,
             right: 0,
-            child: _buildAnimatedOverlay(
-              beginOffset: const Offset(0, -1),
-              child: QuranReaderHeader(
-                onSearchTapped: _openSearchSheet,
-                onMenuTapped: _openSurahPicker,
-                onSettingsTapped: () => showQuranReaderSettingsSheet(
-                  context: context,
-                  currentPage: _currentPage.value,
-                  isTajweedListenable: _isTajweed,
+            bottom: 0,
+            child: RepaintBoundary(
+              child: _buildAnimatedOverlay(
+                beginOffset: const Offset(0, 1),
+                child: QuranReaderIconNavBar(
+                  selectedIndex: 0,
+                  onQuranTapped: () {},
+                  onAdhkarTapped: () => context.push('/adhkar'),
+                  onLibrariesTapped: () => context.push('/quran/libraries'),
+                  onMoreTapped: () => context.push(
+                    '/quran/more',
+                    extra: QuranReaderMoreActions(
+                      currentPage: _currentPage.value,
+                      onSearch: _openSearchSheet,
+                      onSurahPicker: _openSurahPicker,
+                      onBookmarks: _openBookmarksSheet,
+                      onSettings: _openSettingsSheet,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
+
           Positioned(
-            top: MediaQuery.paddingOf(context).top + 18,
-            left: 16,
-            child: _buildAnimatedOverlay(
-              beginOffset: const Offset(-.35, 0),
-              child: QuranReaderBackButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+            top: 0,
+            left: 0,
+            right: 0,
+            child: RepaintBoundary(
+              child: _buildAnimatedOverlay(
+                beginOffset: const Offset(0, -1),
+                child: QuranReaderHeader(
+                  onSearchTapped: _openSearchSheet,
+                ),
               ),
             ),
           ),

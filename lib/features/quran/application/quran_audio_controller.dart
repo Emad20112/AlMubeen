@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'package:al_mubeen/core/audio/audio_providers.dart';
+import 'package:al_mubeen/core/data/data_failure.dart';
+import 'package:al_mubeen/core/network/connectivity_providers.dart';
+import 'package:al_mubeen/core/network/no_internet_exception.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
@@ -7,7 +11,7 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 final quranAudioControllerProvider =
     NotifierProvider<QuranAudioController, QuranAudioState>(
@@ -24,6 +28,7 @@ final class QuranAudioState {
     this.errorMessage,
     this.position = Duration.zero,
     this.duration = Duration.zero,
+    this.isLocalSource = false,
   });
 
   final AyahRef? currentAyah;
@@ -33,6 +38,7 @@ final class QuranAudioState {
   final String? errorMessage;
   final Duration position;
   final Duration duration;
+  final bool isLocalSource;
 
   bool isCurrent({required AyahRef ayahRef, required int recitationId}) {
     final current = currentAyah;
@@ -50,6 +56,7 @@ final class QuranAudioState {
     String? errorMessage,
     Duration? position,
     Duration? duration,
+    bool? isLocalSource,
   }) {
     return QuranAudioState(
       currentAyah: currentAyah ?? this.currentAyah,
@@ -59,23 +66,29 @@ final class QuranAudioState {
       errorMessage: errorMessage,
       position: position ?? this.position,
       duration: duration ?? this.duration,
+      isLocalSource: isLocalSource ?? this.isLocalSource,
     );
   }
 }
 
 final class QuranAudioController extends Notifier<QuranAudioState> {
   static const int _prefetchWindowSize = 5;
+  static const Duration _positionStateInterval = Duration(milliseconds: 350);
 
   late final AudioPlayer _audioPlayer;
   StreamSubscription<PlayerState>? _playerStateSubscription;
   StreamSubscription<Duration>? _positionSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
+  StreamSubscription<int?>? _currentIndexSubscription;
+  StreamSubscription<bool>? _connectivitySubscription;
   String? _loadedKey;
   final Set<String> _prefetchingKeys = <String>{};
   final Map<String, Uri> _prefetchCache = <String, Uri>{};
+  final Map<String, bool> _localSourceCache = <String, bool>{};
   final List<AyahRef> _bufferedAyahs = <AyahRef>[];
   int _requestId = 0;
-  bool _isAdvancing = false; // حارس منع التخطي المزدوج أثناء الانتقال التلقائي
+  bool _isAdvancing = false;
+  DateTime? _lastPositionStateUpdate;
 
   @override
   QuranAudioState build() {
@@ -86,12 +99,30 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     _playerStateSubscription = _audioPlayer.playerStateStream.listen(
       _handlePlayerState,
     );
-    _positionSubscription = _audioPlayer.positionStream.listen((position) {
-      state = state.copyWith(position: position);
-    });
+    _positionSubscription = _audioPlayer.positionStream.listen(
+      _handlePositionChanged,
+    );
     _durationSubscription = _audioPlayer.durationStream.listen((duration) {
       if (duration != null) {
         state = state.copyWith(duration: duration);
+      }
+    });
+    _currentIndexSubscription = _audioPlayer.currentIndexStream.listen(
+      _handleCurrentIndexChanged,
+    );
+
+    // Listen for connectivity changes — pause playback and show error
+    // when the device goes offline mid-session.
+    final connectivityService = ref.read(connectivityServiceProvider);
+    _connectivitySubscription = connectivityService.connectionStream.listen((
+      isConnected,
+    ) {
+      if (!isConnected && _audioPlayer.playing) {
+        _audioPlayer.pause();
+        state = state.copyWith(
+          isPlaying: false,
+          errorMessage: 'انقطع الاتصال بالإنترنت أثناء التشغيل.',
+        );
       }
     });
 
@@ -99,8 +130,10 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       _playerStateSubscription?.cancel();
       _positionSubscription?.cancel();
       _durationSubscription?.cancel();
+      _currentIndexSubscription?.cancel();
+      _connectivitySubscription?.cancel();
       _audioPlayer.dispose();
-      debugPrint('🧹 AudioPlayer disposed.');
+      debugPrint('AudioPlayer disposed.');
     });
 
     return const QuranAudioState();
@@ -114,15 +147,13 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
 
     if (_loadedKey == key) {
       if (_audioPlayer.playing) {
-        debugPrint('⏸️ Pausing audio playback.');
         await _audioPlayer.pause();
       } else {
-        debugPrint('▶️ Resuming audio playback.');
         if (_audioPlayer.processingState == ProcessingState.completed) {
           await _audioPlayer.seek(Duration.zero);
         }
         await _audioPlayer.play();
-        unawaited(_prefetchWindowFor(ayahRef, recitationId));
+        _safePrefetch(ayahRef, recitationId);
       }
       return;
     }
@@ -138,19 +169,23 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     await _audioPlayer.stop();
     _loadedKey = null;
 
-    debugPrint(
-      '🔍 Building a small audio window for Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}',
-    );
-
     try {
       await _playWindow(ayahRef, recitationId);
       if (reqId != _requestId) return;
+    } on NoInternetException catch (error) {
+      debugPrint('Quran audio offline: $error');
+      _setErrorState(ayahRef, recitationId, error.message);
+    } on TimeoutException {
+      debugPrint('Quran audio timeout');
+      await _recheckConnectivityOrError(ayahRef, recitationId);
     } on Object catch (error) {
-      debugPrint('🚨 Quran audio playback error: $error');
-      state = QuranAudioState(
-        currentAyah: ayahRef,
-        recitationId: recitationId,
-        errorMessage: 'تعذر تشغيل تلاوة هذه الآية.',
+      debugPrint('Quran audio playback error: $error');
+      _setErrorState(
+        ayahRef,
+        recitationId,
+        _isNetworkRelated(error)
+            ? 'تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت.'
+            : 'تعذر تشغيل تلاوة هذه الآية.',
       );
     }
   }
@@ -162,12 +197,20 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       nextAyah: _nextAyah,
     );
 
-    if (window.isEmpty) {
-      return;
-    }
+    if (window.isEmpty) return;
 
     await Future.wait(
       window.map((ayahRef) => _fetchAyahUri(ayahRef, recitationId)),
+    );
+  }
+
+  /// Wraps [_prefetchWindowFor] so that any thrown error is logged
+  /// instead of becoming an unhandled Future error.
+  void _safePrefetch(AyahRef startFrom, int recitationId) {
+    unawaited(
+      _prefetchWindowFor(startFrom, recitationId).catchError((error) {
+        debugPrint('Prefetch error (safe): $error');
+      }),
     );
   }
 
@@ -183,9 +226,6 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
 
     _prefetchingKeys.add(key);
     try {
-      debugPrint(
-        '📥 Prefetching next ayah -> Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}',
-      );
       return await _loadAyahUri(ayahRef, recitationId);
     } finally {
       _prefetchingKeys.remove(key);
@@ -193,6 +233,13 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   }
 
   Future<Uri> _loadAyahUri(AyahRef ayahRef, int recitationId) async {
+    final connectivityService = ref.read(connectivityServiceProvider);
+    final online = await connectivityService.checkConnection();
+    if (!online) {
+      throw const NoInternetException();
+    }
+
+    final audioRepo = ref.read(audioRepositoryProvider);
     final result = await ref
         .read(quranAudioRepositoryProvider)
         .getAyahAudio(
@@ -202,25 +249,36 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
 
     final audioFile = result.valueOrNull;
     if (audioFile == null) {
+      final failure = result.failureOrNull;
+      if (failure != null &&
+          (failure.kind == DataFailureKind.network ||
+              failure.kind == DataFailureKind.timeout)) {
+        throw const NoInternetException();
+      }
       throw StateError(
-        result.failureOrNull?.message ??
-            'Unable to fetch audio for ayah ${ayahRef.ayah}.',
+        failure?.message ?? 'Unable to fetch audio for ayah ${ayahRef.ayah}.',
       );
     }
 
+    // Check if local file exists
+    final resolved = await audioRepo.resolveAyahSource(
+      reciterId: recitationId,
+      surahNumber: ayahRef.surah,
+      ayahNumber: ayahRef.ayah,
+      networkUrl: audioFile.url,
+    );
+
     final key = _keyFor(ayahRef, recitationId);
     _prefetchCache[key] = audioFile.url;
-    debugPrint(
-      '💾 Prefetched and cached -> Surah: ${ayahRef.surah}, Ayah: ${ayahRef.ayah}',
-    );
+    _localSourceCache[key] = resolved.isLocal;
     return audioFile.url;
   }
 
   Future<void> stop() async {
     _requestId++;
-    debugPrint('⏹️ Stopping audio completely.');
     await _audioPlayer.stop();
     _loadedKey = null;
+    _lastPositionStateUpdate = null;
     state = const QuranAudioState();
   }
 
@@ -228,30 +286,27 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     final currentPosition = _audioPlayer.position;
     final newPosition = currentPosition + Duration(seconds: seconds);
     final duration = _audioPlayer.duration;
-    
+
     if (duration != null && newPosition > duration) {
       await _audioPlayer.seek(duration);
     } else {
       await _audioPlayer.seek(newPosition);
     }
-    debugPrint('⏩ Seeked forward $seconds seconds');
   }
 
   Future<void> seekBackward({int seconds = 10}) async {
     final currentPosition = _audioPlayer.position;
     final newPosition = currentPosition - Duration(seconds: seconds);
-    
+
     if (newPosition < Duration.zero) {
       await _audioPlayer.seek(Duration.zero);
     } else {
       await _audioPlayer.seek(newPosition);
     }
-    debugPrint('⏪ Seeked backward $seconds seconds');
   }
 
   Future<void> seekTo(Duration position) async {
     await _audioPlayer.seek(position);
-    debugPrint('🎯 Seeked to position: $position');
   }
 
   Future<void> _configureAudioSession() async {
@@ -259,8 +314,40 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       final session = await AudioSession.instance;
       await session.configure(const AudioSessionConfiguration.speech());
     } on Object catch (error) {
-      debugPrint('🚨 Quran audio session error: $error');
+      debugPrint('Quran audio session error: $error');
     }
+  }
+
+  void _handlePositionChanged(Duration position) {
+    final now = DateTime.now();
+    final lastUpdate = _lastPositionStateUpdate;
+    final positionDeltaMs = (position - state.position).inMilliseconds.abs();
+
+    if (lastUpdate != null &&
+        now.difference(lastUpdate) < _positionStateInterval &&
+        positionDeltaMs < 1000) {
+      return;
+    }
+
+    _lastPositionStateUpdate = now;
+    state = state.copyWith(position: position);
+  }
+
+  void _handleCurrentIndexChanged(int? index) {
+    if (index == null || _bufferedAyahs.isEmpty) return;
+    if (index < 0 || index >= _bufferedAyahs.length) return;
+
+    final ayah = _bufferedAyahs[index];
+    final current = state.currentAyah;
+
+    if (current != null &&
+        current.surah == ayah.surah &&
+        current.ayah == ayah.ayah) {
+      return;
+    }
+
+    _loadedKey = _keyFor(ayah, state.recitationId!);
+    state = state.copyWith(currentAyah: ayah);
   }
 
   void _handlePlayerState(PlayerState playerState) {
@@ -269,21 +356,22 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
         playerState.processingState == ProcessingState.buffering;
     final completed = playerState.processingState == ProcessingState.completed;
 
-    state = state.copyWith(
-      isLoading: isLoading,
-      isPlaying: playerState.playing && !completed,
-      position: completed ? Duration.zero : state.position,
-    );
+    final nextIsPlaying = playerState.playing && !completed;
+    final nextPosition = completed ? Duration.zero : state.position;
+    if (state.isLoading != isLoading ||
+        state.isPlaying != nextIsPlaying ||
+        state.position != nextPosition) {
+      state = state.copyWith(
+        isLoading: isLoading,
+        isPlaying: nextIsPlaying,
+        position: nextPosition,
+      );
+    }
 
     if (completed) {
-      if (_isAdvancing) {
-        debugPrint('⏳ Blocked duplicate completion event.');
-        return;
-      }
-
+      if (_isAdvancing) return;
       _isAdvancing = true;
 
-      debugPrint('🏁 Audio playback completed. Advancing to next Ayah.');
       final current = state.currentAyah;
       final recId = state.recitationId;
 
@@ -293,12 +381,23 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
             : _nextAyah(current);
         if (nextWindowStart != null) {
           unawaited(
-            _playWindow(nextWindowStart, recId).then((_) {
-              _isAdvancing = false;
-            }),
+            _playWindow(nextWindowStart, recId)
+                .catchError((Object error) {
+                  debugPrint('Auto-advance error: $error');
+                  _setErrorState(
+                    nextWindowStart,
+                    recId,
+                    _isNetworkRelated(error)
+                        ? 'انقطع الاتصال أثناء التلاوة. تحقق من الإنترنت وأعد المحاولة.'
+                        : 'تعذر تحميل الآيات التالية.',
+                  );
+                })
+                .whenComplete(() {
+                  _isAdvancing = false;
+                }),
           );
         } else {
-          stop().then((_) => _isAdvancing = false);
+          stop().whenComplete(() => _isAdvancing = false);
         }
       } else {
         _isAdvancing = false;
@@ -315,19 +414,40 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
           nextAyah: _nextAyah,
         );
 
-    if (window.isEmpty) {
-      return;
+    if (window.isEmpty) return;
+
+    final audioRepo = ref.read(audioRepositoryProvider);
+    final sources = <AudioSource>[];
+    bool anyLocal = false;
+
+    for (final ayahRef in window) {
+      final key = _keyFor(ayahRef, recitationId);
+
+      // Fetch the URI if not cached
+      if (!_prefetchCache.containsKey(key)) {
+        await _fetchAyahUri(ayahRef, recitationId);
+      }
+
+      final networkUrl = _prefetchCache[key];
+      if (networkUrl == null) {
+        throw NoInternetException(
+          'تعذر تحميل بيانات الصوت للآية ${ayahRef.ayah}.',
+        );
+      }
+
+      // Use AudioRepository to resolve local vs network
+      final resolved = await audioRepo.resolveAyahSource(
+        reciterId: recitationId,
+        surahNumber: ayahRef.surah,
+        ayahNumber: ayahRef.ayah,
+        networkUrl: networkUrl,
+      );
+
+      sources.add(resolved.source);
+      if (resolved.isLocal) anyLocal = true;
     }
 
-    final uris = await Future.wait(
-      window.map((ayahRef) => _fetchAyahUri(ayahRef, recitationId)),
-    );
-
-    final sources = uris.map((uri) => AudioSource.uri(uri)).toList();
-    await _audioPlayer.setAudioSource(
-      ConcatenatingAudioSource(children: sources),
-      initialIndex: 0,
-    );
+    await _audioPlayer.setAudioSources(sources, initialIndex: 0);
 
     _bufferedAyahs
       ..clear()
@@ -338,13 +458,60 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       currentAyah: startAyah,
       recitationId: recitationId,
       isLoading: false,
+      isLocalSource: anyLocal,
     );
     await _audioPlayer.play();
 
     final nextWindowStart = _nextAyah(window.last);
     if (nextWindowStart != null) {
-      unawaited(_prefetchWindowFor(nextWindowStart, recitationId));
+      _safePrefetch(nextWindowStart, recitationId);
     }
+  }
+
+  /// After a timeout, re-check connectivity. If the device is truly offline,
+  /// show a clean [NoInternetException] message. Otherwise, show a generic
+  /// server error.
+  Future<void> _recheckConnectivityOrError(
+    AyahRef ayahRef,
+    int recitationId,
+  ) async {
+    final connectivityService = ref.read(connectivityServiceProvider);
+    final online = await connectivityService.checkConnection();
+    if (!online) {
+      _setErrorState(ayahRef, recitationId, 'لا يوجد اتصال بالإنترنت.');
+    } else {
+      _setErrorState(
+        ayahRef,
+        recitationId,
+        'انتهت مهلة الاتصال بالخادم. حاول مرة أخرى.',
+      );
+    }
+  }
+
+  void _setErrorState(AyahRef ayahRef, int recitationId, String message) {
+    _requestId++;
+    try {
+      _audioPlayer.stop();
+    } catch (_) {}
+    _loadedKey = null;
+    _lastPositionStateUpdate = null;
+    state = QuranAudioState(
+      currentAyah: ayahRef,
+      recitationId: recitationId,
+      errorMessage: message,
+    );
+  }
+
+  bool _isNetworkRelated(Object error) {
+    if (error is NoInternetException) return true;
+    if (error is TimeoutException) return true;
+    final text = error.toString().toLowerCase();
+    return text.contains('timeout') ||
+        text.contains('socket') ||
+        text.contains('connection') ||
+        text.contains('network') ||
+        text.contains('internet') ||
+        text.contains('backend request');
   }
 
   AyahRef? _nextAyah(AyahRef current) {
@@ -377,9 +544,7 @@ List<AyahRef> buildPrefetchWindow({
 
   for (int i = 0; i < count; i++) {
     final next = nextAyah(current!);
-    if (next == null) {
-      break;
-    }
+    if (next == null) break;
     window.add(next);
     current = next;
   }

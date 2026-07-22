@@ -1,7 +1,5 @@
-import 'dart:ui';
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
-import 'package:al_mubeen/features/quran/application/quran_surah_player_controller.dart';
 import 'package:al_mubeen/features/quran/application/quran_surah_player_provider.dart';
 
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';

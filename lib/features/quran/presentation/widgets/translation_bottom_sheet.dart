@@ -1,4 +1,5 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/widgets/app_loading_overlay.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
@@ -6,7 +7,7 @@ import 'package:al_mubeen/features/quran/presentation/pages/translation_download
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 void showTranslationBottomSheet({
   required BuildContext context,
@@ -72,7 +73,9 @@ class _TranslationBottomSheetState
     if (translationsAsync.isLoading && activeTranslation == null) {
       return _TranslationSheetFrame(
         isDark: isDark,
-        child: const Center(child: CircularProgressIndicator()),
+        child: const Center(
+          child: AppLoadingOverlay(icon: Icons.translate_rounded),
+        ),
       );
     }
 
@@ -116,7 +119,13 @@ class _TranslationBottomSheetState
             const Divider(height: 1),
             Expanded(
               child: translationAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(
+                  child: AppLoadingOverlay(
+                    icon: Icons.translate_rounded,
+                    message: 'جاري تحميل الترجمة',
+                    size: 56,
+                  ),
+                ),
                 error: (error, stack) => _TranslationSheetError(
                   isDark: isDark,
                   error: error.toString(),

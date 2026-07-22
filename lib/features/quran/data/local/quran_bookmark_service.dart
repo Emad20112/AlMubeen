@@ -2,7 +2,7 @@ import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:drift/drift.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 class QuranBookmarkService {
   QuranBookmarkService({required AppDatabase database}) : _db = database;

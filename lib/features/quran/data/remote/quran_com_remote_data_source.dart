@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
 import 'package:al_mubeen/core/data/data_result.dart';
@@ -271,6 +275,75 @@ final class QuranComRemoteDataSource implements QuranDataSource {
       success: (json) => _readListOrSingle(json, 'audio_files', 'audio_file'),
       error: DataError.new,
     );
+  }
+
+  Future<DataResult<JsonMap>> getChapterRecitation({
+    required int reciterId,
+    required int surahNumber,
+  }) async {
+    final uri = Uri.parse(
+      'https://api.quran.com/api/v4/chapter_recitations/$reciterId/$surahNumber',
+    );
+
+    try {
+      final client = HttpClient();
+      final request = await client.getUrl(uri).timeout(
+        const Duration(seconds: 15),
+      );
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      request.headers.set(HttpHeaders.userAgentHeader, 'AlMubeen/1.0');
+
+      final response = await request.close().timeout(
+        const Duration(seconds: 15),
+      );
+      final responseBody = await utf8.decoder
+          .bind(response)
+          .join()
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return DataError(
+          DataFailure(
+            kind: DataFailureKind.network,
+            message: 'Chapter recitation request failed with ${response.statusCode}.',
+            uri: uri,
+          ),
+        );
+      }
+
+      final decoded = jsonDecode(responseBody);
+      if (decoded is JsonMap) {
+        return DataSuccess(decoded);
+      }
+
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.invalidResponse,
+          message: 'Expected a JSON object from chapter recitation endpoint.',
+          uri: uri,
+        ),
+      );
+    } on TimeoutException catch (error, stackTrace) {
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.timeout,
+          message: 'Chapter recitation request timed out.',
+          uri: uri,
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    } on Object catch (error, stackTrace) {
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.network,
+          message: 'Unable to fetch chapter recitation.',
+          uri: uri,
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
   }
 
   DataResult<JsonMap> _readObject(DataResult<JsonMap> result, String key) {

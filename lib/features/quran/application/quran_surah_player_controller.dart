@@ -1,26 +1,16 @@
 import 'dart:async';
 
-import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
+import 'package:al_mubeen/core/audio/audio_providers.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
-import 'package:al_mubeen/features/quran/domain/repositories/quran_audio_repository.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 // ─── Repeat mode ───────────────────────────────────────────────
 
-enum SurahRepeatMode {
-  /// No repeat – stop after last ayah of the surah.
-  off,
-
-  /// Repeat the current ayah continuously.
-  ayah,
-
-  /// Repeat the entire surah after the last ayah.
-  surah,
-}
+enum SurahRepeatMode { off, ayah, surah }
 
 // ─── Sleep timer ───────────────────────────────────────────────
 
@@ -47,234 +37,187 @@ enum SleepTimerAction { stopAudio }
 final class SurahPlayerState {
   const SurahPlayerState({
     this.currentSurah = 1,
-    this.currentAyah = 1,
     this.recitationId,
     this.isPlaying = false,
     this.isLoading = false,
     this.errorMessage,
     this.position = Duration.zero,
+    this.bufferedPosition = Duration.zero,
     this.duration = Duration.zero,
-    this.currentSurahAudios = const [],
     this.repeatMode = SurahRepeatMode.off,
     this.sleepTimerSettings = const SleepTimerSettings(),
     this.sleepTimerRemaining,
+    this.isLocalSource = false,
+    this.retryCount = 0,
   });
 
   final int currentSurah;
-  final int currentAyah;
   final int? recitationId;
   final bool isPlaying;
   final bool isLoading;
   final String? errorMessage;
-  final Duration position; // موقع التشغيل الحالي داخل الآية
-  final Duration duration; // مدة الآية الحالية (يتم جلبها تلقائياً من المشغل)
-  final List<QuranAudioFile> currentSurahAudios;
+  final Duration position;
+  final Duration bufferedPosition;
+  final Duration duration;
   final SurahRepeatMode repeatMode;
   final SleepTimerSettings sleepTimerSettings;
   final Duration? sleepTimerRemaining;
+  final bool isLocalSource;
+  final int retryCount;
 
   int get totalAyahs => getVerseCount(currentSurah);
-
-  /// Backward-compatible aliases used by the UI.
   Duration get totalDuration => duration;
   Duration get totalPosition => position;
-
   String get surahName => getSurahNameArabic(currentSurah);
+
+  bool get canRetry => errorMessage != null && !isLocalSource;
 
   SurahPlayerState copyWith({
     int? currentSurah,
-    int? currentAyah,
     int? recitationId,
     bool? isPlaying,
     bool? isLoading,
     String? errorMessage,
     Duration? position,
+    Duration? bufferedPosition,
     Duration? duration,
-    List<QuranAudioFile>? currentSurahAudios,
     SurahRepeatMode? repeatMode,
     SleepTimerSettings? sleepTimerSettings,
     Duration? sleepTimerRemaining,
+    bool? isLocalSource,
+    int? retryCount,
     bool clearError = false,
     bool clearSleepRemaining = false,
   }) {
     return SurahPlayerState(
       currentSurah: currentSurah ?? this.currentSurah,
-      currentAyah: currentAyah ?? this.currentAyah,
       recitationId: recitationId ?? this.recitationId,
       isPlaying: isPlaying ?? this.isPlaying,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       position: position ?? this.position,
+      bufferedPosition: bufferedPosition ?? this.bufferedPosition,
       duration: duration ?? this.duration,
-      currentSurahAudios: currentSurahAudios ?? this.currentSurahAudios,
       repeatMode: repeatMode ?? this.repeatMode,
       sleepTimerSettings: sleepTimerSettings ?? this.sleepTimerSettings,
       sleepTimerRemaining: clearSleepRemaining
           ? null
           : (sleepTimerRemaining ?? this.sleepTimerRemaining),
+      isLocalSource: isLocalSource ?? this.isLocalSource,
+      retryCount: retryCount ?? this.retryCount,
     );
   }
 }
 
-// ──
+// ─── Constants ─────────────────────────────────────────────────
+
+const _kStreamErrorTimeout = Duration(seconds: 15);
+const _kBufferingWatchdogTimeout = Duration(seconds: 20);
+const _kDebounceInterval = Duration(milliseconds: 500);
+const _kPlaybackStateInterval = Duration(milliseconds: 350);
+
+// ─── Controller ────────────────────────────────────────────────
+
 final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
-  late final AudioPlayer _player;
+  AudioPlayer? _player;
   StreamSubscription<PlayerState>? _playerStateSub;
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration?>? _durationSub;
-  StreamSubscription<int?>? _indexSub;
+  StreamSubscription<Duration>? _bufferedSub;
   Timer? _sleepTimer;
   Timer? _sleepTickTimer;
-  String? _loadedKey;
+  Timer? _bufferingWatchdog;
+
   int _requestId = 0;
-  final List<int> _ayahIndices = [];
+  String? _loadedKey;
+  DateTime _lastPlayAction = DateTime(0);
+  DateTime? _lastPositionStateUpdate;
+  DateTime? _lastBufferedStateUpdate;
 
   @override
   SurahPlayerState build() {
-    _player = AudioPlayer();
+    _initPlayer();
     unawaited(_configureSession());
-
-    // 1. الاستماع لحالة المشغل (تحميل، تشغيل، إيقاف)
-    _playerStateSub = _player.playerStateStream.listen(_onPlayerState);
-
-    // 2. الاستماع لتغير الآية الحالية (تحديث رقم الآية في الواجهة تلقائياً)
-    _indexSub = _player.currentIndexStream.listen((index) {
-      if (index != null && index < _ayahIndices.length) {
-        final ayahNum = _ayahIndices[index];
-        state = state.copyWith(
-          currentAyah: ayahNum,
-          position: Duration.zero,
-        );
-      }
-    });
-
-    // 3. الاستماع لتغير الوقت الحالي للتشغيل (لتحديث شريط التقدم بسلاسة)
-    _positionSub = _player.positionStream.listen((pos) {
-      state = state.copyWith(position: pos);
-    });
-
-    // 4. جلب مدة الملف الصوتي الحقيقي فور توفره من المشغل مباشرة (حل مشكلة عدم توفره من الـ API)
-    _durationSub = _player.durationStream.listen((dur) {
-      if (dur != null) {
-        state = state.copyWith(duration: dur);
-      }
-    });
-
-    ref.onDispose(() {
-      _playerStateSub?.cancel();
-      _positionSub?.cancel();
-      _durationSub?.cancel();
-      _indexSub?.cancel();
-      _sleepTimer?.cancel();
-      _sleepTickTimer?.cancel();
-      _player.dispose();
-    });
-
+    ref.onDispose(_dispose);
     return const SurahPlayerState();
+  }
+
+  void _initPlayer() {
+    _player = AudioPlayer();
+    _attachStreamListeners();
   }
 
   // ── Public API ──────────────────────────────────────────────
 
-  /// بدء تشغيل السورة من آية معينة
   Future<void> playSurah({
     required int surahNumber,
     required int recitationId,
-    int ayah = 1,
+    int? position,
   }) async {
+    if (!_debounce()) return;
+
     state = state.copyWith(
       currentSurah: surahNumber,
-      currentAyah: ayah,
       recitationId: recitationId,
       clearError: true,
     );
-    await _loadAndPlay(surahNumber, ayah, recitationId);
+    await _loadAndPlayChapter(surahNumber, recitationId, position: position);
   }
 
-  /// تشغيل / إيقاف مؤقت
   Future<void> togglePlayPause() async {
-    if (_player.playing) {
-      await _player.pause();
-    } else {
-      if (_player.processingState == ProcessingState.completed) {
-        await _player.seek(Duration.zero, index: 0);
+    if (!_debounce()) return;
+
+    if (state.errorMessage != null) {
+      final rid = state.recitationId;
+      if (rid != null) {
+        await playSurah(surahNumber: state.currentSurah, recitationId: rid);
       }
-      await _player.play();
+      return;
     }
-  }
 
-  /// تقديم التشغيل بمقدار 10 ثوانٍ
-  Future<void> seekForward10() async {
-    final currentPosition = _player.position;
-    final targetPosition = currentPosition + const Duration(seconds: 10);
-    final currentDuration = _player.duration;
-
-    if (currentDuration != null && targetPosition < currentDuration) {
-      // التقديم داخل نفس الآية
-      await _player.seek(targetPosition);
-    } else {
-      // إذا تجاوزت الـ 10 ثوانٍ مدة الآية الحالية، ننتقل للآية التالية إن وجدت
-      if (_player.hasNext) {
-        await _player.seekToNext();
-      }
-    }
-  }
-
-  /// تأخير التشغيل بمقدار 10 ثوانٍ
-  Future<void> seekBackward10() async {
-    final currentPosition = _player.position;
-    final targetPosition = currentPosition - const Duration(seconds: 10);
-
-    if (targetPosition.isNegative) {
-      // إذا كان الرجوع للخلف سيتجاوز بداية الآية الحالية
-      if (_player.hasPrevious) {
-        // ننتقل للآية السابقة
-        await _player.seekToPrevious();
+    try {
+      if (_player == null) return;
+      if (_player!.playing) {
+        await _player!.pause();
       } else {
-        // إذا كانت هذه أول آية في السورة، نعود لنقطة الصفر
-        await _player.seek(Duration.zero);
+        if (_player!.processingState == ProcessingState.completed) {
+          await _player!.seek(Duration.zero);
+        }
+        await _player!.play();
       }
-    } else {
-      // التأخير داخل نفس الآية
-      await _player.seek(targetPosition);
+    } catch (e) {
+      debugPrint('togglePlayPause error: $e');
+      _handleNetworkError(_requestId);
     }
   }
 
-  /// الرجوع للآية السابقة (ضمن السورة الحالية)
-  Future<void> previousAyah() async {
-    final prev = state.currentAyah - 1;
-    if (prev < 1) return;
-    await jumpToAyah(prev);
+  Future<void> seekForward10() async {
+    try {
+      if (_player == null) return;
+      final pos = _player!.position;
+      final dur = _player!.duration;
+      final target = pos + const Duration(seconds: 10);
+      if (dur != null && target < dur) {
+        await _player!.seek(target);
+      }
+    } catch (_) {}
   }
 
-  /// التقدم للآية التالية (ضمن السورة الحالية)
-  Future<void> nextAyah() async {
-    final next = state.currentAyah + 1;
-    if (next > state.totalAyahs) return;
-    await jumpToAyah(next);
+  Future<void> seekBackward10() async {
+    try {
+      if (_player == null) return;
+      final pos = _player!.position;
+      final target = pos - const Duration(seconds: 10);
+      await _player!.seek(target.isNegative ? Duration.zero : target);
+    } catch (_) {}
   }
 
-  /// القفز المباشر لآية معينة في السورة الحالية
-  Future<void> jumpToAyah(int ayahNumber) async {
-    if (ayahNumber < 1 || ayahNumber > state.totalAyahs) return;
-
-    final recId = state.recitationId;
-    if (recId == null) return;
-
-    if (_loadedKey == '$recId:${state.currentSurah}') {
-      final playlistIndex = _ayahIndices.indexOf(ayahNumber);
-      if (playlistIndex < 0) return;
-      await _player.seek(Duration.zero, index: playlistIndex);
-    } else {
-      await _loadAndPlay(state.currentSurah, ayahNumber, recId);
-    }
-  }
-
-  /// التحكم اليدوي من خلال شريط التقدم (Slider) الخاص بالآية
   Future<void> seekTo(Duration position) async {
-    await _player.seek(position);
+    try {
+      await _player?.seek(position);
+    } catch (_) {}
   }
 
-  /// تبديل وضع التكرار: off → ayah → surah → off
   void cycleRepeatMode() {
     final next = switch (state.repeatMode) {
       SurahRepeatMode.off => SurahRepeatMode.ayah,
@@ -290,21 +233,6 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
     _updateLoopMode(mode);
   }
 
-  void _updateLoopMode(SurahRepeatMode mode) {
-    if (_loadedKey == null) return;
-    switch (mode) {
-      case SurahRepeatMode.off:
-        _player.setLoopMode(LoopMode.off);
-      case SurahRepeatMode.ayah:
-        _player.setLoopMode(LoopMode.one); // تكرار الملف الحالي (الآية الحالية)
-      case SurahRepeatMode.surah:
-        _player.setLoopMode(
-          LoopMode.all,
-        ); // تكرار القائمة بالكامل (السورة كاملة)
-    }
-  }
-
-  /// مؤقت النوم
   void startSleepTimer(Duration duration) {
     _sleepTimer?.cancel();
     _sleepTickTimer?.cancel();
@@ -337,7 +265,9 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
 
     _sleepTimer = Timer(duration, () {
       _sleepTickTimer?.cancel();
-      _player.pause();
+      try {
+        _player?.pause();
+      } catch (_) {}
       state = state.copyWith(
         isPlaying: false,
         sleepTimerSettings: const SleepTimerSettings(),
@@ -357,44 +287,43 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
 
   Future<void> stop() async {
     _requestId++;
-    _sleepTimer?.cancel();
-    _sleepTickTimer?.cancel();
-    await _player.stop();
+    _cancelAllTimers();
     _loadedKey = null;
+    _lastPositionStateUpdate = null;
+    _lastBufferedStateUpdate = null;
+
+    try {
+      await _player?.stop();
+    } catch (_) {}
+
     state = const SurahPlayerState();
   }
 
-  Future<QuranAudioFile?> _fetchSurahAyah(
-    int surah,
-    int ayah,
-    int recitationId,
-  ) async {
-    final result = await ref
-        .read(quranAudioRepositoryProvider)
-        .getAyahAudio(
-          verseKey: QuranVerseKey(surah: surah, ayah: ayah),
-          recitationId: recitationId,
-        );
-    return result.valueOrNull;
+  Future<void> retry() async {
+    final rid = state.recitationId;
+    if (rid != null) {
+      await playSurah(surahNumber: state.currentSurah, recitationId: rid);
+    }
   }
 
-  // ── Private helpers ──────────────────────────────────────────
+  // ── Core: Load & Play ───────────────────────────────────────
 
-  Future<void> _loadAndPlay(int surah, int ayah, int recitationId) async {
+  Future<void> _loadAndPlayChapter(
+    int surah,
+    int recitationId, {
+    int? position,
+  }) async {
     final key = '$recitationId:$surah';
 
-    if (_loadedKey == key) {
-      final playlistIndex = _ayahIndices.indexOf(ayah);
-      if (playlistIndex < 0) return;
-      if (!_player.playing) {
-        if (_player.processingState == ProcessingState.completed) {
-          await _player.seek(Duration.zero, index: playlistIndex);
-        } else if (_player.currentIndex != playlistIndex) {
-          await _player.seek(Duration.zero, index: playlistIndex);
+    // Resume from loaded source
+    if (_loadedKey == key && _player != null && !_player!.playing) {
+      try {
+        if (_player!.processingState == ProcessingState.completed) {
+          await _player!.seek(Duration.zero);
         }
-        await _player.play();
-      } else if (_player.currentIndex != playlistIndex) {
-        await _player.seek(Duration.zero, index: playlistIndex);
+        await _player!.play();
+      } catch (_) {
+        _handleNetworkError(_requestId);
       }
       return;
     }
@@ -403,109 +332,344 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
 
     state = state.copyWith(
       currentSurah: surah,
-      currentAyah: ayah,
       recitationId: recitationId,
       isLoading: true,
       clearError: true,
     );
 
-    await _player.stop();
+    try {
+      await _player?.stop();
+    } catch (_) {}
     _loadedKey = null;
 
     try {
-      final totalAyahs = getVerseCount(surah);
-      final fetchedFiles = List<QuranAudioFile?>.filled(totalAyahs, null);
-      const batchSize = 10;
+      // 1. Fetch the audio URL from the API
+      final urlResult = await ref
+          .read(quranAudioRepositoryProvider)
+          .getChapterAudioUrl(reciterId: recitationId, surahNumber: surah)
+          .timeout(_kStreamErrorTimeout);
 
-      for (var batchStart = 1; batchStart <= totalAyahs; batchStart += batchSize) {
-        if (reqId != _requestId) return;
+      if (reqId != _requestId) return;
 
-        final batchEnd = (batchStart + batchSize - 1).clamp(1, totalAyahs);
-        final batchFutures = <Future<QuranAudioFile?>>[];
-
-        for (var a = batchStart; a <= batchEnd; a++) {
-          batchFutures.add(_fetchSurahAyah(surah, a, recitationId));
-        }
-
-        final batchResults = await Future.wait(batchFutures);
-        for (var i = 0; i < batchResults.length; i++) {
-          final idx = batchStart + i - 1;
-          if (batchResults[i] != null) {
-            fetchedFiles[idx] = batchResults[i];
-          }
-        }
-      }
-
-      final validSources = <AudioSource>[];
-      final ayahIndices = <int>[];
-      for (var i = 0; i < fetchedFiles.length; i++) {
-        final file = fetchedFiles[i];
-        if (file != null) {
-          final scheme = file.url.scheme;
-          if (scheme == 'https' || scheme == 'http') {
-            validSources.add(AudioSource.uri(file.url));
-            ayahIndices.add(i + 1);
-          } else {
-            debugPrint('SurahPlayer: skipping invalid URL for ayah ${i + 1}: ${file.url}');
-          }
-        } else {
-          debugPrint('SurahPlayer: no audio for ayah ${i + 1}, skipping');
-        }
-      }
-
-      if (validSources.isEmpty) {
+      final networkUrl = urlResult.valueOrNull;
+      if (networkUrl == null) {
         state = state.copyWith(
           isLoading: false,
-          errorMessage: 'لا يوجد روابط تشغيل متاحة لهذه السورة.',
+          errorMessage:
+              'تعذر جلب رابط تلاوة سورة ${getSurahNameArabic(surah)}.',
         );
         return;
       }
 
-      _ayahIndices
-        ..clear()
-        ..addAll(ayahIndices);
-
-      final nonNullFiles = fetchedFiles.whereType<QuranAudioFile>().toList();
-      state = state.copyWith(currentSurahAudios: nonNullFiles);
-
-      final initialIndex = ayahIndices.indexOf(ayah);
-      await _player.setAudioSources(
-        validSources,
-        initialIndex: initialIndex >= 0 ? initialIndex : 0,
+      // 2. Use AudioRepository to decide local vs network
+      final audioRepo = ref.read(audioRepositoryProvider);
+      final resolved = await audioRepo.resolveSurahSource(
+        reciterId: recitationId,
+        surahNumber: surah,
+        networkUrl: networkUrl,
       );
+
+      if (reqId != _requestId) return;
+
+      // 3. Ensure player exists
+      _ensurePlayer();
+
+      // 4. Set the audio source — either local file or network URI
+      //    NO LockCachingAudioSource. NO proxy. NO cache.
+      final sourceFuture = _player!.setAudioSource(resolved.source);
+      final completer = Completer<void>();
+      late final StreamSubscription<void> sub;
+
+      sub = sourceFuture.asStream().listen(
+        (_) {
+          if (!completer.isCompleted) completer.complete();
+        },
+        onError: (Object error) {
+          if (!completer.isCompleted) completer.completeError(error);
+        },
+        onDone: () {
+          if (!completer.isCompleted) completer.complete();
+        },
+      );
+
+      try {
+        await completer.future.timeout(_kStreamErrorTimeout);
+      } on TimeoutException {
+        debugPrint('setAudioSource timeout');
+        try {
+          await _player?.stop();
+        } catch (_) {}
+        if (reqId == _requestId) {
+          _handleNetworkError(
+            reqId,
+            message: 'انتهت مهلة تحميل السورة. تحقق من اتصال الإنترنت.',
+          );
+        }
+        return;
+      } finally {
+        sub.cancel();
+      }
+
       _updateLoopMode(state.repeatMode);
 
       if (reqId != _requestId) return;
 
       _loadedKey = key;
-      await _player.play();
-    } on Object catch (error) {
-      debugPrint('SurahPlayer error: $error');
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'تعذر تشغيل تلاوة هذه السورة.',
-      );
+      _startBufferingWatchdog(reqId);
+
+      state = state.copyWith(isLocalSource: resolved.isLocal, retryCount: 0);
+
+      if (position != null && position > 0) {
+        await _player!.seek(Duration(seconds: position));
+      }
+
+      await _player!.play();
+    } on TimeoutException catch (e, st) {
+      debugPrint('SurahPlayer TimeoutException: $e\n$st');
+      if (reqId == _requestId) {
+        _handleNetworkError(
+          reqId,
+          message: 'انتهت مهلة الاتصال. تحقق من سرعة الإنترنت.',
+        );
+      }
+    } on PlayerException catch (e, st) {
+      debugPrint('SurahPlayer PlayerException: $e\n$st');
+      if (reqId == _requestId) {
+        final msg = _isSourceNotFound(e)
+            ? 'صوت السورة غير متوفر حالياً لهذا القارئ.'
+            : 'حدث خطأ أثناء تشغيل التلاوة.';
+        _handleNetworkError(reqId, message: msg);
+      }
+    } on Object catch (e, st) {
+      debugPrint('SurahPlayer unexpected error: $e\n$st');
+      if (reqId == _requestId) {
+        _handleNetworkError(reqId, message: 'تعذر تشغيل تلاوة هذه السورة.');
+      }
     }
   }
 
-  void _onPlayerState(PlayerState playerState) {
-    final isLoading =
-        playerState.processingState == ProcessingState.loading ||
-        playerState.processingState == ProcessingState.buffering;
-    final completed = playerState.processingState == ProcessingState.completed;
-
-    state = state.copyWith(
-      isLoading: isLoading,
-      isPlaying: playerState.playing && !completed,
-    );
+  void _ensurePlayer() {
+    if (_player == null) {
+      _player = AudioPlayer();
+      _attachStreamListeners();
+    }
   }
 
   Future<void> _configureSession() async {
     try {
       final session = await AudioSession.instance;
       await session.configure(const AudioSessionConfiguration.speech());
-    } on Object catch (error) {
-      debugPrint('SurahPlayer session error: $error');
+    } catch (e) {
+      debugPrint('SurahPlayer session error: $e');
     }
+  }
+
+  // ── Error handling ──────────────────────────────────────────
+
+  void _handleNetworkError(int reqId, {String? message}) {
+    if (reqId != _requestId) return;
+
+    _cancelAllTimers();
+    _loadedKey = null;
+    _lastPositionStateUpdate = null;
+    _lastBufferedStateUpdate = null;
+
+    try {
+      _player?.stop();
+    } catch (_) {}
+
+    final newRetryCount = state.retryCount + 1;
+
+    state = state.copyWith(
+      isLoading: false,
+      isPlaying: false,
+      errorMessage: message ?? 'انقطع الاتصال بالإنترنت. يرجى المحاولة لاحقاً.',
+      retryCount: newRetryCount,
+    );
+  }
+
+  void _onStreamError(Object error) {
+    debugPrint('SurahPlayer stream error: $error');
+
+    String msg;
+    if (error is TimeoutException) {
+      msg = 'انتهت مهلة الاتصال.';
+    } else if (error is PlayerException) {
+      msg = _isSourceNotFound(error)
+          ? 'صوت السورة غير متوفر حالياً لهذا القارئ.'
+          : 'حدث خطأ في المشغل.';
+    } else {
+      msg = 'حدث خطأ في الاتصال أثناء التشغيل.';
+    }
+
+    _handleNetworkError(_requestId, message: msg);
+  }
+
+  bool _isSourceNotFound(PlayerException e) {
+    final text = '${e.message} ${e.code}'.toLowerCase();
+    return text.contains('404') ||
+        text.contains('source error') ||
+        text.contains('response code');
+  }
+
+  // ── Debounce ────────────────────────────────────────────────
+
+  bool _debounce() {
+    final now = DateTime.now();
+    if (now.difference(_lastPlayAction) < _kDebounceInterval) return false;
+    _lastPlayAction = now;
+    return true;
+  }
+
+  // ── Buffering watchdog ──────────────────────────────────────
+
+  void _startBufferingWatchdog(int reqId) {
+    _bufferingWatchdog?.cancel();
+    _bufferingWatchdog = Timer(_kBufferingWatchdogTimeout, () {
+      if (reqId != _requestId) return;
+      if (state.isLoading && !state.isPlaying) {
+        debugPrint('Buffering watchdog triggered — stream stalled');
+        _handleNetworkError(
+          reqId,
+          message: 'تم تجميد التحميل. تحقق من اتصال الإنترنت وأعد المحاولة.',
+        );
+      }
+    });
+  }
+
+  // ── Stream listeners ────────────────────────────────────────
+
+  void _attachStreamListeners() {
+    if (_player == null) return;
+
+    _playerStateSub?.cancel();
+    _positionSub?.cancel();
+    _durationSub?.cancel();
+    _bufferedSub?.cancel();
+
+    _playerStateSub = _player!.playerStateStream.listen(
+      _onPlayerState,
+      onError: _onStreamError,
+    );
+
+    _positionSub = _player!.positionStream.listen(
+      _handlePositionChanged,
+      onError: _onStreamError,
+    );
+
+    _durationSub = _player!.durationStream.listen((dur) {
+      if (dur != null && dur != state.duration) {
+        state = state.copyWith(duration: dur);
+      }
+    }, onError: _onStreamError);
+
+    _bufferedSub = _player!.bufferedPositionStream.listen(
+      _handleBufferedPositionChanged,
+      onError: _onStreamError,
+    );
+  }
+
+  void _handlePositionChanged(Duration position) {
+    final now = DateTime.now();
+    final lastUpdate = _lastPositionStateUpdate;
+    final positionDeltaMs = (position - state.position).inMilliseconds.abs();
+
+    if (lastUpdate != null &&
+        now.difference(lastUpdate) < _kPlaybackStateInterval &&
+        positionDeltaMs < 1000) {
+      return;
+    }
+
+    if (position != state.position) {
+      _lastPositionStateUpdate = now;
+      state = state.copyWith(position: position);
+    }
+  }
+
+  void _handleBufferedPositionChanged(Duration bufferedPosition) {
+    final now = DateTime.now();
+    final lastUpdate = _lastBufferedStateUpdate;
+    final positionDeltaMs = (bufferedPosition - state.bufferedPosition)
+        .inMilliseconds
+        .abs();
+
+    if (lastUpdate != null &&
+        now.difference(lastUpdate) < _kPlaybackStateInterval &&
+        positionDeltaMs < 1000) {
+      return;
+    }
+
+    if (bufferedPosition != state.bufferedPosition) {
+      _lastBufferedStateUpdate = now;
+      state = state.copyWith(bufferedPosition: bufferedPosition);
+    }
+  }
+
+  void _onPlayerState(PlayerState playerState) {
+    final processingState = playerState.processingState;
+    final isLoadingState =
+        processingState == ProcessingState.loading ||
+        processingState == ProcessingState.buffering;
+    final completed = processingState == ProcessingState.completed;
+
+    // If idle while we expected loading → playback failed silently
+    if (processingState == ProcessingState.idle && state.isLoading) {
+      _bufferingWatchdog?.cancel();
+      state = state.copyWith(isLoading: false, isPlaying: false);
+      if (!state.isLocalSource) {
+        _handleNetworkError(
+          _requestId,
+          message: 'فشل تحميل التلاوة. يرجى المحاولة مرة أخرى.',
+        );
+      }
+      return;
+    }
+
+    if (completed) {
+      _bufferingWatchdog?.cancel();
+    }
+
+    state = state.copyWith(
+      isLoading: isLoadingState,
+      isPlaying: playerState.playing && !completed,
+    );
+  }
+
+  void _updateLoopMode(SurahRepeatMode mode) {
+    if (_loadedKey == null || _player == null) return;
+    try {
+      switch (mode) {
+        case SurahRepeatMode.off:
+          _player!.setLoopMode(LoopMode.off);
+        case SurahRepeatMode.ayah:
+          _player!.setLoopMode(LoopMode.one);
+        case SurahRepeatMode.surah:
+          _player!.setLoopMode(LoopMode.all);
+      }
+    } catch (_) {}
+  }
+
+  // ── Timer helpers ───────────────────────────────────────────
+
+  void _cancelAllTimers() {
+    _sleepTimer?.cancel();
+    _sleepTickTimer?.cancel();
+    _bufferingWatchdog?.cancel();
+  }
+
+  // ── Dispose ─────────────────────────────────────────────────
+
+  void _dispose() {
+    _requestId++;
+    _cancelAllTimers();
+    _playerStateSub?.cancel();
+    _positionSub?.cancel();
+    _durationSub?.cancel();
+    _bufferedSub?.cancel();
+    _loadedKey = null;
+    _lastPositionStateUpdate = null;
+    _lastBufferedStateUpdate = null;
+    _player?.dispose();
+    _player = null;
   }
 }

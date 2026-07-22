@@ -11,6 +11,12 @@ abstract interface class QuranAudioRepository {
     required int chapterNumber,
     required int recitationId,
   });
+
+  /// جلب رابط ملف الصوت الكامل لسورة واحدة من واجهة Quran.com v4.
+  Future<DataResult<Uri>> getChapterAudioUrl({
+    required int reciterId,
+    required int surahNumber,
+  });
 }
 
 @immutable

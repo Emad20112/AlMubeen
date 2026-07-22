@@ -2857,6 +2857,277 @@ class AdhkarFavoritesCompanion extends UpdateCompanion<AdhkarFavoritesEntry> {
   }
 }
 
+class $CategoryFavoritesTable extends CategoryFavorites
+    with TableInfo<$CategoryFavoritesTable, CategoryFavoritesEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoryFavoritesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [categoryId, type, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'category_favorites';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryFavoritesEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {categoryId};
+  @override
+  CategoryFavoritesEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryFavoritesEntry(
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoryFavoritesTable createAlias(String alias) {
+    return $CategoryFavoritesTable(attachedDatabase, alias);
+  }
+}
+
+class CategoryFavoritesEntry extends DataClass
+    implements Insertable<CategoryFavoritesEntry> {
+  final String categoryId;
+  final String type;
+  final DateTime createdAt;
+  const CategoryFavoritesEntry({
+    required this.categoryId,
+    required this.type,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['category_id'] = Variable<String>(categoryId);
+    map['type'] = Variable<String>(type);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CategoryFavoritesCompanion toCompanion(bool nullToAbsent) {
+    return CategoryFavoritesCompanion(
+      categoryId: Value(categoryId),
+      type: Value(type),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CategoryFavoritesEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryFavoritesEntry(
+      categoryId: serializer.fromJson<String>(json['categoryId']),
+      type: serializer.fromJson<String>(json['type']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'categoryId': serializer.toJson<String>(categoryId),
+      'type': serializer.toJson<String>(type),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  CategoryFavoritesEntry copyWith({
+    String? categoryId,
+    String? type,
+    DateTime? createdAt,
+  }) => CategoryFavoritesEntry(
+    categoryId: categoryId ?? this.categoryId,
+    type: type ?? this.type,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  CategoryFavoritesEntry copyWithCompanion(CategoryFavoritesCompanion data) {
+    return CategoryFavoritesEntry(
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      type: data.type.present ? data.type.value : this.type,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryFavoritesEntry(')
+          ..write('categoryId: $categoryId, ')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(categoryId, type, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryFavoritesEntry &&
+          other.categoryId == this.categoryId &&
+          other.type == this.type &&
+          other.createdAt == this.createdAt);
+}
+
+class CategoryFavoritesCompanion
+    extends UpdateCompanion<CategoryFavoritesEntry> {
+  final Value<String> categoryId;
+  final Value<String> type;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const CategoryFavoritesCompanion({
+    this.categoryId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoryFavoritesCompanion.insert({
+    required String categoryId,
+    required String type,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : categoryId = Value(categoryId),
+       type = Value(type),
+       createdAt = Value(createdAt);
+  static Insertable<CategoryFavoritesEntry> custom({
+    Expression<String>? categoryId,
+    Expression<String>? type,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (categoryId != null) 'category_id': categoryId,
+      if (type != null) 'type': type,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoryFavoritesCompanion copyWith({
+    Value<String>? categoryId,
+    Value<String>? type,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return CategoryFavoritesCompanion(
+      categoryId: categoryId ?? this.categoryId,
+      type: type ?? this.type,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryFavoritesCompanion(')
+          ..write('categoryId: $categoryId, ')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $QuranReadingProgressCacheTable extends QuranReadingProgressCache
     with TableInfo<$QuranReadingProgressCacheTable, QuranReadingProgressEntry> {
   @override
@@ -5505,6 +5776,1094 @@ class TranslationTextCacheCompanion
   }
 }
 
+class $HisnContentCacheTable extends HisnContentCache
+    with TableInfo<$HisnContentCacheTable, HisnContentCacheEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HisnContentCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subtitleMeta = const VerificationMeta(
+    'subtitle',
+  );
+  @override
+  late final GeneratedColumn<String> subtitle = GeneratedColumn<String>(
+    'subtitle',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconKeyMeta = const VerificationMeta(
+    'iconKey',
+  );
+  @override
+  late final GeneratedColumn<String> iconKey = GeneratedColumn<String>(
+    'icon_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countMeta = const VerificationMeta('count');
+  @override
+  late final GeneratedColumn<int> count = GeneratedColumn<int>(
+    'count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _arabicTitleMeta = const VerificationMeta(
+    'arabicTitle',
+  );
+  @override
+  late final GeneratedColumn<String> arabicTitle = GeneratedColumn<String>(
+    'arabic_title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<int> priority = GeneratedColumn<int>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(99),
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    subtitle,
+    iconKey,
+    count,
+    arabicTitle,
+    priority,
+    type,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hisn_content_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HisnContentCacheEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('subtitle')) {
+      context.handle(
+        _subtitleMeta,
+        subtitle.isAcceptableOrUnknown(data['subtitle']!, _subtitleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subtitleMeta);
+    }
+    if (data.containsKey('icon_key')) {
+      context.handle(
+        _iconKeyMeta,
+        iconKey.isAcceptableOrUnknown(data['icon_key']!, _iconKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_iconKeyMeta);
+    }
+    if (data.containsKey('count')) {
+      context.handle(
+        _countMeta,
+        count.isAcceptableOrUnknown(data['count']!, _countMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_countMeta);
+    }
+    if (data.containsKey('arabic_title')) {
+      context.handle(
+        _arabicTitleMeta,
+        arabicTitle.isAcceptableOrUnknown(
+          data['arabic_title']!,
+          _arabicTitleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HisnContentCacheEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HisnContentCacheEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      subtitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subtitle'],
+      )!,
+      iconKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_key'],
+      )!,
+      count: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}count'],
+      )!,
+      arabicTitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}arabic_title'],
+      ),
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}priority'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+    );
+  }
+
+  @override
+  $HisnContentCacheTable createAlias(String alias) {
+    return $HisnContentCacheTable(attachedDatabase, alias);
+  }
+}
+
+class HisnContentCacheEntry extends DataClass
+    implements Insertable<HisnContentCacheEntry> {
+  final String id;
+  final String title;
+  final String subtitle;
+  final String iconKey;
+  final int count;
+  final String? arabicTitle;
+  final int priority;
+  final String type;
+  const HisnContentCacheEntry({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.iconKey,
+    required this.count,
+    this.arabicTitle,
+    required this.priority,
+    required this.type,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['subtitle'] = Variable<String>(subtitle);
+    map['icon_key'] = Variable<String>(iconKey);
+    map['count'] = Variable<int>(count);
+    if (!nullToAbsent || arabicTitle != null) {
+      map['arabic_title'] = Variable<String>(arabicTitle);
+    }
+    map['priority'] = Variable<int>(priority);
+    map['type'] = Variable<String>(type);
+    return map;
+  }
+
+  HisnContentCacheCompanion toCompanion(bool nullToAbsent) {
+    return HisnContentCacheCompanion(
+      id: Value(id),
+      title: Value(title),
+      subtitle: Value(subtitle),
+      iconKey: Value(iconKey),
+      count: Value(count),
+      arabicTitle: arabicTitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(arabicTitle),
+      priority: Value(priority),
+      type: Value(type),
+    );
+  }
+
+  factory HisnContentCacheEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HisnContentCacheEntry(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      subtitle: serializer.fromJson<String>(json['subtitle']),
+      iconKey: serializer.fromJson<String>(json['iconKey']),
+      count: serializer.fromJson<int>(json['count']),
+      arabicTitle: serializer.fromJson<String?>(json['arabicTitle']),
+      priority: serializer.fromJson<int>(json['priority']),
+      type: serializer.fromJson<String>(json['type']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'subtitle': serializer.toJson<String>(subtitle),
+      'iconKey': serializer.toJson<String>(iconKey),
+      'count': serializer.toJson<int>(count),
+      'arabicTitle': serializer.toJson<String?>(arabicTitle),
+      'priority': serializer.toJson<int>(priority),
+      'type': serializer.toJson<String>(type),
+    };
+  }
+
+  HisnContentCacheEntry copyWith({
+    String? id,
+    String? title,
+    String? subtitle,
+    String? iconKey,
+    int? count,
+    Value<String?> arabicTitle = const Value.absent(),
+    int? priority,
+    String? type,
+  }) => HisnContentCacheEntry(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    subtitle: subtitle ?? this.subtitle,
+    iconKey: iconKey ?? this.iconKey,
+    count: count ?? this.count,
+    arabicTitle: arabicTitle.present ? arabicTitle.value : this.arabicTitle,
+    priority: priority ?? this.priority,
+    type: type ?? this.type,
+  );
+  HisnContentCacheEntry copyWithCompanion(HisnContentCacheCompanion data) {
+    return HisnContentCacheEntry(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      subtitle: data.subtitle.present ? data.subtitle.value : this.subtitle,
+      iconKey: data.iconKey.present ? data.iconKey.value : this.iconKey,
+      count: data.count.present ? data.count.value : this.count,
+      arabicTitle: data.arabicTitle.present
+          ? data.arabicTitle.value
+          : this.arabicTitle,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      type: data.type.present ? data.type.value : this.type,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HisnContentCacheEntry(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('count: $count, ')
+          ..write('arabicTitle: $arabicTitle, ')
+          ..write('priority: $priority, ')
+          ..write('type: $type')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    title,
+    subtitle,
+    iconKey,
+    count,
+    arabicTitle,
+    priority,
+    type,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HisnContentCacheEntry &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.subtitle == this.subtitle &&
+          other.iconKey == this.iconKey &&
+          other.count == this.count &&
+          other.arabicTitle == this.arabicTitle &&
+          other.priority == this.priority &&
+          other.type == this.type);
+}
+
+class HisnContentCacheCompanion extends UpdateCompanion<HisnContentCacheEntry> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> subtitle;
+  final Value<String> iconKey;
+  final Value<int> count;
+  final Value<String?> arabicTitle;
+  final Value<int> priority;
+  final Value<String> type;
+  final Value<int> rowid;
+  const HisnContentCacheCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.subtitle = const Value.absent(),
+    this.iconKey = const Value.absent(),
+    this.count = const Value.absent(),
+    this.arabicTitle = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.type = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HisnContentCacheCompanion.insert({
+    required String id,
+    required String title,
+    required String subtitle,
+    required String iconKey,
+    required int count,
+    this.arabicTitle = const Value.absent(),
+    this.priority = const Value.absent(),
+    required String type,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       subtitle = Value(subtitle),
+       iconKey = Value(iconKey),
+       count = Value(count),
+       type = Value(type);
+  static Insertable<HisnContentCacheEntry> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? subtitle,
+    Expression<String>? iconKey,
+    Expression<int>? count,
+    Expression<String>? arabicTitle,
+    Expression<int>? priority,
+    Expression<String>? type,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (subtitle != null) 'subtitle': subtitle,
+      if (iconKey != null) 'icon_key': iconKey,
+      if (count != null) 'count': count,
+      if (arabicTitle != null) 'arabic_title': arabicTitle,
+      if (priority != null) 'priority': priority,
+      if (type != null) 'type': type,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HisnContentCacheCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String>? subtitle,
+    Value<String>? iconKey,
+    Value<int>? count,
+    Value<String?>? arabicTitle,
+    Value<int>? priority,
+    Value<String>? type,
+    Value<int>? rowid,
+  }) {
+    return HisnContentCacheCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      subtitle: subtitle ?? this.subtitle,
+      iconKey: iconKey ?? this.iconKey,
+      count: count ?? this.count,
+      arabicTitle: arabicTitle ?? this.arabicTitle,
+      priority: priority ?? this.priority,
+      type: type ?? this.type,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (subtitle.present) {
+      map['subtitle'] = Variable<String>(subtitle.value);
+    }
+    if (iconKey.present) {
+      map['icon_key'] = Variable<String>(iconKey.value);
+    }
+    if (count.present) {
+      map['count'] = Variable<int>(count.value);
+    }
+    if (arabicTitle.present) {
+      map['arabic_title'] = Variable<String>(arabicTitle.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<int>(priority.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HisnContentCacheCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('subtitle: $subtitle, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('count: $count, ')
+          ..write('arabicTitle: $arabicTitle, ')
+          ..write('priority: $priority, ')
+          ..write('type: $type, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HisnContentItemCacheTable extends HisnContentItemCache
+    with TableInfo<$HisnContentItemCacheTable, HisnContentItemCacheEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HisnContentItemCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentTextMeta = const VerificationMeta(
+    'contentText',
+  );
+  @override
+  late final GeneratedColumn<String> contentText = GeneratedColumn<String>(
+    'content_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _repeatCountMeta = const VerificationMeta(
+    'repeatCount',
+  );
+  @override
+  late final GeneratedColumn<int> repeatCount = GeneratedColumn<int>(
+    'repeat_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _fadlMeta = const VerificationMeta('fadl');
+  @override
+  late final GeneratedColumn<String> fadl = GeneratedColumn<String>(
+    'fadl',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceMeta = const VerificationMeta(
+    'reference',
+  );
+  @override
+  late final GeneratedColumn<String> reference = GeneratedColumn<String>(
+    'reference',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _translationMeta = const VerificationMeta(
+    'translation',
+  );
+  @override
+  late final GeneratedColumn<String> translation = GeneratedColumn<String>(
+    'translation',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    categoryId,
+    contentText,
+    source,
+    repeatCount,
+    fadl,
+    reference,
+    translation,
+    type,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hisn_content_item_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HisnContentItemCacheEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('content_text')) {
+      context.handle(
+        _contentTextMeta,
+        contentText.isAcceptableOrUnknown(
+          data['content_text']!,
+          _contentTextMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_contentTextMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('repeat_count')) {
+      context.handle(
+        _repeatCountMeta,
+        repeatCount.isAcceptableOrUnknown(
+          data['repeat_count']!,
+          _repeatCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fadl')) {
+      context.handle(
+        _fadlMeta,
+        fadl.isAcceptableOrUnknown(data['fadl']!, _fadlMeta),
+      );
+    }
+    if (data.containsKey('reference')) {
+      context.handle(
+        _referenceMeta,
+        reference.isAcceptableOrUnknown(data['reference']!, _referenceMeta),
+      );
+    }
+    if (data.containsKey('translation')) {
+      context.handle(
+        _translationMeta,
+        translation.isAcceptableOrUnknown(
+          data['translation']!,
+          _translationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HisnContentItemCacheEntry map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HisnContentItemCacheEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      )!,
+      contentText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content_text'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      repeatCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}repeat_count'],
+      )!,
+      fadl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fadl'],
+      ),
+      reference: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference'],
+      ),
+      translation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}translation'],
+      ),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+    );
+  }
+
+  @override
+  $HisnContentItemCacheTable createAlias(String alias) {
+    return $HisnContentItemCacheTable(attachedDatabase, alias);
+  }
+}
+
+class HisnContentItemCacheEntry extends DataClass
+    implements Insertable<HisnContentItemCacheEntry> {
+  final String id;
+  final String categoryId;
+  final String contentText;
+  final String source;
+  final int repeatCount;
+  final String? fadl;
+  final String? reference;
+  final String? translation;
+  final String type;
+  const HisnContentItemCacheEntry({
+    required this.id,
+    required this.categoryId,
+    required this.contentText,
+    required this.source,
+    required this.repeatCount,
+    this.fadl,
+    this.reference,
+    this.translation,
+    required this.type,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['category_id'] = Variable<String>(categoryId);
+    map['content_text'] = Variable<String>(contentText);
+    map['source'] = Variable<String>(source);
+    map['repeat_count'] = Variable<int>(repeatCount);
+    if (!nullToAbsent || fadl != null) {
+      map['fadl'] = Variable<String>(fadl);
+    }
+    if (!nullToAbsent || reference != null) {
+      map['reference'] = Variable<String>(reference);
+    }
+    if (!nullToAbsent || translation != null) {
+      map['translation'] = Variable<String>(translation);
+    }
+    map['type'] = Variable<String>(type);
+    return map;
+  }
+
+  HisnContentItemCacheCompanion toCompanion(bool nullToAbsent) {
+    return HisnContentItemCacheCompanion(
+      id: Value(id),
+      categoryId: Value(categoryId),
+      contentText: Value(contentText),
+      source: Value(source),
+      repeatCount: Value(repeatCount),
+      fadl: fadl == null && nullToAbsent ? const Value.absent() : Value(fadl),
+      reference: reference == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reference),
+      translation: translation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(translation),
+      type: Value(type),
+    );
+  }
+
+  factory HisnContentItemCacheEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HisnContentItemCacheEntry(
+      id: serializer.fromJson<String>(json['id']),
+      categoryId: serializer.fromJson<String>(json['categoryId']),
+      contentText: serializer.fromJson<String>(json['contentText']),
+      source: serializer.fromJson<String>(json['source']),
+      repeatCount: serializer.fromJson<int>(json['repeatCount']),
+      fadl: serializer.fromJson<String?>(json['fadl']),
+      reference: serializer.fromJson<String?>(json['reference']),
+      translation: serializer.fromJson<String?>(json['translation']),
+      type: serializer.fromJson<String>(json['type']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'categoryId': serializer.toJson<String>(categoryId),
+      'contentText': serializer.toJson<String>(contentText),
+      'source': serializer.toJson<String>(source),
+      'repeatCount': serializer.toJson<int>(repeatCount),
+      'fadl': serializer.toJson<String?>(fadl),
+      'reference': serializer.toJson<String?>(reference),
+      'translation': serializer.toJson<String?>(translation),
+      'type': serializer.toJson<String>(type),
+    };
+  }
+
+  HisnContentItemCacheEntry copyWith({
+    String? id,
+    String? categoryId,
+    String? contentText,
+    String? source,
+    int? repeatCount,
+    Value<String?> fadl = const Value.absent(),
+    Value<String?> reference = const Value.absent(),
+    Value<String?> translation = const Value.absent(),
+    String? type,
+  }) => HisnContentItemCacheEntry(
+    id: id ?? this.id,
+    categoryId: categoryId ?? this.categoryId,
+    contentText: contentText ?? this.contentText,
+    source: source ?? this.source,
+    repeatCount: repeatCount ?? this.repeatCount,
+    fadl: fadl.present ? fadl.value : this.fadl,
+    reference: reference.present ? reference.value : this.reference,
+    translation: translation.present ? translation.value : this.translation,
+    type: type ?? this.type,
+  );
+  HisnContentItemCacheEntry copyWithCompanion(
+    HisnContentItemCacheCompanion data,
+  ) {
+    return HisnContentItemCacheEntry(
+      id: data.id.present ? data.id.value : this.id,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      contentText: data.contentText.present
+          ? data.contentText.value
+          : this.contentText,
+      source: data.source.present ? data.source.value : this.source,
+      repeatCount: data.repeatCount.present
+          ? data.repeatCount.value
+          : this.repeatCount,
+      fadl: data.fadl.present ? data.fadl.value : this.fadl,
+      reference: data.reference.present ? data.reference.value : this.reference,
+      translation: data.translation.present
+          ? data.translation.value
+          : this.translation,
+      type: data.type.present ? data.type.value : this.type,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HisnContentItemCacheEntry(')
+          ..write('id: $id, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('contentText: $contentText, ')
+          ..write('source: $source, ')
+          ..write('repeatCount: $repeatCount, ')
+          ..write('fadl: $fadl, ')
+          ..write('reference: $reference, ')
+          ..write('translation: $translation, ')
+          ..write('type: $type')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    categoryId,
+    contentText,
+    source,
+    repeatCount,
+    fadl,
+    reference,
+    translation,
+    type,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HisnContentItemCacheEntry &&
+          other.id == this.id &&
+          other.categoryId == this.categoryId &&
+          other.contentText == this.contentText &&
+          other.source == this.source &&
+          other.repeatCount == this.repeatCount &&
+          other.fadl == this.fadl &&
+          other.reference == this.reference &&
+          other.translation == this.translation &&
+          other.type == this.type);
+}
+
+class HisnContentItemCacheCompanion
+    extends UpdateCompanion<HisnContentItemCacheEntry> {
+  final Value<String> id;
+  final Value<String> categoryId;
+  final Value<String> contentText;
+  final Value<String> source;
+  final Value<int> repeatCount;
+  final Value<String?> fadl;
+  final Value<String?> reference;
+  final Value<String?> translation;
+  final Value<String> type;
+  final Value<int> rowid;
+  const HisnContentItemCacheCompanion({
+    this.id = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.contentText = const Value.absent(),
+    this.source = const Value.absent(),
+    this.repeatCount = const Value.absent(),
+    this.fadl = const Value.absent(),
+    this.reference = const Value.absent(),
+    this.translation = const Value.absent(),
+    this.type = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HisnContentItemCacheCompanion.insert({
+    required String id,
+    required String categoryId,
+    required String contentText,
+    required String source,
+    this.repeatCount = const Value.absent(),
+    this.fadl = const Value.absent(),
+    this.reference = const Value.absent(),
+    this.translation = const Value.absent(),
+    required String type,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       categoryId = Value(categoryId),
+       contentText = Value(contentText),
+       source = Value(source),
+       type = Value(type);
+  static Insertable<HisnContentItemCacheEntry> custom({
+    Expression<String>? id,
+    Expression<String>? categoryId,
+    Expression<String>? contentText,
+    Expression<String>? source,
+    Expression<int>? repeatCount,
+    Expression<String>? fadl,
+    Expression<String>? reference,
+    Expression<String>? translation,
+    Expression<String>? type,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (categoryId != null) 'category_id': categoryId,
+      if (contentText != null) 'content_text': contentText,
+      if (source != null) 'source': source,
+      if (repeatCount != null) 'repeat_count': repeatCount,
+      if (fadl != null) 'fadl': fadl,
+      if (reference != null) 'reference': reference,
+      if (translation != null) 'translation': translation,
+      if (type != null) 'type': type,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HisnContentItemCacheCompanion copyWith({
+    Value<String>? id,
+    Value<String>? categoryId,
+    Value<String>? contentText,
+    Value<String>? source,
+    Value<int>? repeatCount,
+    Value<String?>? fadl,
+    Value<String?>? reference,
+    Value<String?>? translation,
+    Value<String>? type,
+    Value<int>? rowid,
+  }) {
+    return HisnContentItemCacheCompanion(
+      id: id ?? this.id,
+      categoryId: categoryId ?? this.categoryId,
+      contentText: contentText ?? this.contentText,
+      source: source ?? this.source,
+      repeatCount: repeatCount ?? this.repeatCount,
+      fadl: fadl ?? this.fadl,
+      reference: reference ?? this.reference,
+      translation: translation ?? this.translation,
+      type: type ?? this.type,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (contentText.present) {
+      map['content_text'] = Variable<String>(contentText.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (repeatCount.present) {
+      map['repeat_count'] = Variable<int>(repeatCount.value);
+    }
+    if (fadl.present) {
+      map['fadl'] = Variable<String>(fadl.value);
+    }
+    if (reference.present) {
+      map['reference'] = Variable<String>(reference.value);
+    }
+    if (translation.present) {
+      map['translation'] = Variable<String>(translation.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HisnContentItemCacheCompanion(')
+          ..write('id: $id, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('contentText: $contentText, ')
+          ..write('source: $source, ')
+          ..write('repeatCount: $repeatCount, ')
+          ..write('fadl: $fadl, ')
+          ..write('reference: $reference, ')
+          ..write('translation: $translation, ')
+          ..write('type: $type, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5522,6 +6881,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AdhkarFavoritesTable adhkarFavorites = $AdhkarFavoritesTable(
     this,
   );
+  late final $CategoryFavoritesTable categoryFavorites =
+      $CategoryFavoritesTable(this);
   late final $QuranReadingProgressCacheTable quranReadingProgressCache =
       $QuranReadingProgressCacheTable(this);
   late final $QuranBookmarksTable quranBookmarks = $QuranBookmarksTable(this);
@@ -5534,6 +6895,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $TranslationTextCacheTable translationTextCache =
       $TranslationTextCacheTable(this);
+  late final $HisnContentCacheTable hisnContentCache = $HisnContentCacheTable(
+    this,
+  );
+  late final $HisnContentItemCacheTable hisnContentItemCache =
+      $HisnContentItemCacheTable(this);
   late final Index quranChapterCacheUpdatedAt = Index(
     'quran_chapter_cache_updated_at',
     'CREATE INDEX quran_chapter_cache_updated_at ON quran_chapter_cache (updated_at)',
@@ -5601,12 +6967,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     quranCacheMetadata,
     adhkarProgressCache,
     adhkarFavorites,
+    categoryFavorites,
     quranReadingProgressCache,
     quranBookmarks,
     downloadedTafsirs,
     downloadedTranslations,
     tafsirTextCache,
     translationTextCache,
+    hisnContentCache,
+    hisnContentItemCache,
     quranChapterCacheUpdatedAt,
     quranVerseCacheChapterVerse,
     quranVerseCachePageNumber,
@@ -7138,6 +8507,183 @@ typedef $$AdhkarFavoritesTableProcessedTableManager =
       AdhkarFavoritesEntry,
       PrefetchHooks Function()
     >;
+typedef $$CategoryFavoritesTableCreateCompanionBuilder =
+    CategoryFavoritesCompanion Function({
+      required String categoryId,
+      required String type,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$CategoryFavoritesTableUpdateCompanionBuilder =
+    CategoryFavoritesCompanion Function({
+      Value<String> categoryId,
+      Value<String> type,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$CategoryFavoritesTableFilterComposer
+    extends Composer<_$AppDatabase, $CategoryFavoritesTable> {
+  $$CategoryFavoritesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CategoryFavoritesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CategoryFavoritesTable> {
+  $$CategoryFavoritesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CategoryFavoritesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CategoryFavoritesTable> {
+  $$CategoryFavoritesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$CategoryFavoritesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CategoryFavoritesTable,
+          CategoryFavoritesEntry,
+          $$CategoryFavoritesTableFilterComposer,
+          $$CategoryFavoritesTableOrderingComposer,
+          $$CategoryFavoritesTableAnnotationComposer,
+          $$CategoryFavoritesTableCreateCompanionBuilder,
+          $$CategoryFavoritesTableUpdateCompanionBuilder,
+          (
+            CategoryFavoritesEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $CategoryFavoritesTable,
+              CategoryFavoritesEntry
+            >,
+          ),
+          CategoryFavoritesEntry,
+          PrefetchHooks Function()
+        > {
+  $$CategoryFavoritesTableTableManager(
+    _$AppDatabase db,
+    $CategoryFavoritesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoryFavoritesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoryFavoritesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoryFavoritesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> categoryId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryFavoritesCompanion(
+                categoryId: categoryId,
+                type: type,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String categoryId,
+                required String type,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryFavoritesCompanion.insert(
+                categoryId: categoryId,
+                type: type,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CategoryFavoritesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CategoryFavoritesTable,
+      CategoryFavoritesEntry,
+      $$CategoryFavoritesTableFilterComposer,
+      $$CategoryFavoritesTableOrderingComposer,
+      $$CategoryFavoritesTableAnnotationComposer,
+      $$CategoryFavoritesTableCreateCompanionBuilder,
+      $$CategoryFavoritesTableUpdateCompanionBuilder,
+      (
+        CategoryFavoritesEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $CategoryFavoritesTable,
+          CategoryFavoritesEntry
+        >,
+      ),
+      CategoryFavoritesEntry,
+      PrefetchHooks Function()
+    >;
 typedef $$QuranReadingProgressCacheTableCreateCompanionBuilder =
     QuranReadingProgressCacheCompanion Function({
       Value<int> id,
@@ -8591,6 +10137,575 @@ typedef $$TranslationTextCacheTableProcessedTableManager =
       TranslationTextCacheEntry,
       PrefetchHooks Function()
     >;
+typedef $$HisnContentCacheTableCreateCompanionBuilder =
+    HisnContentCacheCompanion Function({
+      required String id,
+      required String title,
+      required String subtitle,
+      required String iconKey,
+      required int count,
+      Value<String?> arabicTitle,
+      Value<int> priority,
+      required String type,
+      Value<int> rowid,
+    });
+typedef $$HisnContentCacheTableUpdateCompanionBuilder =
+    HisnContentCacheCompanion Function({
+      Value<String> id,
+      Value<String> title,
+      Value<String> subtitle,
+      Value<String> iconKey,
+      Value<int> count,
+      Value<String?> arabicTitle,
+      Value<int> priority,
+      Value<String> type,
+      Value<int> rowid,
+    });
+
+class $$HisnContentCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $HisnContentCacheTable> {
+  $$HisnContentCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subtitle => $composableBuilder(
+    column: $table.subtitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get arabicTitle => $composableBuilder(
+    column: $table.arabicTitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HisnContentCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $HisnContentCacheTable> {
+  $$HisnContentCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subtitle => $composableBuilder(
+    column: $table.subtitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get arabicTitle => $composableBuilder(
+    column: $table.arabicTitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HisnContentCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HisnContentCacheTable> {
+  $$HisnContentCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get subtitle =>
+      $composableBuilder(column: $table.subtitle, builder: (column) => column);
+
+  GeneratedColumn<String> get iconKey =>
+      $composableBuilder(column: $table.iconKey, builder: (column) => column);
+
+  GeneratedColumn<int> get count =>
+      $composableBuilder(column: $table.count, builder: (column) => column);
+
+  GeneratedColumn<String> get arabicTitle => $composableBuilder(
+    column: $table.arabicTitle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+}
+
+class $$HisnContentCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HisnContentCacheTable,
+          HisnContentCacheEntry,
+          $$HisnContentCacheTableFilterComposer,
+          $$HisnContentCacheTableOrderingComposer,
+          $$HisnContentCacheTableAnnotationComposer,
+          $$HisnContentCacheTableCreateCompanionBuilder,
+          $$HisnContentCacheTableUpdateCompanionBuilder,
+          (
+            HisnContentCacheEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $HisnContentCacheTable,
+              HisnContentCacheEntry
+            >,
+          ),
+          HisnContentCacheEntry,
+          PrefetchHooks Function()
+        > {
+  $$HisnContentCacheTableTableManager(
+    _$AppDatabase db,
+    $HisnContentCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HisnContentCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HisnContentCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HisnContentCacheTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> subtitle = const Value.absent(),
+                Value<String> iconKey = const Value.absent(),
+                Value<int> count = const Value.absent(),
+                Value<String?> arabicTitle = const Value.absent(),
+                Value<int> priority = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HisnContentCacheCompanion(
+                id: id,
+                title: title,
+                subtitle: subtitle,
+                iconKey: iconKey,
+                count: count,
+                arabicTitle: arabicTitle,
+                priority: priority,
+                type: type,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String title,
+                required String subtitle,
+                required String iconKey,
+                required int count,
+                Value<String?> arabicTitle = const Value.absent(),
+                Value<int> priority = const Value.absent(),
+                required String type,
+                Value<int> rowid = const Value.absent(),
+              }) => HisnContentCacheCompanion.insert(
+                id: id,
+                title: title,
+                subtitle: subtitle,
+                iconKey: iconKey,
+                count: count,
+                arabicTitle: arabicTitle,
+                priority: priority,
+                type: type,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HisnContentCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HisnContentCacheTable,
+      HisnContentCacheEntry,
+      $$HisnContentCacheTableFilterComposer,
+      $$HisnContentCacheTableOrderingComposer,
+      $$HisnContentCacheTableAnnotationComposer,
+      $$HisnContentCacheTableCreateCompanionBuilder,
+      $$HisnContentCacheTableUpdateCompanionBuilder,
+      (
+        HisnContentCacheEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $HisnContentCacheTable,
+          HisnContentCacheEntry
+        >,
+      ),
+      HisnContentCacheEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$HisnContentItemCacheTableCreateCompanionBuilder =
+    HisnContentItemCacheCompanion Function({
+      required String id,
+      required String categoryId,
+      required String contentText,
+      required String source,
+      Value<int> repeatCount,
+      Value<String?> fadl,
+      Value<String?> reference,
+      Value<String?> translation,
+      required String type,
+      Value<int> rowid,
+    });
+typedef $$HisnContentItemCacheTableUpdateCompanionBuilder =
+    HisnContentItemCacheCompanion Function({
+      Value<String> id,
+      Value<String> categoryId,
+      Value<String> contentText,
+      Value<String> source,
+      Value<int> repeatCount,
+      Value<String?> fadl,
+      Value<String?> reference,
+      Value<String?> translation,
+      Value<String> type,
+      Value<int> rowid,
+    });
+
+class $$HisnContentItemCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $HisnContentItemCacheTable> {
+  $$HisnContentItemCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get contentText => $composableBuilder(
+    column: $table.contentText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get repeatCount => $composableBuilder(
+    column: $table.repeatCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fadl => $composableBuilder(
+    column: $table.fadl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reference => $composableBuilder(
+    column: $table.reference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get translation => $composableBuilder(
+    column: $table.translation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HisnContentItemCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $HisnContentItemCacheTable> {
+  $$HisnContentItemCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get contentText => $composableBuilder(
+    column: $table.contentText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get repeatCount => $composableBuilder(
+    column: $table.repeatCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fadl => $composableBuilder(
+    column: $table.fadl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reference => $composableBuilder(
+    column: $table.reference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get translation => $composableBuilder(
+    column: $table.translation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HisnContentItemCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HisnContentItemCacheTable> {
+  $$HisnContentItemCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get contentText => $composableBuilder(
+    column: $table.contentText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<int> get repeatCount => $composableBuilder(
+    column: $table.repeatCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fadl =>
+      $composableBuilder(column: $table.fadl, builder: (column) => column);
+
+  GeneratedColumn<String> get reference =>
+      $composableBuilder(column: $table.reference, builder: (column) => column);
+
+  GeneratedColumn<String> get translation => $composableBuilder(
+    column: $table.translation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+}
+
+class $$HisnContentItemCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HisnContentItemCacheTable,
+          HisnContentItemCacheEntry,
+          $$HisnContentItemCacheTableFilterComposer,
+          $$HisnContentItemCacheTableOrderingComposer,
+          $$HisnContentItemCacheTableAnnotationComposer,
+          $$HisnContentItemCacheTableCreateCompanionBuilder,
+          $$HisnContentItemCacheTableUpdateCompanionBuilder,
+          (
+            HisnContentItemCacheEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $HisnContentItemCacheTable,
+              HisnContentItemCacheEntry
+            >,
+          ),
+          HisnContentItemCacheEntry,
+          PrefetchHooks Function()
+        > {
+  $$HisnContentItemCacheTableTableManager(
+    _$AppDatabase db,
+    $HisnContentItemCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HisnContentItemCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HisnContentItemCacheTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HisnContentItemCacheTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> categoryId = const Value.absent(),
+                Value<String> contentText = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<int> repeatCount = const Value.absent(),
+                Value<String?> fadl = const Value.absent(),
+                Value<String?> reference = const Value.absent(),
+                Value<String?> translation = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HisnContentItemCacheCompanion(
+                id: id,
+                categoryId: categoryId,
+                contentText: contentText,
+                source: source,
+                repeatCount: repeatCount,
+                fadl: fadl,
+                reference: reference,
+                translation: translation,
+                type: type,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String categoryId,
+                required String contentText,
+                required String source,
+                Value<int> repeatCount = const Value.absent(),
+                Value<String?> fadl = const Value.absent(),
+                Value<String?> reference = const Value.absent(),
+                Value<String?> translation = const Value.absent(),
+                required String type,
+                Value<int> rowid = const Value.absent(),
+              }) => HisnContentItemCacheCompanion.insert(
+                id: id,
+                categoryId: categoryId,
+                contentText: contentText,
+                source: source,
+                repeatCount: repeatCount,
+                fadl: fadl,
+                reference: reference,
+                translation: translation,
+                type: type,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HisnContentItemCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HisnContentItemCacheTable,
+      HisnContentItemCacheEntry,
+      $$HisnContentItemCacheTableFilterComposer,
+      $$HisnContentItemCacheTableOrderingComposer,
+      $$HisnContentItemCacheTableAnnotationComposer,
+      $$HisnContentItemCacheTableCreateCompanionBuilder,
+      $$HisnContentItemCacheTableUpdateCompanionBuilder,
+      (
+        HisnContentItemCacheEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $HisnContentItemCacheTable,
+          HisnContentItemCacheEntry
+        >,
+      ),
+      HisnContentItemCacheEntry,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8607,6 +10722,8 @@ class $AppDatabaseManager {
       $$AdhkarProgressCacheTableTableManager(_db, _db.adhkarProgressCache);
   $$AdhkarFavoritesTableTableManager get adhkarFavorites =>
       $$AdhkarFavoritesTableTableManager(_db, _db.adhkarFavorites);
+  $$CategoryFavoritesTableTableManager get categoryFavorites =>
+      $$CategoryFavoritesTableTableManager(_db, _db.categoryFavorites);
   $$QuranReadingProgressCacheTableTableManager get quranReadingProgressCache =>
       $$QuranReadingProgressCacheTableTableManager(
         _db,
@@ -8625,4 +10742,8 @@ class $AppDatabaseManager {
       $$TafsirTextCacheTableTableManager(_db, _db.tafsirTextCache);
   $$TranslationTextCacheTableTableManager get translationTextCache =>
       $$TranslationTextCacheTableTableManager(_db, _db.translationTextCache);
+  $$HisnContentCacheTableTableManager get hisnContentCache =>
+      $$HisnContentCacheTableTableManager(_db, _db.hisnContentCache);
+  $$HisnContentItemCacheTableTableManager get hisnContentItemCache =>
+      $$HisnContentItemCacheTableTableManager(_db, _db.hisnContentItemCache);
 }

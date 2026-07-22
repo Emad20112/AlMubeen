@@ -3,7 +3,7 @@ import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 Future<void> showQuranBookmarksSheet({
   required BuildContext context,

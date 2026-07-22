@@ -1,4 +1,5 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/widgets/app_loading_overlay.dart';
 import 'package:al_mubeen/features/quran/application/quran_surah_player_controller.dart';
 import 'package:al_mubeen/features/quran/application/quran_surah_player_provider.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
@@ -26,62 +27,79 @@ class SurahPlayerControls extends ConsumerWidget {
     final controller = ref.read(quranSurahPlayerProvider.notifier);
     final iconColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
 
-    return Column(
+    return Stack(
       children: [
-        const SizedBox(height: 24),
+        Column(
+          children: [
+            const SizedBox(height: 24),
 
-        // ── Control buttons row ──
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Rewind 10s button
-              _SeekButton(
-                icon: Icons.replay_rounded,
-                label: '10',
-                iconColor: iconColor,
-                onTap: () => controller.seekBackward10(),
-              ),
+            // ── Control buttons row ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Rewind 10s button
+                  _SeekButton(
+                    icon: Icons.replay_rounded,
+                    label: '10',
+                    iconColor: iconColor,
+                    onTap: () => controller.seekBackward10(),
+                  ),
 
-              // Play/Pause button (large circular)
-              _PlayPauseButton(
-                isPlaying: playerState.isPlaying,
-                isLoading: playerState.isLoading,
-                accentColor: accentColor,
-                isDark: isDark,
-                onTap: () {
-                  if (playerState.recitationId != null) {
-                    controller.togglePlayPause();
-                  } else if (activeRecitation != null) {
-                    controller.playSurah(
-                      surahNumber: playerState.currentSurah,
-                      recitationId: activeRecitation!.id,
-                    );
-                  }
-                },
-              ),
+                  // Play/Pause button (large circular)
+                  _PlayPauseButton(
+                    isPlaying: playerState.isPlaying,
+                    isLoading: playerState.isLoading,
+                    accentColor: accentColor,
+                    isDark: isDark,
+                    onTap: () {
+                      if (playerState.recitationId != null) {
+                        controller.togglePlayPause();
+                      } else if (activeRecitation != null) {
+                        controller.playSurah(
+                          surahNumber: playerState.currentSurah,
+                          recitationId: activeRecitation!.id,
+                        );
+                      }
+                    },
+                  ),
 
-              // Forward 10s button
-              _SeekButton(
-                icon: Icons.forward_rounded,
-                label: '10',
-                iconColor: iconColor,
-                onTap: () => controller.seekForward10(),
-              ),
+                  // Forward 10s button
+                  _SeekButton(
+                    icon: Icons.forward_rounded,
+                    label: '10',
+                    iconColor: iconColor,
+                    onTap: () => controller.seekForward10(),
+                  ),
 
-              // Repeat button
-              _ControlIconButton(
-                icon: _repeatIcon(playerState.repeatMode),
-                label: 'تكرار',
-                iconColor: playerState.repeatMode != SurahRepeatMode.off
-                    ? accentColor
-                    : iconColor,
-                onTap: () => controller.cycleRepeatMode(),
+                  // Repeat button
+                  _ControlIconButton(
+                    icon: _repeatIcon(playerState.repeatMode),
+                    label: 'تكرار',
+                    iconColor: playerState.repeatMode != SurahRepeatMode.off
+                        ? accentColor
+                        : iconColor,
+                    onTap: () => controller.cycleRepeatMode(),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+
+        if (playerState.isLoading)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black26,
+              child: Center(
+                child: AppLoadingOverlay(
+                  icon: Icons.headphones_rounded,
+                  message: 'جاري تجهيز التلاوة',
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

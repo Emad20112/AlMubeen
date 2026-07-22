@@ -1,16 +1,26 @@
 import 'package:al_mubeen/app/al_mubeen_app.dart';
 import 'package:al_mubeen/core/config/app_config.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
-import 'package:qcf_quran_plus/src/services/get_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await AppConfig.load();
+  // Global safety net: catches unhandled errors from platform plugins
+  // and prevents the app from crashing.
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('PlatformDispatcher error: $error');
+    return true; // Prevent crash
+  };
 
-  GetPage().getQuran(totalPagesCount);
+  // Catch Flutter framework errors
+  FlutterError.onError = (details) {
+    debugPrint('FlutterError: ${details.exception}');
+    debugPrint('${details.stack}');
+  };
+
+  await AppConfig.load();
 
   runApp(const ProviderScope(child: AlMubeenApp()));
 }

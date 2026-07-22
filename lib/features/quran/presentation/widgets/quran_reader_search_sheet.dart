@@ -6,7 +6,7 @@ import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 Future<void> showQuranReaderSearchSheet({
   required BuildContext context,
@@ -43,6 +43,9 @@ class _QuranReaderSearchSheetState
     extends ConsumerState<_QuranReaderSearchSheet> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
+
+  // Pre-built surah metadata – avoids calling qcf_quran helpers on every keystroke.
+  static final _surahCache = QuranSurahMetadataCache.instance;
 
   @override
   void dispose() {
@@ -94,7 +97,7 @@ class _QuranReaderSearchSheetState
       if (normalizedQuery.isEmpty)
         _SearchResult(
           title: 'الصفحة الحالية',
-          subtitle: 'صفحة ${_toArabicDigits(widget.currentPage)}',
+          subtitle: 'صفحة ${convertToArabicDigits(widget.currentPage)}',
           page: widget.currentPage,
           icon: Icons.chrome_reader_mode_rounded,
         )
@@ -102,7 +105,7 @@ class _QuranReaderSearchSheetState
           parsedPage >= 1 &&
           parsedPage <= totalPagesCount)
         _SearchResult(
-          title: 'صفحة ${_toArabicDigits(parsedPage)}',
+          title: 'صفحة ${convertToArabicDigits(parsedPage)}',
           subtitle: 'الانتقال مباشرة إلى الصفحة',
           page: parsedPage,
           icon: Icons.chrome_reader_mode_rounded,
@@ -111,35 +114,33 @@ class _QuranReaderSearchSheetState
 
     final surahResults = <_SearchResult>[];
     if (normalizedQuery.isNotEmpty) {
-      for (var surah = 1; surah <= totalSurahCount; surah++) {
-        final name = getSurahNameArabic(surah);
-        final page = getPageNumber(surah, 1);
-        final ayahCount = getVerseCount(surah);
-        final pageLabel = 'صفحة ${_toArabicDigits(page)}';
+      for (final surah in _surahCache.all) {
         final matches =
-            name.contains(normalizedQuery) ||
-            surah.toString() == normalizedQuery ||
-            _toArabicDigits(surah).contains(normalizedQuery);
+            surah.nameArabic.contains(normalizedQuery) ||
+            surah.number.toString() == normalizedQuery ||
+            convertToArabicDigits(surah.number).contains(normalizedQuery);
         if (!matches) {
           continue;
         }
 
+        final pageLabel = 'صفحة ${convertToArabicDigits(surah.firstPage)}';
         surahResults.add(
           _SearchResult(
-            title: name,
-            subtitle: '$pageLabel • $ayahCount آية',
-            page: page,
+            title: surah.nameArabic,
+            subtitle: '$pageLabel • ${surah.verseCount} آية',
+            page: surah.firstPage,
             icon: Icons.auto_stories_rounded,
           ),
         );
       }
     } else {
+      final currentSurahMeta = _surahCache.all[currentSurah - 1];
       surahResults.add(
         _SearchResult(
-          title: getSurahNameArabic(currentSurah),
+          title: currentSurahMeta.nameArabic,
           subtitle:
-              'السورة الحالية • صفحة ${_toArabicDigits(widget.currentPage)}',
-          page: getPageNumber(currentSurah, 1),
+              'السورة الحالية • صفحة ${convertToArabicDigits(widget.currentPage)}',
+          page: currentSurahMeta.firstPage,
           icon: Icons.auto_stories_rounded,
         ),
       );
@@ -651,20 +652,4 @@ String _recitationLabel(QuranRecitation recitation) {
     return '${recitation.reciterName} - $style';
   }
   return recitation.reciterName;
-}
-
-String _toArabicDigits(int number) {
-  const digits = {
-    '0': '٠',
-    '1': '١',
-    '2': '٢',
-    '3': '٣',
-    '4': '٤',
-    '5': '٥',
-    '6': '٦',
-    '7': '٧',
-    '8': '٨',
-    '9': '٩',
-  };
-  return number.toString().split('').map((d) => digits[d] ?? d).join();
 }

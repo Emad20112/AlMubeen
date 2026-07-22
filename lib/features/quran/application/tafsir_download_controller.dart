@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
 import 'package:al_mubeen/core/data/request_abort_handle.dart';
+import 'package:al_mubeen/features/quran/application/quran_download_session_store.dart';
 import 'package:al_mubeen/features/quran/data/local/tafsir_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
+import 'package:al_mubeen/features/quran/domain/tafsir_defaults.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 final tafsirDownloadControllerProvider =
     NotifierProvider<TafsirDownloadController, TafsirDownloadState>(
@@ -129,6 +131,9 @@ final class TafsirDownloadState {
 
 final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
   static const int _totalChapters = 114;
+  static const Duration _chapterYieldDelay = Duration(milliseconds: 16);
+
+  final QuranDownloadSessionStore _sessionStore = QuranDownloadSessionStore();
 
   bool _isCancelled = false;
   bool _isPaused = false;
@@ -147,6 +152,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
     _isPaused = true;
     _pauseInterruptRequested = true;
     _activeRequestAbortHandle?.abort();
+    unawaited(_sessionStore.updateTafsirStatus(QuranTextDownloadStatus.paused));
     _pauseCompleter = Completer<void>();
     state = state.copyWith(
       status: TafsirDownloadStatus.paused,
@@ -159,6 +165,9 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
     _isPaused = false;
     _pauseCompleter?.complete();
     _pauseCompleter = null;
+    unawaited(
+      _sessionStore.updateTafsirStatus(QuranTextDownloadStatus.downloading),
+    );
     state = state.copyWith(
       status: TafsirDownloadStatus.downloading,
       message: 'جاري استئناف التنزيل...',
@@ -174,6 +183,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
       _isPaused = false;
       _pauseCompleter?.complete();
     }
+    unawaited(_sessionStore.clearTafsirSession());
     state = state.copyWith(
       status: TafsirDownloadStatus.cancelled,
       message: 'تم إلغاء التنزيل',
@@ -181,8 +191,15 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
   }
 
   Future<bool> ensureDefaultTafsirDownloaded({
-    int defaultResourceId = 16,
+    int defaultResourceId = defaultTafsirResourceId,
   }) async {
+    if (defaultResourceId == defaultTafsirResourceId) {
+      await ref
+          .read(defaultTafsirSeedServiceProvider)
+          .ensureSeeded();
+      return true;
+    }
+
     final localDataSource = ref.read(tafsirLocalDataSourceProvider);
     if (await localDataSource.isTafsirDownloaded(defaultResourceId)) {
       final downloadedTafsirs = await localDataSource.getDownloadedTafsirs();
@@ -207,6 +224,16 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
     bool selectOnComplete = true,
     bool force = false,
   }) async {
+    if (tafsir.id == defaultTafsirResourceId) {
+      await ref
+          .read(defaultTafsirSeedServiceProvider)
+          .ensureSeeded();
+      if (selectOnComplete) {
+        ref.read(selectedTafsirProvider.notifier).state = tafsir.id;
+      }
+      return true;
+    }
+
     if (state.isDownloading || state.isPaused) {
       return false;
     }
@@ -219,6 +246,10 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
 
     final localDataSource = ref.read(tafsirLocalDataSourceProvider);
     final repository = ref.read(quranRepositoryProvider);
+    await _sessionStore.saveTafsirSession(
+      tafsir,
+      selectOnComplete: selectOnComplete,
+    );
     final cachedChapters = force
         ? <int>{}
         : await localDataSource.getCachedTafsirChapterIds(tafsir.id);
@@ -267,6 +298,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
           localDataSource: localDataSource,
           resourceId: tafsir.id,
         );
+        await _sessionStore.clearTafsirSession();
         state = state.copyWith(
           status: TafsirDownloadStatus.cancelled,
           message: 'تم إلغاء التنزيل وتم حذف الملفات الجزئية.',
@@ -281,6 +313,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
             localDataSource: localDataSource,
             resourceId: tafsir.id,
           );
+          await _sessionStore.clearTafsirSession();
           state = state.copyWith(
             status: TafsirDownloadStatus.cancelled,
             message: 'تم إلغاء التنزيل وتم حذف الملفات الجزئية.',
@@ -299,16 +332,29 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
         clearErrorMessage: true,
       );
 
-      final abortHandle = RequestAbortHandle();
-      _activeRequestAbortHandle = abortHandle;
-      final result = await repository.getTafsirChapterTexts(
-        resourceId: tafsir.id,
-        chapterNumber: chapterNumber,
-        fetchPolicy: DataFetchPolicy.networkOnly,
-        abortHandle: abortHandle,
-      );
-      if (_activeRequestAbortHandle == abortHandle) {
-        _activeRequestAbortHandle = null;
+      const maxRetries = 3;
+      var attempt = 0;
+      dynamic result;
+      while (attempt < maxRetries) {
+        attempt++;
+        final abortHandle = RequestAbortHandle();
+        _activeRequestAbortHandle = abortHandle;
+        result = await repository.getTafsirChapterTexts(
+          resourceId: tafsir.id,
+          chapterNumber: chapterNumber,
+          fetchPolicy: DataFetchPolicy.networkOnly,
+          abortHandle: abortHandle,
+        );
+        if (_activeRequestAbortHandle == abortHandle) {
+          _activeRequestAbortHandle = null;
+        }
+
+        if (result.isSuccess || _isCancelled || _pauseInterruptRequested) {
+          break;
+        }
+        if (attempt < maxRetries) {
+          await Future<void>.delayed(Duration(milliseconds: 400 * attempt));
+        }
       }
 
       final failure = result.failureOrNull;
@@ -318,6 +364,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
             localDataSource: localDataSource,
             resourceId: tafsir.id,
           );
+          await _sessionStore.clearTafsirSession();
           state = state.copyWith(
             status: TafsirDownloadStatus.cancelled,
             message: 'تم إلغاء التنزيل وتم حذف الملفات الجزئية.',
@@ -335,6 +382,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
                 localDataSource: localDataSource,
                 resourceId: tafsir.id,
               );
+              await _sessionStore.clearTafsirSession();
               state = state.copyWith(
                 status: TafsirDownloadStatus.cancelled,
                 message: 'تم إلغاء التنزيل وتم حذف الملفات الجزئية.',
@@ -352,6 +400,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
           message: 'تعذر متابعة تنزيل التفسير.',
           errorMessage: 'تم إيقاف الطلب الجاري بشكل غير متوقع.',
         );
+        await _sessionStore.clearTafsirSession();
         return false;
       }
 
@@ -366,6 +415,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
           errorMessage: 'لم يتم العثور على نص التفسير لهذه السورة.',
         );
         chapterIndex++;
+        await Future<void>.delayed(_chapterYieldDelay);
         continue;
       }
 
@@ -385,6 +435,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
       );
 
       chapterIndex++;
+      await Future<void>.delayed(_chapterYieldDelay);
     }
 
     final isFullyCached = await localDataSource.isTafsirDownloaded(tafsir.id);
@@ -396,6 +447,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
       if (selectOnComplete) {
         ref.read(selectedTafsirProvider.notifier).state = tafsir.id;
       }
+      await _sessionStore.clearTafsirSession();
 
       state = TafsirDownloadState.completed(
         totalChapters: _totalChapters,
@@ -418,6 +470,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
       message: 'اكتمل التنزيل مع بعض الأخطاء.',
       errorMessage: 'فشل تنزيل بعض السور. يمكن إعادة المحاولة لاحقًا.',
     );
+    await _sessionStore.clearTafsirSession();
     return false;
   }
 
@@ -436,6 +489,7 @@ final class TafsirDownloadController extends Notifier<TafsirDownloadState> {
     _pauseInterruptRequested = false;
     await localDataSource.deleteDownloadedTafsirMetadata(resourceId);
     ref.invalidate(downloadedTafsirsProvider);
+    await _sessionStore.clearTafsirSession();
   }
 
   Future<Tafsir> _resolveTafsir(int resourceId) async {

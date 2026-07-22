@@ -1,6 +1,6 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 /// A bottom sheet that displays a searchable list of all 114 surahs.
 /// Returns the selected surah number when tapped.
@@ -15,11 +15,12 @@ class SurahListSheet extends StatefulWidget {
 
 class _SurahListSheetState extends State<SurahListSheet> {
   final TextEditingController _searchController = TextEditingController();
-  String _query = '';
+  final ValueNotifier<String> _query = ValueNotifier<String>('');
 
   @override
   void dispose() {
     _searchController.dispose();
+    _query.dispose();
     super.dispose();
   }
 
@@ -36,16 +37,6 @@ class _SurahListSheetState extends State<SurahListSheet> {
         isDark ? AppColors.parchmentMuted : AppColors.maroon700;
 
     final allSurahs = List.generate(totalSurahCount, (i) => i + 1);
-    final filteredSurahs = _query.isEmpty
-        ? allSurahs
-        : allSurahs.where((surah) {
-            final name = getSurahNameArabic(surah).toLowerCase();
-            final englishName = getSurahName(surah).toLowerCase();
-            final q = _query.toLowerCase();
-            return name.contains(q) ||
-                englishName.contains(q) ||
-                surah.toString().contains(q);
-          }).toList();
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -124,48 +115,67 @@ class _SurahListSheetState extends State<SurahListSheet> {
                 // Search
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) => setState(() => _query = val),
-                    decoration: InputDecoration(
-                      hintText: 'ابحث عن سورة...',
-                      hintStyle: TextStyle(color: mutedColor),
-                      prefixIcon: Icon(Icons.search, color: mutedColor),
-                      suffixIcon: _query.isNotEmpty
-                          ? IconButton(
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _query = '');
-                              },
-                              icon: Icon(Icons.clear, color: mutedColor),
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: accentColor.withValues(alpha: 0.06),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: _query,
+                    builder: (context, queryValue, _) {
+                      return TextField(
+                        controller: _searchController,
+                        onChanged: (val) => _query.value = val,
+                        decoration: InputDecoration(
+                          hintText: 'ابحث عن سورة...',
+                          hintStyle: TextStyle(color: mutedColor),
+                          prefixIcon: Icon(Icons.search, color: mutedColor),
+                          suffixIcon: queryValue.isNotEmpty
+                              ? IconButton(
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _query.value = '';
+                                  },
+                                  icon: Icon(Icons.clear, color: mutedColor),
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: accentColor.withValues(alpha: 0.06),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                      );
+                    }
                   ),
                 ),
                 const Divider(height: 1),
                 // Surah list
                 Expanded(
-                  child: ListView.builder(
-                    controller: scrollController,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    itemCount: filteredSurahs.length,
-                    itemBuilder: (context, index) {
-                      final surah = filteredSurahs[index];
-                      final isSelected = surah == widget.currentSurah;
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: _query,
+                    builder: (context, queryValue, _) {
+                      final filteredSurahs = queryValue.isEmpty
+                          ? allSurahs
+                          : allSurahs.where((surah) {
+                              final name = getSurahNameArabic(surah).toLowerCase();
+                              final englishName = getSurahName(surah).toLowerCase();
+                              final q = queryValue.toLowerCase();
+                              return name.contains(q) ||
+                                  englishName.contains(q) ||
+                                  surah.toString().contains(q);
+                            }).toList();
+                      
+                      return ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        itemCount: filteredSurahs.length,
+                        itemBuilder: (context, index) {
+                          final surah = filteredSurahs[index];
+                          final isSelected = surah == widget.currentSurah;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 4),
@@ -251,6 +261,8 @@ class _SurahListSheetState extends State<SurahListSheet> {
                             ),
                           ),
                         ),
+                      );
+                        },
                       );
                     },
                   ),

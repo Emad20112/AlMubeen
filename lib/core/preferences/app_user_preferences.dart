@@ -22,17 +22,19 @@ class AppUserPreferences {
     required this.autoContinueFromLastPosition,
     required this.easyListeningMode,
     required this.recentSleepTimers,
+    required this.lastQuranPage,
   });
 
   const AppUserPreferences.initial()
     : hasCompletedWelcome = false,
       themePreference = AppThemePreference.system,
-      fontScale = 1.0,
+      fontScale = 0.85,
       preferredReciterId = null,
       preferredReciterName = null,
       autoContinueFromLastPosition = true,
       easyListeningMode = true,
-      recentSleepTimers = const [];
+      recentSleepTimers = const [],
+      lastQuranPage = null;
 
   final bool hasCompletedWelcome;
   final AppThemePreference themePreference;
@@ -42,6 +44,7 @@ class AppUserPreferences {
   final bool autoContinueFromLastPosition;
   final bool easyListeningMode;
   final List<int> recentSleepTimers;
+  final int? lastQuranPage;
 
   ThemeMode get resolvedThemeMode => switch (themePreference) {
     AppThemePreference.light => ThemeMode.light,
@@ -51,11 +54,12 @@ class AppUserPreferences {
 
   bool get hasSavedPreferences {
     return themePreference != AppThemePreference.system ||
-        (fontScale - 1.0).abs() > 0.001 ||
+        (fontScale - 0.85).abs() > 0.001 ||
         preferredReciterId != null ||
         !autoContinueFromLastPosition ||
         !easyListeningMode ||
-        recentSleepTimers.isNotEmpty;
+        recentSleepTimers.isNotEmpty ||
+        lastQuranPage != null;
   }
 
   AppUserPreferences copyWith({
@@ -67,6 +71,7 @@ class AppUserPreferences {
     bool? autoContinueFromLastPosition,
     bool? easyListeningMode,
     List<int>? recentSleepTimers,
+    Object? lastQuranPage = _unset,
   }) {
     return AppUserPreferences(
       hasCompletedWelcome: hasCompletedWelcome ?? this.hasCompletedWelcome,
@@ -82,6 +87,9 @@ class AppUserPreferences {
           autoContinueFromLastPosition ?? this.autoContinueFromLastPosition,
       easyListeningMode: easyListeningMode ?? this.easyListeningMode,
       recentSleepTimers: recentSleepTimers ?? this.recentSleepTimers,
+      lastQuranPage: lastQuranPage == _unset
+          ? this.lastQuranPage
+          : lastQuranPage as int?,
     );
   }
 
@@ -95,6 +103,7 @@ class AppUserPreferences {
       'autoContinueFromLastPosition': autoContinueFromLastPosition,
       'easyListeningMode': easyListeningMode,
       'recentSleepTimers': recentSleepTimers,
+      'lastQuranPage': lastQuranPage,
     };
   }
 
@@ -110,11 +119,13 @@ class AppUserPreferences {
       autoContinueFromLastPosition:
           json['autoContinueFromLastPosition'] as bool? ?? true,
       easyListeningMode: json['easyListeningMode'] as bool? ?? true,
-      recentSleepTimers: (json['recentSleepTimers'] as List<dynamic>?)
+      recentSleepTimers:
+          (json['recentSleepTimers'] as List<dynamic>?)
               ?.map((e) => _readInt(e) ?? 0)
               .where((e) => e > 0)
               .toList() ??
           const [],
+      lastQuranPage: _readInt(json['lastQuranPage']),
     );
   }
 
@@ -210,14 +221,22 @@ final appUserPreferencesProvider =
 
 class AppUserPreferencesController extends AsyncNotifier<AppUserPreferences> {
   late final AppUserPreferencesStore _store;
+  AppUserPreferences? _cachedValue;
 
   @override
   Future<AppUserPreferences> build() async {
     _store = ref.watch(appUserPreferencesStoreProvider);
-    return _store.read();
+    final preferences = await _store.read();
+    _cachedValue = preferences;
+    return preferences;
   }
 
   AppUserPreferences get _currentValue {
+    final cachedValue = _cachedValue;
+    if (cachedValue != null) {
+      return cachedValue;
+    }
+
     return state.maybeWhen(
       data: (value) => value,
       orElse: () => const AppUserPreferences.initial(),
@@ -234,7 +253,7 @@ class AppUserPreferencesController extends AsyncNotifier<AppUserPreferences> {
 
   Future<void> setFontScale(double scale) {
     return _save(
-      _currentValue.copyWith(fontScale: scale.clamp(0.9, 1.25).toDouble()),
+      _currentValue.copyWith(fontScale: scale.clamp(0.55, 1.25).toDouble()),
     );
   }
 
@@ -257,6 +276,13 @@ class AppUserPreferencesController extends AsyncNotifier<AppUserPreferences> {
     return _save(_currentValue.copyWith(easyListeningMode: value));
   }
 
+  Future<void> setLastQuranPage(int page) {
+    return _save(
+      _currentValue.copyWith(lastQuranPage: page.clamp(1, 604)),
+      notifyListeners: false,
+    );
+  }
+
   Future<void> addRecentSleepTimer(int seconds) async {
     if (seconds <= 0) return;
     final list = List<int>.from(_currentValue.recentSleepTimers);
@@ -268,8 +294,15 @@ class AppUserPreferencesController extends AsyncNotifier<AppUserPreferences> {
     return _save(_currentValue.copyWith(recentSleepTimers: list));
   }
 
-  Future<void> _save(AppUserPreferences updated) async {
-    state = AsyncData(updated);
+  Future<void> _save(
+    AppUserPreferences updated, {
+    bool notifyListeners = true,
+  }) async {
+    _cachedValue = updated;
+    if (notifyListeners) {
+      state = AsyncData(updated);
+    }
+
     try {
       await _store.write(updated);
     } catch (error, stackTrace) {

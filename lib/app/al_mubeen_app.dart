@@ -29,9 +29,10 @@ class AlMubeenApp extends ConsumerWidget {
               data: (settings) => settings.fontScale,
               orElse: () => 1.0,
             )
-            .clamp(0.9, 1.25)
+            .clamp(0.55, 1.25)
             .toDouble();
-        final combinedTextScale = mediaQuery.textScaler.scale(1.0) * fontScale;
+        final systemTextScale = mediaQuery.textScaler.scale(1.0).clamp(0.8, 1.3);
+        final combinedTextScale = (systemTextScale * fontScale).clamp(0.8, 1.45);
 
         return Directionality(
           textDirection: TextDirection.rtl,

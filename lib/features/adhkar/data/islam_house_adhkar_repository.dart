@@ -7,43 +7,24 @@ import 'package:al_mubeen/features/adhkar/domain/repositories/adhkar_repository.
 class IslamHouseAdhkarRepository implements AdhkarRepository {
   IslamHouseAdhkarRepository({
     required AdhkarLocalDataSource localDataSource,
-    required AdhkarRepository fallback,
-  }) : _localDataSource = localDataSource,
-       _fallback = fallback;
+  }) : _localDataSource = localDataSource;
 
   final AdhkarLocalDataSource _localDataSource;
-  final AdhkarRepository _fallback;
-  final Map<String, List<AdhkarItem>> _itemsCache = {};
 
   @override
-  List<AdhkarCategory> getCategories() => _fallback.getCategories();
-
-  @override
-  AdhkarCategory? getCategoryById(String id) => _fallback.getCategoryById(id);
-
-  @override
-  Future<List<AdhkarItem>> getItemsByCategory(String categoryId) async {
-    final cachedItems = _itemsCache[categoryId];
-    if (cachedItems != null) {
-      return cachedItems;
-    }
-
-    try {
-      final localItems = await _localDataSource.getItemsByCategory(categoryId);
-      if (localItems.isNotEmpty) {
-        _itemsCache[categoryId] = localItems;
-        return localItems;
-      }
-    } catch (e) {
-      // تجاهل الخطأ في جلب البيانات المحلية والعودة للمستودع الاحتياطي
-    }
-
-    final fallbackItems = await _fallback.getItemsByCategory(categoryId);
-    _itemsCache[categoryId] = fallbackItems;
-    return fallbackItems;
+  Future<List<AdhkarCategory>> getCategories() async {
+    return await _localDataSource.getCategories();
   }
 
-  void dispose() {
-    // لا حاجة لعمليات إغلاق حالياً
+  @override
+  Future<AdhkarCategory?> getCategoryById(String id) async {
+    return await _localDataSource.getCategoryById(id);
   }
+
+  @override
+  Future<List<AdhkarItem>> getItemsByCategory(String categoryId) {
+    return _localDataSource.getItemsByCategory(categoryId);
+  }
+
+  void dispose() {}
 }

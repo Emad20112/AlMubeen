@@ -123,6 +123,16 @@ class AdhkarFavorites extends Table {
   Set<Column<Object>> get primaryKey => {itemId};
 }
 
+@DataClassName('CategoryFavoritesEntry')
+class CategoryFavorites extends Table {
+  TextColumn get categoryId => text()();
+  TextColumn get type => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {categoryId};
+}
+
 @DataClassName('QuranReadingProgressEntry')
 class QuranReadingProgressCache extends Table {
   IntColumn get id => integer().withDefault(const Constant(1))();
@@ -243,6 +253,37 @@ class TranslationTextCache extends Table {
   Set<Column<Object>> get primaryKey => {resourceId, chapterId, ayahNumber};
 }
 
+@DataClassName('HisnContentCacheEntry')
+class HisnContentCache extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get subtitle => text()();
+  TextColumn get iconKey => text()();
+  IntColumn get count => integer()();
+  TextColumn get arabicTitle => text().nullable()();
+  IntColumn get priority => integer().withDefault(const Constant(99))();
+  TextColumn get type => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('HisnContentItemCacheEntry')
+class HisnContentItemCache extends Table {
+  TextColumn get id => text()();
+  TextColumn get categoryId => text()();
+  TextColumn get contentText => text().named('content_text')();
+  TextColumn get source => text()();
+  IntColumn get repeatCount => integer().withDefault(const Constant(1))();
+  TextColumn get fadl => text().nullable()();
+  TextColumn get reference => text().nullable()();
+  TextColumn get translation => text().nullable()();
+  TextColumn get type => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     QuranChapterCache,
@@ -251,12 +292,15 @@ class TranslationTextCache extends Table {
     QuranCacheMetadata,
     AdhkarProgressCache,
     AdhkarFavorites,
+    CategoryFavorites,
     QuranReadingProgressCache,
     QuranBookmarks,
     DownloadedTafsirs,
     DownloadedTranslations,
     TafsirTextCache,
     TranslationTextCache,
+    HisnContentCache,
+    HisnContentItemCache,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -265,7 +309,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forExecutor(super.executor);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration {
@@ -372,6 +416,13 @@ class AppDatabase extends _$AppDatabase {
             CREATE INDEX IF NOT EXISTS translation_text_cache_updated_at 
             ON translation_text_cache (cached_at)
           ''');
+        }
+        if (from < 9) {
+          await migrator.createTable(hisnContentCache);
+          await migrator.createTable(hisnContentItemCache);
+        }
+        if (from < 10) {
+          await migrator.createTable(categoryFavorites);
         }
       },
     );

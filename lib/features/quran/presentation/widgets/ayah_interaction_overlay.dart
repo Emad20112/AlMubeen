@@ -10,7 +10,7 @@ import 'package:al_mubeen/features/quran/presentation/widgets/tafsir_bottom_shee
 import 'package:flutter/material.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 import 'package:flutter/services.dart';
 

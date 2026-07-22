@@ -1,6 +1,6 @@
+import 'package:al_mubeen/features/quran/data/models/highlight_verse.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:flutter/material.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 
 class QuranHighlightController extends ValueNotifier<List<HighlightVerse>> {
   QuranHighlightController() : super(const []);

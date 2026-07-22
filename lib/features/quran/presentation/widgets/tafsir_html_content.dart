@@ -9,6 +9,7 @@ class TafsirHtmlContent extends StatelessWidget {
     required this.textStyle,
     required this.accentColor,
     this.padding = const EdgeInsets.all(20),
+    this.scrollable = true,
     super.key,
   });
 
@@ -16,82 +17,86 @@ class TafsirHtmlContent extends StatelessWidget {
   final TextStyle textStyle;
   final Color accentColor;
   final EdgeInsetsGeometry padding;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
     final normalizedHtml = _normalizeTafsirHtml(text);
+    final content = HtmlWidget(
+      normalizedHtml,
+      enableCaching: true,
+      buildAsync: normalizedHtml.length > 10000,
+      renderMode: scrollable
+          ? ListViewMode(padding: padding, primary: false)
+          : const ColumnMode(),
+      textStyle: textStyle,
+      customStylesBuilder: (element) {
+        switch (element.localName) {
+          case 'body':
+          case 'div':
+            return const {
+              'direction': 'rtl',
+              'text-align': 'justify',
+              'line-height': '1.95',
+            };
+          case 'p':
+            return const {'margin': '0 0 12px 0', 'line-height': '1.95'};
+          case 'ul':
+          case 'ol':
+            return const {
+              'margin': '0 0 12px 0',
+              'padding-inline-start': '22px',
+            };
+          case 'li':
+            return const {'margin': '0 0 8px 0'};
+          case 'blockquote':
+            return {
+              'margin': '12px 0',
+              'padding': '12px 14px',
+              'border-right': '3px solid ${_cssHexColor(accentColor)}',
+              'background-color': _cssRgbaColor(
+                accentColor.withValues(alpha: 0.08),
+              ),
+              'border-radius': '12px',
+            };
+          case 'h1':
+          case 'h2':
+          case 'h3':
+          case 'h4':
+          case 'h5':
+          case 'h6':
+            return const {
+              'margin': '16px 0 12px 0',
+              'font-weight': '700',
+              'line-height': '1.5',
+            };
+          case 'table':
+            return const {'width': '100%', 'margin': '12px 0'};
+          case 'td':
+          case 'th':
+            return const {'padding': '6px 8px', 'vertical-align': 'top'};
+        }
+
+        return null;
+      },
+      onLoadingBuilder: (context, element, progress) {
+        return const _TafsirHtmlLoading();
+      },
+      onErrorBuilder: (context, element, error) {
+        return Padding(
+          padding: padding,
+          child: Text(
+            _plainTextFallback(text),
+            style: textStyle,
+            textAlign: TextAlign.justify,
+            textDirection: TextDirection.rtl,
+          ),
+        );
+      },
+    );
 
     return RepaintBoundary(
-      child: HtmlWidget(
-        normalizedHtml,
-        enableCaching: true,
-        buildAsync: normalizedHtml.length > 10000,
-        renderMode: ListViewMode(padding: padding, primary: false),
-        textStyle: textStyle,
-        customStylesBuilder: (element) {
-          switch (element.localName) {
-            case 'body':
-            case 'div':
-              return const {
-                'direction': 'rtl',
-                'text-align': 'justify',
-                'line-height': '1.95',
-              };
-            case 'p':
-              return const {'margin': '0 0 12px 0', 'line-height': '1.95'};
-            case 'ul':
-            case 'ol':
-              return const {
-                'margin': '0 0 12px 0',
-                'padding-inline-start': '22px',
-              };
-            case 'li':
-              return const {'margin': '0 0 8px 0'};
-            case 'blockquote':
-              return {
-                'margin': '12px 0',
-                'padding': '12px 14px',
-                'border-right': '3px solid ${_cssHexColor(accentColor)}',
-                'background-color': _cssRgbaColor(
-                  accentColor.withValues(alpha: 0.08),
-                ),
-                'border-radius': '12px',
-              };
-            case 'h1':
-            case 'h2':
-            case 'h3':
-            case 'h4':
-            case 'h5':
-            case 'h6':
-              return const {
-                'margin': '16px 0 12px 0',
-                'font-weight': '700',
-                'line-height': '1.5',
-              };
-            case 'table':
-              return const {'width': '100%', 'margin': '12px 0'};
-            case 'td':
-            case 'th':
-              return const {'padding': '6px 8px', 'vertical-align': 'top'};
-          }
-
-          return null;
-        },
-        onLoadingBuilder: (context, element, progress) {
-          return const _TafsirHtmlLoading();
-        },
-        onErrorBuilder: (context, element, error) {
-          return Padding(
-            padding: padding,
-            child: Text(
-              _plainTextFallback(text),
-              style: textStyle,
-              textAlign: TextAlign.justify,
-              textDirection: TextDirection.rtl,
-            ),
-          );
-        },
-      ),
+      child: scrollable ? content : Padding(padding: padding, child: content),
     );
   }
 }

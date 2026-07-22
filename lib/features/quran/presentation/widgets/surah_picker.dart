@@ -5,7 +5,7 @@ import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_page_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
-import 'package:qcf_quran_plus/qcf_quran_plus.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 Future<void> openSurahPickerAndReader(BuildContext context) async {
   final surahNumber = await showSurahPicker(context);
