@@ -5,6 +5,7 @@ import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/features/names_of_allah/data/names_of_allah_providers.dart';
 import 'package:al_mubeen/features/names_of_allah/domain/models/allah_name_entry.dart';
+import 'package:al_mubeen/features/names_of_allah/presentation/widgets/allah_name_detail_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -155,6 +156,13 @@ class _NamesOfAllahScreenState extends ConsumerState<NamesOfAllahScreen> {
                     key: ValueKey(entry.id),
                     entry: entry,
                     isDark: isDark,
+                    onTap: () {
+                      showAllahNameDetailSheet(
+                        context: context,
+                        entries: filteredEntries,
+                        initialIndex: index,
+                      );
+                    },
                   );
                 },
               ),
@@ -437,11 +445,13 @@ class AllahNameCard extends StatelessWidget {
   const AllahNameCard({
     required this.entry,
     required this.isDark,
+    this.onTap,
     super.key,
   });
 
   final AllahNameEntry entry;
   final bool isDark;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -453,77 +463,103 @@ class AllahNameCard extends StatelessWidget {
     final meaningColor = isDark ? AppColors.darkInk : AppColors.ink;
 
     return RepaintBoundary(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              backgroundColor,
-              isDark ? AppColors.darkSurface : AppColors.parchmentLight,
-            ],
-          ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: borderColor.withValues(alpha: 0.58)),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.maroon900.withValues(
-                alpha: isDark ? 0.24 : 0.14,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  backgroundColor,
+                  isDark ? AppColors.darkSurface : AppColors.parchmentLight,
+                ],
               ),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Align(
-                      alignment: AlignmentDirectional.topEnd,
-                      child: _AllahIndexBadge(
-                        number: entry.id,
-                        isDark: isDark,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      entry.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: titleColor,
-                        fontFamily: 'DiwaniBent',
-                        fontSize: 30,
-                        height: 1.02,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      entry.meaning,
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: meaningColor.withValues(
-                          alpha: isDark ? 0.92 : 0.88,
-                        ),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        height: 1.35,
-                      ),
-                    ),
-                    const Spacer(),
-                  ],
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: borderColor.withValues(alpha: 0.58)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.maroon900.withValues(
+                    alpha: isDark ? 0.24 : 0.14,
+                  ),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
                 ),
-              ),
+              ],
             ),
-          ],
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Eye Icon Button
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: titleColor.withValues(alpha: isDark ? 0.12 : 0.08),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: titleColor.withValues(alpha: 0.15),
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.visibility_rounded,
+                                color: titleColor.withValues(alpha: 0.8),
+                                size: 15,
+                              ),
+                            ),
+                            _AllahIndexBadge(
+                              number: entry.id,
+                              isDark: isDark,
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Text(
+                          entry.name,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: titleColor,
+                            fontFamily: 'DiwaniBent',
+                            fontSize: 30,
+                            height: 1.02,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          entry.meaning,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: meaningColor.withValues(
+                              alpha: isDark ? 0.92 : 0.88,
+                            ),
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            height: 1.35,
+                          ),
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

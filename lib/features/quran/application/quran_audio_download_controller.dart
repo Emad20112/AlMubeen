@@ -33,6 +33,7 @@ final class QuranAudioDownloadState {
     this.totalCount = 0,
     this.completedCount = 0,
     this.currentVerse = '',
+    this.recitationId,
     this.reciterName,
     this.savePath,
     this.message,
@@ -48,6 +49,7 @@ final class QuranAudioDownloadState {
   final int totalCount;
   final int completedCount;
   final String currentVerse;
+  final int? recitationId;
   final String? reciterName;
   final String? savePath;
   final String? message;
@@ -74,6 +76,7 @@ final class QuranAudioDownloadState {
     int? totalCount,
     int? completedCount,
     String? currentVerse,
+    int? recitationId,
     String? reciterName,
     String? savePath,
     String? message,
@@ -91,6 +94,7 @@ final class QuranAudioDownloadState {
       totalCount: totalCount ?? this.totalCount,
       completedCount: completedCount ?? this.completedCount,
       currentVerse: currentVerse ?? this.currentVerse,
+      recitationId: recitationId ?? this.recitationId,
       reciterName: reciterName ?? this.reciterName,
       savePath: savePath ?? this.savePath,
       message: message ?? this.message,
@@ -180,6 +184,7 @@ final class QuranAudioDownloadController
       completedCount: 0,
       progress: 0.0,
       currentVerse: 'جاري التحضير...',
+      recitationId: recitation.id,
       reciterName: recitation.reciterName,
       message: 'جاري تنزيل صوت القرآن الكريم بالقارئ المحدد.',
       errorMessage: null,
@@ -305,6 +310,9 @@ final class QuranAudioDownloadController
         await statusSub.cancel();
       }
     } on Object catch (error, stackTrace) {
+      if (state.status == QuranAudioDownloadStatus.cancelled) {
+        return;
+      }
       state = state.copyWith(
         status: QuranAudioDownloadStatus.failed,
         errorMessage: error.toString(),
@@ -339,6 +347,7 @@ final class QuranAudioDownloadController
       completedCount: 0,
       progress: 0.0,
       currentVerse: 'جاري تحميل سورة $surahName...',
+      recitationId: recitation.id,
       reciterName: recitation.reciterName,
       downloadingSurahNumber: surahNumber,
       message: 'جاري تنزيل سورة $surahName',
@@ -461,6 +470,9 @@ final class QuranAudioDownloadController
         await statusSub.cancel();
       }
     } on Object catch (error, stackTrace) {
+      if (state.status == QuranAudioDownloadStatus.cancelled) {
+        return;
+      }
       state = state.copyWith(
         status: QuranAudioDownloadStatus.failed,
         errorMessage: error.toString(),
@@ -474,7 +486,8 @@ final class QuranAudioDownloadController
   }
 
   /// Wait for a specific download task to reach a final state.
-  /// Returns true if completed, false if paused/canceled.
+  /// Pause-like states do not complete this future; the same task is expected
+  /// to continue after resume, and only a terminal state ends the wait.
   Future<bool> _waitForTask(
     String taskId,
     DownloadManager downloadManager,
@@ -489,16 +502,18 @@ final class QuranAudioDownloadController
         case DownloadStatus.completed:
           if (!completer.isCompleted) completer.complete(true);
         case DownloadStatus.failed:
+        case DownloadStatus.notFound:
           if (!completer.isCompleted) {
             completer.completeError(
               Exception('Download failed for task $taskId'),
             );
           }
+        case DownloadStatus.cancelled:
+          if (!completer.isCompleted) completer.complete(false);
         case DownloadStatus.paused:
         case DownloadStatus.awaitingWifi:
-        case DownloadStatus.notFound:
-          if (!completer.isCompleted) completer.complete(false);
-        default:
+        case DownloadStatus.waiting:
+        case DownloadStatus.downloading:
           break;
       }
     });
@@ -560,6 +575,11 @@ final class QuranAudioDownloadController
       state = state.copyWith(
         status: QuranAudioDownloadStatus.paused,
         message: 'تم إيقاف التنزيل مؤقتًا',
+      );
+    } else if (update.status == DownloadStatus.downloading && state.isPaused) {
+      state = state.copyWith(
+        status: QuranAudioDownloadStatus.downloading,
+        message: 'جاري استئناف التنزيل...',
       );
     }
   }

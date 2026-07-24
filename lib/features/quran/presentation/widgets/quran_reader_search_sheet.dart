@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
+import 'package:al_mubeen/features/quran/application/quran_search_provider.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
+import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +16,7 @@ Future<void> showQuranReaderSearchSheet({
   required BuildContext context,
   required int currentPage,
   required ValueChanged<int> onPageSelected,
+  ValueChanged<AyahRef>? onAyahSelected,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -21,6 +26,7 @@ Future<void> showQuranReaderSearchSheet({
     builder: (_) => _QuranReaderSearchSheet(
       currentPage: currentPage,
       onPageSelected: onPageSelected,
+      onAyahSelected: onAyahSelected,
     ),
   );
 }
@@ -29,10 +35,12 @@ class _QuranReaderSearchSheet extends ConsumerStatefulWidget {
   const _QuranReaderSearchSheet({
     required this.currentPage,
     required this.onPageSelected,
+    required this.onAyahSelected,
   });
 
   final int currentPage;
   final ValueChanged<int> onPageSelected;
+  final ValueChanged<AyahRef>? onAyahSelected;
 
   @override
   ConsumerState<_QuranReaderSearchSheet> createState() =>
@@ -42,20 +50,61 @@ class _QuranReaderSearchSheet extends ConsumerStatefulWidget {
 class _QuranReaderSearchSheetState
     extends ConsumerState<_QuranReaderSearchSheet> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
   String _query = '';
+  String _debouncedQuery = '';
 
   // Pre-built surah metadata – avoids calling qcf_quran helpers on every keystroke.
   static final _surahCache = QuranSurahMetadataCache.instance;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      warmUpQuranSearchMetadata();
+    });
+  }
+
+  @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onQueryChanged(String value) {
+    setState(() => _query = value);
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      setState(() => _debouncedQuery = value.trim());
+    });
+  }
+
+  void _clearQuery() {
+    _searchDebounce?.cancel();
+    setState(() {
+      _query = '';
+      _debouncedQuery = '';
+      _searchController.clear();
+    });
   }
 
   Future<void> _selectPage(int page) async {
     Navigator.of(context).pop();
     widget.onPageSelected(page);
+  }
+
+  Future<void> _selectVerse(QuranSearchResult result) async {
+    Navigator.of(context).pop();
+    final ayahRef = result.ayahRef;
+    final onAyahSelected = widget.onAyahSelected;
+    if (onAyahSelected != null) {
+      onAyahSelected(ayahRef);
+      return;
+    }
+
+    widget.onPageSelected(ayahRef.page);
   }
 
   Future<void> _selectRecitation(QuranRecitation recitation) async {
@@ -89,7 +138,7 @@ class _QuranReaderSearchSheetState
     final borderColor = AppColors.maroon800.withValues(
       alpha: isDark ? 0.18 : 0.12,
     );
-    final normalizedQuery = _query.trim().toLowerCase();
+    final normalizedQuery = _debouncedQuery.trim().toLowerCase();
     final currentSurah = getSurahNumberFromPage(widget.currentPage);
     final parsedPage = int.tryParse(normalizedQuery);
 
@@ -212,7 +261,7 @@ class _QuranReaderSearchSheetState
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'ابحث عن الصفحة أو السورة أو القارئ.',
+                                'ابحث في آيات القرآن الكريم.',
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(color: mutedColor),
                               ),
@@ -228,22 +277,17 @@ class _QuranReaderSearchSheetState
                     const SizedBox(height: 14),
                     TextField(
                       controller: _searchController,
-                      onChanged: (value) => setState(() => _query = value),
+                      onChanged: _onQueryChanged,
                       textInputAction: TextInputAction.search,
                       decoration: InputDecoration(
                         prefixIcon: const Icon(Icons.search_rounded),
                         suffixIcon: _query.isEmpty
                             ? null
                             : IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _query = '';
-                                    _searchController.clear();
-                                  });
-                                },
+                                onPressed: _clearQuery,
                                 icon: const Icon(Icons.clear_rounded),
                               ),
-                        hintText: 'ابحث عن الصفحة، السورة، القارئ...',
+                        hintText: 'اكتب كلمة من الآية للبحث في القرآن...',
                         filled: true,
                         fillColor: isDark
                             ? AppColors.darkSurfaceHigh
@@ -287,6 +331,15 @@ class _QuranReaderSearchSheetState
                               ],
                             ),
                             const SizedBox(height: 18),
+                          ],
+                          if (_query.trim().isNotEmpty) ...[
+                            _QuranSearchResultsSection(
+                              query: _debouncedQuery,
+                              titleColor: titleColor,
+                              mutedColor: mutedColor,
+                              onTap: _selectVerse,
+                            ),
+                            const SizedBox(height: 16),
                           ],
                           if (pageResults.isNotEmpty) ...[
                             _SectionTitle(title: 'الصفحات'),
@@ -365,39 +418,6 @@ class _QuranReaderSearchSheetState
                               );
                             },
                           ),
-                          if (pageResults.isEmpty &&
-                              surahResults.isEmpty &&
-                              normalizedQuery.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 24),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.search_off_rounded,
-                                    size: 54,
-                                    color: mutedColor,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'لا توجد نتائج مطابقة',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall
-                                        ?.copyWith(
-                                          color: titleColor,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'جرّب رقم صفحة آخر أو اسم سورة أو قارئ.',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: mutedColor),
-                                  ),
-                                ],
-                              ),
-                            ),
                         ],
                       ),
                     ),
@@ -419,6 +439,274 @@ class _QuranReaderSearchSheetState
         translated.contains(query) ||
         style.contains(query);
   }
+}
+
+class _QuranSearchResultsSection extends ConsumerWidget {
+  const _QuranSearchResultsSection({
+    required this.query,
+    required this.titleColor,
+    required this.mutedColor,
+    required this.onTap,
+  });
+
+  final String query;
+  final Color titleColor;
+  final Color mutedColor;
+  final ValueChanged<QuranSearchResult> onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) {
+      return _SearchLoadingState(mutedColor: mutedColor);
+    }
+
+    final results = ref.watch(quranSearchResultsProvider(trimmedQuery));
+    if (results.isEmpty) {
+      return _SearchMessageState(
+        icon: Icons.search_off_rounded,
+        title: 'لا توجد نتائج',
+        subtitle: 'جرّب كلمة أخرى من الآية أو اكتبها بدون تشكيل.',
+        titleColor: titleColor,
+        mutedColor: mutedColor,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionTitle(
+          title: 'نتائج القرآن (${convertToArabicDigits(results.length)})',
+        ),
+        const SizedBox(height: 8),
+        for (final result in results)
+          _QuranVerseResultTile(
+            key: ValueKey(
+              'quran-search-${result.surahNumber}-${result.verseNumber}',
+            ),
+            result: result,
+            titleColor: titleColor,
+            mutedColor: mutedColor,
+            onTap: () => onTap(result),
+          ),
+      ],
+    );
+  }
+}
+
+class _SearchLoadingState extends StatelessWidget {
+  const _SearchLoadingState({required this.mutedColor});
+
+  final Color mutedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28),
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2.4, color: mutedColor),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchMessageState extends StatelessWidget {
+  const _SearchMessageState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.titleColor,
+    required this.mutedColor,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color titleColor;
+  final Color mutedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 12),
+      child: Column(
+        children: [
+          Icon(icon, size: 54, color: mutedColor),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: titleColor,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: mutedColor),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuranVerseResultTile extends StatelessWidget {
+  const _QuranVerseResultTile({
+    required this.result,
+    required this.titleColor,
+    required this.mutedColor,
+    required this.onTap,
+    super.key,
+  });
+
+  final QuranSearchResult result;
+  final Color titleColor;
+  final Color mutedColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final metadata =
+        'صفحة ${convertToArabicDigits(result.pageNumber)} • '
+        'الجزء ${convertToArabicDigits(result.juzNumber)} • '
+        'الحزب ${convertToArabicDigits(result.hizbNumber)}';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Ink(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.maroon800.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.maroon800.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.maroon800.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.menu_book_rounded,
+                        color: AppColors.maroon800,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${result.surahName} • الآية ${convertToArabicDigits(result.verseNumber)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
+                                  color: titleColor,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            metadata,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(color: mutedColor),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: mutedColor,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text.rich(
+                  _highlightedVerseSpan(
+                    context: context,
+                    verseText: result.verseText,
+                    normalizedQuery: result.normalizedQuery,
+                    titleColor: titleColor,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  textDirection: TextDirection.rtl,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+TextSpan _highlightedVerseSpan({
+  required BuildContext context,
+  required String verseText,
+  required String normalizedQuery,
+  required Color titleColor,
+}) {
+  final baseStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+    color: titleColor,
+    height: 1.8,
+    fontWeight: FontWeight.w600,
+  );
+  final highlightStyle = baseStyle?.copyWith(
+    backgroundColor: AppColors.maroon800.withValues(alpha: 0.16),
+    color: AppColors.maroon800,
+    fontWeight: FontWeight.w900,
+  );
+
+  final query = normalizedQuery.trim();
+  if (query.isEmpty) {
+    return TextSpan(text: verseText, style: baseStyle);
+  }
+
+  final spans = <TextSpan>[];
+  final tokens = RegExp(r'\S+|\s+').allMatches(verseText);
+  for (final token in tokens) {
+    final text = token.group(0) ?? '';
+    final normalizedText = normalise(text).toLowerCase();
+    spans.add(
+      TextSpan(
+        text: text,
+        style: normalizedText.contains(query.toLowerCase())
+            ? highlightStyle
+            : baseStyle,
+      ),
+    );
+  }
+
+  return TextSpan(children: spans);
 }
 
 class _SearchResult {

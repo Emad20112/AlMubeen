@@ -13,6 +13,7 @@ class QuranReaderBottomPanel extends StatelessWidget {
     required this.onPageSelected,
     this.rightControls,
     this.leftControls,
+    this.reciterButton,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class QuranReaderBottomPanel extends StatelessWidget {
   final ValueChanged<int> onPageSelected;
   final Widget? rightControls;
   final Widget? leftControls;
+  final Widget? reciterButton;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +47,10 @@ class QuranReaderBottomPanel extends StatelessWidget {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: backgroundColor,
                       borderRadius: BorderRadius.circular(24),
@@ -53,6 +58,7 @@ class QuranReaderBottomPanel extends StatelessWidget {
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         SizedBox(
                           width: 64,
@@ -69,6 +75,10 @@ class QuranReaderBottomPanel extends StatelessWidget {
                             compact: true,
                           ),
                         ),
+                        if (reciterButton != null) ...[
+                          const SizedBox(width: 4),
+                          reciterButton!,
+                        ],
                         const SizedBox(width: 4),
                         SizedBox(
                           width: 64,

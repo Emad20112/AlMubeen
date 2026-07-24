@@ -7,6 +7,7 @@ import 'package:al_mubeen/features/hadith_nawawi/presentation/screens/hadith_naw
 import 'package:al_mubeen/features/names_of_allah/presentation/screens/names_of_allah_screen.dart';
 import 'package:al_mubeen/features/qibla/presentation/screens/qibla_compass_screen.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
+import 'package:al_mubeen/features/quran/presentation/pages/quran_audio_download_screen.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_surah_player_screen.dart';
 import 'package:al_mubeen/features/tasbih/presentation/screens/tasbih_screen.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,8 @@ class QuranMoreScreen extends StatelessWidget {
       sections: [
         if (actions != null)
           ContactStyleMenuSection(
-            title: 'أدوات القارئ - صفحة ${convertToArabicDigits(actions.currentPage)}',
+            title:
+                'أدوات القارئ - صفحة ${convertToArabicDigits(actions.currentPage)}',
             items: [
               ContactStyleMenuItem(
                 icon: Icons.search_rounded,
@@ -61,10 +63,17 @@ class QuranMoreScreen extends StatelessWidget {
                 onTap: () => _runReaderAction(context, actions.onSettings),
               ),
               ContactStyleMenuItem(
+                icon: Icons.library_music_rounded,
+                title: 'المكتبة الصوتية',
+                subtitle: 'مكتبة القراء وتنزيل التلاوات الكاملة.',
+                accentColor: const Color(0xFF7B6A2E),
+                onTap: () => context.push(QuranAudioDownloadScreen.routePath),
+              ),
+              ContactStyleMenuItem(
                 icon: Icons.headphones_rounded,
                 title: 'استماع القرآن الكريم',
-                subtitle: 'افتح مشغّل التلاوة والسور.',
-                accentColor: const Color(0xFF7B6A2E),
+                subtitle: 'مشغّل السور مع تنزيل السورة الحالية مباشرة.',
+                accentColor: const Color(0xFF6A5A2E),
                 onTap: () => context.push(QuranSurahPlayerScreen.routePath),
               ),
             ],
@@ -123,9 +132,7 @@ class QuranMoreScreen extends StatelessWidget {
 
   void _runReaderAction(BuildContext context, VoidCallback action) {
     Navigator.of(context).pop();
-    unawaited(
-      Future<void>.delayed(const Duration(milliseconds: 180), action),
-    );
+    unawaited(Future<void>.delayed(const Duration(milliseconds: 180), action));
   }
 }
 

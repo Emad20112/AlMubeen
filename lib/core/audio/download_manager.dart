@@ -22,10 +22,8 @@ class DownloadManager {
 
   late final FileDownloader _downloader;
 
-  final _progressController =
-      StreamController<DownloadProgress>.broadcast();
-  final _statusController =
-      StreamController<DownloadStatusUpdate>.broadcast();
+  final _progressController = StreamController<DownloadProgress>.broadcast();
+  final _statusController = StreamController<DownloadStatusUpdate>.broadcast();
 
   Stream<DownloadProgress> get progressStream => _progressController.stream;
   Stream<DownloadStatusUpdate> get statusStream => _statusController.stream;
@@ -196,10 +194,12 @@ class DownloadManager {
   }
 
   void _onTaskStatus(TaskStatusUpdate update) {
-    _statusController.add(DownloadStatusUpdate(
-      taskId: update.task.taskId,
-      status: _mapStatus(update.status),
-    ));
+    _statusController.add(
+      DownloadStatusUpdate(
+        taskId: update.task.taskId,
+        status: _mapStatus(update.status),
+      ),
+    );
 
     if (update.status.isFinalState) {
       _activeTasks.remove(update.task.taskId);
@@ -228,7 +228,7 @@ class DownloadManager {
       TaskStatus.notFound => DownloadStatus.notFound,
       TaskStatus.waitingToRetry => DownloadStatus.awaitingWifi,
       TaskStatus.paused => DownloadStatus.paused,
-      TaskStatus.canceled => DownloadStatus.failed,
+      TaskStatus.canceled => DownloadStatus.cancelled,
     };
   }
 
@@ -265,10 +265,7 @@ class DownloadProgress {
 }
 
 class DownloadStatusUpdate {
-  const DownloadStatusUpdate({
-    required this.taskId,
-    required this.status,
-  });
+  const DownloadStatusUpdate({required this.taskId, required this.status});
 
   final String taskId;
   final DownloadStatus status;
@@ -280,6 +277,7 @@ enum DownloadStatus {
   paused,
   completed,
   failed,
+  cancelled,
   notFound,
   awaitingWifi,
 }

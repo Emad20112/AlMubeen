@@ -28,7 +28,10 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(
-        ref.read(hadithNawawiLocalDataSourceProvider).warmUp().catchError((e, s) {
+        ref.read(hadithNawawiLocalDataSourceProvider).warmUp().catchError((
+          e,
+          s,
+        ) {
           debugPrint('HadithNawawi warm-up failed: $e');
           debugPrint('$s');
         }),
@@ -68,9 +71,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
-            SliverToBoxAdapter(
-              child: _buildHeader(isDark, fgColor, bgColor),
-            ),
+            SliverToBoxAdapter(child: _buildHeader(isDark, fgColor, bgColor)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(sidePadding, 0, sidePadding, 8),
@@ -90,7 +91,12 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
                 }
                 return [
                   SliverPadding(
-                    padding: EdgeInsets.fromLTRB(sidePadding, 12, sidePadding, 32),
+                    padding: EdgeInsets.fromLTRB(
+                      sidePadding,
+                      12,
+                      sidePadding,
+                      32,
+                    ),
                     sliver: SliverList.separated(
                       itemCount: filtered.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 14),
@@ -102,7 +108,8 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => HadithDetailScreen(
-                                  entry: filtered[index],
+                                  entries: filtered,
+                                  initialIndex: index,
                                 ),
                               ),
                             );
@@ -115,7 +122,12 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
               },
               loading: () => [
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(sidePadding, 12, sidePadding, 32),
+                  padding: EdgeInsets.fromLTRB(
+                    sidePadding,
+                    12,
+                    sidePadding,
+                    32,
+                  ),
                   sliver: SliverList.separated(
                     itemCount: 6,
                     separatorBuilder: (_, _) => const SizedBox(height: 14),
@@ -176,14 +188,18 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.goldenAccent.withValues(alpha: isDark ? 0.15 : 0.12),
+              color: AppColors.goldenAccent.withValues(
+                alpha: isDark ? 0.15 : 0.12,
+              ),
               border: Border.all(
                 color: AppColors.goldenAccent.withValues(alpha: 0.35),
               ),
             ),
             child: Icon(
               Icons.menu_book_rounded,
-              color: AppColors.goldenAccent.withValues(alpha: isDark ? 0.9 : 0.8),
+              color: AppColors.goldenAccent.withValues(
+                alpha: isDark ? 0.9 : 0.8,
+              ),
               size: 20,
             ),
           ),
@@ -251,7 +267,10 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
           ),
           border: InputBorder.none,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 13,
+          ),
         ),
       ),
     );
@@ -340,9 +359,12 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
     );
   }
 
-  Color _bgColor(bool isDark) => isDark ? AppColors.darkScaffold : const Color(0xFFFAF8F3);
-  Color _fgColor(bool isDark) => isDark ? AppColors.darkInk : const Color(0xFF2C2420);
-  Color _surfaceColor(bool isDark) => isDark ? AppColors.darkSurfaceHigh : Colors.white;
+  Color _bgColor(bool isDark) =>
+      isDark ? AppColors.darkScaffold : const Color(0xFFFAF8F3);
+  Color _fgColor(bool isDark) =>
+      isDark ? AppColors.darkInk : const Color(0xFF2C2420);
+  Color _surfaceColor(bool isDark) =>
+      isDark ? AppColors.darkSurfaceHigh : Colors.white;
 }
 
 // ─── Hadith Card ──────────────────────────────────────────────
@@ -358,12 +380,10 @@ class _HadithCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cardBg = isDark ? AppColors.darkSurfaceHigh : Colors.white;
     final fgColor = isDark ? AppColors.darkInk : const Color(0xFF2C2420);
-    final mutedColor = isDark ? AppColors.darkInk.withValues(alpha: 0.6) : const Color(0xFF8A7D72);
-    final goldBg = isDark ? AppColors.goldenAccentDark.withValues(alpha: 0.12) : AppColors.goldenAccent.withValues(alpha: 0.1);
-    final goldFg = isDark ? AppColors.goldenAccentDark : AppColors.goldenAccent;
-    final goldBorder = isDark
-        ? AppColors.goldenAccentDark.withValues(alpha: 0.25)
-        : AppColors.goldenAccent.withValues(alpha: 0.3);
+    final mutedColor = isDark
+        ? AppColors.darkInk.withValues(alpha: 0.6)
+        : const Color(0xFF8A7D72);
+
     final chipBg = isDark
         ? AppColors.maroon800.withValues(alpha: 0.6)
         : AppColors.maroon700.withValues(alpha: 0.08);
@@ -387,7 +407,9 @@ class _HadithCard extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.maroon900.withValues(alpha: isDark ? 0.2 : 0.06),
+                  color: AppColors.maroon900.withValues(
+                    alpha: isDark ? 0.2 : 0.06,
+                  ),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -396,102 +418,101 @@ class _HadithCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-            // ── Left: Bookmark icon ──
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: entry.hadithNumber <= 2 ? goldBg : Colors.transparent,
-                  border: Border.all(
-                    color: entry.hadithNumber <= 2 ? goldBorder : Colors.transparent,
-                  ),
-                ),
-                child: Icon(
-                  entry.hadithNumber <= 2
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_border_rounded,
-                  color: entry.hadithNumber <= 2 ? goldFg : mutedColor.withValues(alpha: 0.4),
-                  size: 18,
-                ),
-              ),
-            ),
-
-            const SizedBox(width: 14),
-
-            // ── Middle: Content ──
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    entry.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: fgColor,
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w700,
-                      height: 1.35,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Preview
-                  Text(
-                    entry.preview,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: mutedColor,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w400,
-                      height: 1.55,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Source chip
-                  if (entry.source.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: chipBg,
-                        borderRadius: BorderRadius.circular(999),
+                // Left: Eye action icon button
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: fgColor.withValues(alpha: isDark ? 0.12 : 0.06),
+                      border: Border.all(
+                        color: fgColor.withValues(alpha: 0.12),
                       ),
-                      child: Text(
-                        entry.source,
-                        maxLines: 1,
+                    ),
+                    child: Icon(
+                      Icons.visibility_rounded,
+                      color: fgColor.withValues(alpha: 0.75),
+                      size: 16,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Middle: Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        entry.title,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: chipFg,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
+                          color: fgColor,
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w700,
+                          height: 1.35,
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
 
-            const SizedBox(width: 10),
+                      const SizedBox(height: 8),
 
-            // ── Right: Number badge ──
-            _OctagonBadge(
-              number: entry.hadithNumber,
-              isDark: isDark,
+                      // Preview
+                      Text(
+                        entry.preview,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: mutedColor,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w400,
+                          height: 1.55,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Source chip
+                      if (entry.source.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: chipBg,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          constraints: const BoxConstraints(maxWidth: 200),
+                          child: Text(
+                            entry.source,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: chipFg,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // Right: Number badge
+                _OctagonBadge(number: entry.hadithNumber, isDark: isDark),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    ),
-    ),
-  );
+    );
   }
 }
 
@@ -508,7 +529,9 @@ class _OctagonBadge extends StatelessWidget {
     final bgColor = isDark
         ? AppColors.goldenAccentDark.withValues(alpha: 0.12)
         : AppColors.goldenAccent.withValues(alpha: 0.1);
-    final fgColor = isDark ? AppColors.goldenAccentDark : AppColors.goldenAccent;
+    final fgColor = isDark
+        ? AppColors.goldenAccentDark
+        : AppColors.goldenAccent;
     final borderColor = isDark
         ? AppColors.goldenAccentDark.withValues(alpha: 0.25)
         : AppColors.goldenAccent.withValues(alpha: 0.35);
@@ -559,9 +582,10 @@ class _SkeletonCardState extends State<_SkeletonCard>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.3, end: 0.75).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.3,
+      end: 0.75,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

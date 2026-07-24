@@ -70,19 +70,13 @@ class TafsirReaderContent extends ConsumerWidget {
       displayTafsirs.add(selectedTafsir);
     }
 
-    final surahName = getSurahName(chapterNumber);
-    final titleText = ayahNumber != null
-        ? 'تفسير سورة $surahName - الآية $ayahNumber'
-        : 'تفسير سورة $surahName';
-
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       children: [
         _ReaderHeader(
           isDark: isDark,
-          titleText: titleText,
-          subtitleText:
-              'يظهر تفسير الميسر أولًا، ويمكنك تنزيل تفاسير أخرى من المكتبة.',
+          chapterNumber: chapterNumber,
+          ayahNumber: ayahNumber,
           onOpenLibrary: onOpenLibrary,
           onClose: onClose,
         ),
@@ -104,91 +98,97 @@ class TafsirReaderContent extends ConsumerWidget {
 class _ReaderHeader extends StatelessWidget {
   const _ReaderHeader({
     required this.isDark,
-    required this.titleText,
-    required this.subtitleText,
+    required this.chapterNumber,
     required this.onOpenLibrary,
+    this.ayahNumber,
     this.onClose,
   });
 
   final bool isDark;
-  final String titleText;
-  final String subtitleText;
+  final int chapterNumber;
+  final int? ayahNumber;
   final VoidCallback onOpenLibrary;
   final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {
     final accentColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+    final cardBg = isDark ? const Color(0xFF231A17) : Colors.white;
+
+    String? verseText;
+    if (ayahNumber != null) {
+      try {
+        verseText = getVerse(chapterNumber, ayahNumber!, verseEndSymbol: true);
+      } catch (_) {
+        verseText = null;
+      }
+    }
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF231A17) : Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accentColor.withValues(alpha: 0.14)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(Icons.menu_book_rounded, color: accentColor),
+          if (verseText != null) ...[
+            Text(
+              verseText,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? AppColors.darkInk : AppColors.maroon800,
+                fontSize: 20,
+                height: 1.8,
+                fontFamily: 'Amiri',
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      titleText,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitleText,
-                      style: TextStyle(
-                        color: isDark ? Colors.white70 : Colors.black54,
-                        fontSize: 12,
-                        height: 1.6,
-                      ),
-                    ),
-                  ],
+            ),
+          ] else ...[
+            Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(Icons.menu_book_rounded, color: accentColor, size: 20),
                 ),
-              ),
-              if (onClose != null) ...[
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: onClose,
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: isDark ? Colors.white70 : Colors.black54,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'تفسير سورة ${getSurahName(chapterNumber)}',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
+                if (onClose != null) ...[
+                  IconButton(
+                    onPressed: onClose,
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ],
               ],
-            ],
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: onOpenLibrary,
-              icon: const Icon(Icons.library_books_rounded),
-              label: const Text('تحميل تفاسير أخرى'),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -248,18 +248,18 @@ class _TafsirSectionCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 46,
-                  height: 46,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.menu_book_rounded, color: primaryColor),
+                  child: Icon(Icons.auto_stories_rounded, color: primaryColor, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -270,28 +270,17 @@ class _TafsirSectionCard extends ConsumerWidget {
                         tafsir.name,
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black87,
-                          fontSize: 15,
+                          fontSize: 14.5,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      if (tafsir.resourceName != null &&
-                          tafsir.resourceName != tafsir.name) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          tafsir.resourceName!,
-                          style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
                       if (tafsir.authorName != null) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           'المفسر: ${tafsir.authorName!}',
                           style: TextStyle(
                             color: isDark ? Colors.white60 : Colors.black45,
-                            fontSize: 12,
+                            fontSize: 11.5,
                           ),
                         ),
                       ],
@@ -301,8 +290,8 @@ class _TafsirSectionCard extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                    horizontal: 10,
+                    vertical: 5,
                   ),
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.08),
@@ -315,7 +304,7 @@ class _TafsirSectionCard extends ConsumerWidget {
                     resourceLabel,
                     style: TextStyle(
                       color: primaryColor,
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -331,7 +320,7 @@ class _TafsirSectionCard extends ConsumerWidget {
                 child: AppLoadingOverlay(
                   icon: Icons.menu_book_rounded,
                   message: 'جاري تحميل ${tafsir.name}',
-                  size: 56,
+                  size: 50,
                 ),
               ),
             ),
@@ -361,8 +350,8 @@ class _TafsirSectionCard extends ConsumerWidget {
                 scrollable: false,
                 textStyle: TextStyle(
                   color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 17,
-                  height: 1.95,
+                  fontSize: 16.5,
+                  height: 1.9,
                   fontFamily: 'Amiri',
                 ),
               );
@@ -393,13 +382,13 @@ class _TafsirSectionError extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       child: Column(
         children: [
-          Icon(Icons.error_outline, size: 46, color: accentColor),
+          Icon(Icons.error_outline, size: 40, color: accentColor),
           const SizedBox(height: 12),
           Text(
             'حدث خطأ أثناء تحميل التفسير',
             style: TextStyle(
               color: isDark ? Colors.white : Colors.black87,
-              fontSize: 15,
+              fontSize: 14.5,
               fontWeight: FontWeight.w700,
             ),
             textAlign: TextAlign.center,
@@ -417,7 +406,7 @@ class _TafsirSectionError extends StatelessWidget {
           const SizedBox(height: 14),
           OutlinedButton.icon(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, size: 16),
             label: const Text('إعادة المحاولة'),
           ),
         ],

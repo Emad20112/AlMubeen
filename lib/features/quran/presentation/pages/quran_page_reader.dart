@@ -11,6 +11,7 @@ import 'package:al_mubeen/features/quran/presentation/widgets/ayah_audio_player_
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_interaction_overlay.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_bookmarks_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_bottom_panel.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reciters_list_view.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_header.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_icon_nav_bar.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_search_sheet.dart';
@@ -95,7 +96,10 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     WidgetsBinding.instance.removeObserver(this);
     _saveProgressDebounce?.cancel();
-    unawaited(_persistCurrentPage(_currentPage.value));
+    // Note: _persistCurrentPage intentionally not called here because it uses
+    // `ref.read()` which is unsafe in dispose() (BuildContext is deactivated).
+    // The page is already persisted via _schedulePersistCurrentPage on change
+    // and via didChangeAppLifecycleState when the app goes to background.
     _pageController.dispose();
     _currentPage.dispose();
     _highlightController.dispose();
@@ -104,9 +108,10 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     super.dispose();
   }
 
-  void _handlePageChanged(int page) {
-    _currentPage.value = page;
-    _schedulePersistCurrentPage(page);
+  void _handlePageChanged(int pageIndex) {
+    final pageNumber = pageIndex + 1;
+    _currentPage.value = pageNumber;
+    _schedulePersistCurrentPage(pageNumber);
   }
 
   Future<void> _goToPage(int page) async {
@@ -121,14 +126,22 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
       if (mounted) {
         _pageController.jumpToPage(boundedPage - 1);
       }
+      _currentPage.value = boundedPage;
       _schedulePersistCurrentPage(boundedPage);
     } else {
-      _pageController.animateToPage(
+      await _pageController.animateToPage(
         boundedPage - 1,
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOutCubic,
       );
     }
+  }
+
+  Future<void> _goToAyah(AyahRef ayahRef) async {
+    _lastSyncedAyah = null;
+    _highlightController.highlightSingle(ayahRef, _highlightColor(context));
+    await _goToPage(ayahRef.page);
+    _hideOverlay();
   }
 
   @override
@@ -392,6 +405,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
       context: context,
       currentPage: _currentPage.value,
       onPageSelected: _goToPage,
+      onAyahSelected: _goToAyah,
     );
   }
 
@@ -506,8 +520,8 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     );
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconNavBarOffset = kQuranReaderIconNavBarHeight +
-        MediaQuery.of(context).padding.bottom;
+    final iconNavBarOffset =
+        kQuranReaderIconNavBarHeight + MediaQuery.of(context).padding.bottom;
 
     final fontScale = ref.watch(
       appUserPreferencesProvider.select(
@@ -576,6 +590,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                           onPageSelected: _goToPage,
                           rightControls: const AyahRightAudioControls(),
                           leftControls: const AyahLeftAudioControls(),
+                          reciterButton: const _ReciterButton(),
                         ),
                       ],
                     ),
@@ -619,13 +634,171 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
             child: RepaintBoundary(
               child: _buildAnimatedOverlay(
                 beginOffset: const Offset(0, -1),
-                child: QuranReaderHeader(
-                  onSearchTapped: _openSearchSheet,
-                ),
+                child: QuranReaderHeader(onSearchTapped: _openSearchSheet),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReciterButton extends ConsumerWidget {
+  const _ReciterButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioState = ref.watch(
+      quranAudioControllerProvider.select(
+        (state) =>
+            (currentAyah: state.currentAyah, recitationId: state.recitationId),
+      ),
+    );
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+
+    return Tooltip(
+      message: 'القارئ',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            final currentAyah =
+                audioState.currentAyah ??
+                const AyahRef(surah: 1, ayah: 1, page: 1);
+            showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => _RecitersSheet(
+                currentAyah: currentAyah,
+                recitationId: audioState.recitationId,
+              ),
+            );
+          },
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 26,
+            height: 26,
+            decoration: const BoxDecoration(shape: BoxShape.circle),
+            child: Icon(
+              Icons.headphones_rounded,
+              color: primaryColor,
+              size: 17,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecitersSheet extends StatelessWidget {
+  const _RecitersSheet({required this.currentAyah, required this.recitationId});
+
+  final AyahRef currentAyah;
+  final int? recitationId;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark
+        ? AppColors.darkSurface
+        : AppColors.parchmentLight;
+    final titleColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
+    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.55,
+          minChildSize: 0.35,
+          maxChildSize: 0.85,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 44,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.maroon800.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.maroon800.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.headphones_rounded,
+                          color: AppColors.maroon800,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'اختر القارئ',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    color: titleColor,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'اختر القارئ المفضل لديك.',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: mutedColor),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  QuranRecitersListView(
+                    currentAyah: currentAyah,
+                    recitationId: recitationId,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

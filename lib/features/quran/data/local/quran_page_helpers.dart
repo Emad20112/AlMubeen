@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+// ignore: implementation_imports
+import 'package:qcf_quran/src/data/quarters.dart' as qcf_quarters;
 
 /// Helper functions for Quran page-related calculations that are not
 /// directly available in the qcf_quran package.
@@ -34,11 +36,6 @@ class PageMetadata {
     required this.juzHizbText,
   });
 
-  /// Placeholder used while the list is being populated.
-  const PageMetadata._empty()
-      : surahNameArabic = '',
-        juzHizbText = '';
-
   /// The Arabic name of the primary surah on this page.
   final String surahNameArabic;
 
@@ -70,8 +67,7 @@ class QuranPageMetadataCache {
 
     final first = getFirstAyahOnPage(page);
     final juz = getJuzNumber(first.surah, first.ayah);
-    final quarter = getQuarterNumber(first.surah, first.ayah);
-    final hizb = ((quarter - 1) ~/ 4) + 1;
+    final hizb = getHizbNumber(first.surah, first.ayah);
 
     return PageMetadata(
       surahNameArabic: surahName,
@@ -174,7 +170,105 @@ AyahRef getFirstAyahOnPage(int pageNumber) {
 
 /// Returns the Rub' al-Hizb (quarter) number (1-240) for a given surah and verse.
 int getQuarterNumber(int surahNumber, int verseNumber) {
-  final juzNum = getJuzNumber(surahNumber, verseNumber);
-  if (juzNum < 1) return 1;
-  return ((juzNum - 1) * 8) + 1;
+  return QuranQuarterMetadataCache.instance.quarterForAyah(
+    surahNumber,
+    verseNumber,
+  );
+}
+
+/// Returns the Hizb number (1-60) for a given surah and verse.
+int getHizbNumber(int surahNumber, int verseNumber) {
+  final quarter = getQuarterNumber(surahNumber, verseNumber);
+  return ((quarter - 1) ~/ 4) + 1;
+}
+
+@immutable
+class QuarterStartMetadata {
+  const QuarterStartMetadata({
+    required this.surah,
+    required this.ayah,
+    required this.serial,
+  });
+
+  final int surah;
+  final int ayah;
+  final int serial;
+}
+
+/// Lazily maps qcf_quran quarter starts to O(log n) ayah lookups.
+class QuranQuarterMetadataCache {
+  QuranQuarterMetadataCache._();
+
+  static final QuranQuarterMetadataCache instance =
+      QuranQuarterMetadataCache._();
+
+  late final List<int> _surahStartSerials = _buildSurahStartSerials();
+  late final List<QuarterStartMetadata> _quarterStarts = _buildQuarterStarts();
+
+  int quarterForAyah(int surahNumber, int verseNumber) {
+    final serial = _verseSerial(surahNumber, verseNumber);
+    var low = 0;
+    var high = _quarterStarts.length - 1;
+    var match = 0;
+
+    while (low <= high) {
+      final mid = (low + high) >> 1;
+      if (_quarterStarts[mid].serial <= serial) {
+        match = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    return match + 1;
+  }
+
+  List<int> _buildSurahStartSerials() {
+    var runningTotal = 0;
+    return List<int>.generate(totalSurahCount, (index) {
+      final start = runningTotal + 1;
+      runningTotal += getVerseCount(index + 1);
+      return start;
+    }, growable: false);
+  }
+
+  List<QuarterStartMetadata> _buildQuarterStarts() {
+    final starts = <QuarterStartMetadata>[];
+    for (final rawQuarter in qcf_quarters.quarters) {
+      if (rawQuarter is! Map) {
+        continue;
+      }
+      final surah = _asInt(rawQuarter['surah']);
+      final ayah = _asInt(rawQuarter['ayah']);
+      if (surah == null || ayah == null) {
+        continue;
+      }
+      starts.add(
+        QuarterStartMetadata(
+          surah: surah,
+          ayah: ayah,
+          serial: _verseSerial(surah, ayah),
+        ),
+      );
+    }
+
+    starts.sort((a, b) => a.serial.compareTo(b.serial));
+    return List<QuarterStartMetadata>.unmodifiable(starts);
+  }
+
+  int _verseSerial(int surahNumber, int verseNumber) {
+    final boundedSurah = surahNumber.clamp(1, totalSurahCount).toInt();
+    final boundedVerse = verseNumber
+        .clamp(1, getVerseCount(boundedSurah))
+        .toInt();
+    return _surahStartSerials[boundedSurah - 1] + boundedVerse - 1;
+  }
+}
+
+int? _asInt(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
 }
