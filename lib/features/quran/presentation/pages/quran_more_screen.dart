@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/screens/contact_style_menu_screen.dart';
 import 'package:al_mubeen/features/about/presentation/screens/about_app_screen.dart';
@@ -9,7 +7,6 @@ import 'package:al_mubeen/features/qibla/presentation/screens/qibla_compass_scre
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_audio_download_screen.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_surah_player_screen.dart';
-import 'package:al_mubeen/features/quran/presentation/widgets/wird_dialog.dart';
 import 'package:al_mubeen/features/tasbih/presentation/screens/tasbih_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

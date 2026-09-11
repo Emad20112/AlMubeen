@@ -19,7 +19,7 @@ Future<void> showWirdHotelDoorsDialog(
     barrierLabel: 'Wird Dialog',
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 320),
-    pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+    pageBuilder: (_, _, _) => const SizedBox.shrink(),
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final curved = CurvedAnimation(
         parent: animation,
@@ -184,7 +184,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
           data: Theme.of(context).copyWith(
             timePickerTheme: TimePickerThemeData(
               dialBackgroundColor: Theme.of(context).colorScheme.surface,
-              dayPeriodTextColor: MaterialStateColor.resolveWith(
+              dayPeriodTextColor: WidgetStateColor.resolveWith(
                 (_) => AppColors.maroon800,
               ),
             ),
@@ -277,7 +277,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.24),
+                color: Colors.black.withValues(alpha: 0.24),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
@@ -418,7 +418,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             value: progressValue,
             minHeight: 8,
             color: accent,
-            backgroundColor: accent.withOpacity(0.16),
+            backgroundColor: accent.withValues(alpha: 0.16),
           ),
           const SizedBox(height: 12),
           Text(
@@ -426,7 +426,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(
                 context,
-              ).textTheme.bodySmall?.color?.withOpacity(0.82),
+              ).textTheme.bodySmall?.color?.withValues(alpha: 0.82),
             ),
           ),
           const SizedBox(height: 6),
@@ -476,7 +476,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
                     _selectedType = type;
                   });
                 },
-                selectedColor: accent.withOpacity(0.14),
+                selectedColor: accent.withValues(alpha: 0.14),
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 labelStyle: TextStyle(
                   color: selected
@@ -556,7 +556,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(
                 context,
-              ).textTheme.bodySmall?.color?.withOpacity(0.72),
+              ).textTheme.bodySmall?.color?.withValues(alpha: 0.72),
             ),
           ),
         ],

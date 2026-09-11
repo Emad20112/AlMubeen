@@ -1,20 +1,21 @@
 import 'dart:async';
-import 'dart:collection';
-import 'dart:convert';
-import 'dart:io';
 
-import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/core/config/app_config.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
+import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/core/database/app_database_provider.dart';
 import 'package:al_mubeen/features/quran/application/default_tafsir_seed_service.dart';
-import 'package:al_mubeen/features/quran/data/local/quran_bookmark_service.dart';
+import 'package:al_mubeen/features/quran/data/cache/chapter_lru_cache.dart';
+import 'package:al_mubeen/features/quran/data/cache/quran_memory_cache_providers.dart';
+import 'package:al_mubeen/features/quran/data/helpers/reciter_normalizer.dart';
 import 'package:al_mubeen/features/quran/data/local/islamic_app_recitation_store.dart';
+import 'package:al_mubeen/features/quran/data/local/quran_bookmark_service.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_reciter_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_resource_catalog_storage.dart';
 import 'package:al_mubeen/features/quran/data/local/tafsir_local_data_source.dart';
 import 'package:al_mubeen/features/quran/data/local/tafsir_muyassar_asset_data_source.dart';
 import 'package:al_mubeen/features/quran/data/local/translation_local_data_source.dart';
+import 'package:al_mubeen/features/quran/data/remote/islamic_app_remote_data_source.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_api_client.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_remote_data_source.dart';
 import 'package:al_mubeen/features/quran/data/repositories/quran_audio_repository_impl.dart';
@@ -28,64 +29,27 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-@immutable
-final class _ResourceChapterKey {
-  const _ResourceChapterKey({
-    required this.resourceId,
-    required this.chapterNumber,
-  });
-
-  final int resourceId;
-  final int chapterNumber;
-
-  @override
-  bool operator ==(Object other) {
-    return other is _ResourceChapterKey &&
-        other.resourceId == resourceId &&
-        other.chapterNumber == chapterNumber;
-  }
-
-  @override
-  int get hashCode => Object.hash(resourceId, chapterNumber);
-}
-
-final class _ChapterLruCache<T> {
-  _ChapterLruCache({required this.maxEntries});
-
-  final int maxEntries;
-  final LinkedHashMap<_ResourceChapterKey, T> _entries =
-      LinkedHashMap<_ResourceChapterKey, T>();
-
-  T? get(_ResourceChapterKey key) {
-    final value = _entries.remove(key);
-    if (value != null) {
-      _entries[key] = value;
-    }
-    return value;
-  }
-
-  void put(_ResourceChapterKey key, T value) {
-    _entries.remove(key);
-    _entries[key] = value;
-
-    while (_entries.length > maxEntries) {
-      _entries.remove(_entries.keys.first);
-    }
-  }
-}
-
-final _tafsirChapterMemoryCache = _ChapterLruCache<List<TafsirText>>(
-  maxEntries: 24,
-);
-final _translationChapterMemoryCache = _ChapterLruCache<List<TranslationText>>(
-  maxEntries: 24,
-);
-
 final quranComApiClientProvider = Provider<QuranComApiClient>((ref) {
   final client = HttpQuranComApiClient(baseUri: AppConfig.quranBackendUrl);
   ref.onDispose(client.dispose);
   return client;
 });
+
+final islamicAppApiClientProvider = Provider<QuranComApiClient>((ref) {
+  final client = HttpQuranComApiClient(
+    baseUri: Uri.parse('https://api.islamic.app/v1/audio'),
+  );
+  ref.onDispose(client.dispose);
+  return client;
+});
+
+final islamicAppRemoteDataSourceProvider = Provider<IslamicAppRemoteDataSource>(
+  (ref) {
+    return IslamicAppRemoteDataSource(
+      apiClient: ref.watch(islamicAppApiClientProvider),
+    );
+  },
+);
 
 final quranComRemoteDataSourceProvider = Provider<QuranComRemoteDataSource>((
   ref,
@@ -178,131 +142,26 @@ final quranAudioRepositoryProvider = Provider<QuranAudioRepository>((ref) {
   );
 });
 
-int _stableNegativeReciterId(String identifier) {
-  int hash = 5381;
-  for (int i = 0; i < identifier.length; i++) {
-    hash = ((hash << 5) + hash) + identifier.codeUnitAt(i);
-  }
-  return -100000 - (hash.abs() % 800000);
-}
-
-String _normalizeReciterName(String name) {
-  var s = name.trim().toLowerCase();
-  s = s.replaceAll(RegExp(r'[\u064B-\u0652]'), '');
-  s = s.replaceAll(RegExp(r'[إأآا]'), 'ا');
-  s = s.replaceAll('ة', 'ه');
-  s = s
-      .replaceAll('الشيخ', '')
-      .replaceAll('القارئ', '')
-      .replaceAll('الدكتور', '')
-      .trim();
-  s = s.replaceAll(RegExp(r'\s+'), ' ');
-  return s;
-}
-
-String _assignReciterCategory(QuranRecitation r, {required bool isIslamicApp}) {
-  final name = r.reciterName.toLowerCase();
-  final style = (r.style ?? '').toLowerCase();
-  final id = (r.identifier ?? '').toLowerCase();
-
-  const haramainKeywords = [
-    'السديس',
-    'الشريم',
-    'الحذيفي',
-    'المعيقلي',
-    'البدير',
-    'الثبيتي',
-    'الجهني',
-    'بليلة',
-    'المحيسني',
-    'الغامدي',
-    'sudais',
-    'shuraym',
-    'hudaify',
-    'muaiqly',
-    'budeir',
-    'juhany',
-    'balilah',
-  ];
-  if (haramainKeywords.any((k) => name.contains(k) || id.contains(k))) {
-    return 'قراء الحرمين الشريفين';
-  }
-
-  if (style.contains('تراويح') ||
-      style.contains('taraweeh') ||
-      id.contains('taraweeh')) {
-    return 'تلاوات التراويح والصلوات';
-  }
-
-  if (style.contains('معلم') ||
-      style.contains('muallim') ||
-      style.contains('مجو') ||
-      style.contains('mujawwad') ||
-      style.contains('تجويد')) {
-    return 'قراء للتعلم والتجويد';
-  }
-
-  return isIslamicApp ? 'قراء خدمة Islamic.app' : 'قراء خدمة Quran.com';
-}
-
 final islamicAppRecitationsProvider = FutureProvider<List<QuranRecitation>>((
   ref,
 ) async {
   final store = ref.watch(islamicAppRecitationStoreProvider);
-  try {
-    final client = HttpClient();
-    try {
-      final request = await client.getUrl(
-        Uri.parse('https://api.islamic.app/v1/audio/reciters'),
-      );
-      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
-      final response = await request.close();
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final responseBody = await utf8.decoder.bind(response).join();
-        final decoded = jsonDecode(responseBody);
-        if (decoded is Map && decoded['data'] is List) {
-          final recitations = (decoded['data'] as List).map((e) {
-            final identifier = e['identifier'] as String;
-            final audioLevelsRaw = e['audioLevels'];
-            final List<String> audioLevels = audioLevelsRaw is List
-                ? audioLevelsRaw
-                      .map((item) => item.toString().toLowerCase())
-                      .toList()
-                : <String>[];
+  final result = await ref
+      .watch(islamicAppRemoteDataSourceProvider)
+      .fetchReciters();
 
-            final hasAyah = audioLevels.isEmpty || audioLevels.contains('ayah');
-            final hasSurah =
-                audioLevels.isEmpty || audioLevels.contains('surah');
-
-            return QuranRecitation(
-              id: _stableNegativeReciterId(identifier),
-              reciterName: e['name'] as String? ?? 'Unknown',
-              translatedName: e['englishName'] as String?,
-              languageName: e['language'] as String?,
-              style: e['format'] == 'audio' ? 'Islamic.app' : null,
-              identifier: identifier,
-              hasAyahAudio: hasAyah,
-              hasSurahAudio: hasSurah,
-            );
-          }).toList();
-
-          // حفظ القائمة محلياً ليتم استخدامها عند انقطاع الإنترنت
-          if (recitations.isNotEmpty) {
-            unawaited(store.save(recitations));
-          }
-          return recitations;
-        }
+  return result.when<Future<List<QuranRecitation>>>(
+    success: (recitations) async {
+      if (recitations.isNotEmpty) {
+        unawaited(store.save(recitations));
       }
-      // فشل الطلب: نعود للمخزن المحلي
+      return recitations;
+    },
+    error: (failure) {
+      debugPrint('Failed to load islamic app recitations: ${failure.message}');
       return store.load();
-    } finally {
-      client.close(force: true);
-    }
-  } catch (e) {
-    debugPrint('Failed to load islamic app recitations: $e');
-    // عند حدوث أي خطأ (لا إنترنت، مهلة، ...) نستخدم المخزن المحلي
-    return store.load();
-  }
+    },
+  );
 });
 
 final quranRecitationsProvider = FutureProvider<List<QuranRecitation>>((
@@ -324,17 +183,17 @@ final quranRecitationsProvider = FutureProvider<List<QuranRecitation>>((
   final Map<String, QuranRecitation> uniqueMap = {};
 
   for (final r in quranComRecitations) {
-    final normKey = _normalizeReciterName(r.reciterName);
+    final normKey = normalizeReciterName(r.reciterName);
     if (normKey.isNotEmpty) {
-      final cat = _assignReciterCategory(r, isIslamicApp: false);
+      final cat = assignReciterCategory(r, isIslamicApp: false);
       uniqueMap[normKey] = r.copyWith(category: cat);
     }
   }
 
   for (final r in islamicAppRecitations) {
-    final normKey = _normalizeReciterName(r.reciterName);
+    final normKey = normalizeReciterName(r.reciterName);
     if (normKey.isNotEmpty) {
-      final cat = _assignReciterCategory(r, isIslamicApp: true);
+      final cat = assignReciterCategory(r, isIslamicApp: true);
       if (uniqueMap.containsKey(normKey)) {
         final existing = uniqueMap[normKey]!;
         uniqueMap[normKey] = existing.copyWith(
@@ -562,6 +421,7 @@ final tafsirChapterProvider =
         resourceId: params.resourceId,
         chapterNumber: params.chapterNumber,
       );
+      final tafsirChapterCache = ref.watch(tafsirChapterCacheProvider);
       final localDataSource = ref.watch(tafsirLocalDataSourceProvider);
       final displayResourceName = await _resolveTafsirDisplayName(
         ref,
@@ -646,6 +506,7 @@ final tafsirAyahProvider =
         resourceId: params.resourceId,
         chapterNumber: params.chapterNumber,
       );
+      final tafsirChapterCache = ref.watch(tafsirChapterCacheProvider);
       final localDataSource = ref.watch(tafsirLocalDataSourceProvider);
       final displayResourceName = await _resolveTafsirDisplayName(
         ref,
@@ -740,6 +601,9 @@ final translationChapterProvider =
         resourceId: params.resourceId,
         chapterNumber: params.chapterNumber,
       );
+      final translationChapterCache = ref.watch(
+        translationChapterCacheProvider,
+      );
       final localDataSource = ref.watch(translationLocalDataSourceProvider);
       final displayResourceName = await _resolveTranslationDisplayName(
         ref,
@@ -806,6 +670,9 @@ final translationAyahProvider =
       final cacheKey = ResourceChapterKey(
         resourceId: params.resourceId,
         chapterNumber: params.chapterNumber,
+      );
+      final translationChapterCache = ref.watch(
+        translationChapterCacheProvider,
       );
       final localDataSource = ref.watch(translationLocalDataSourceProvider);
       final displayResourceName = await _resolveTranslationDisplayName(

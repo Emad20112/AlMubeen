@@ -1,7 +1,6 @@
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:qcf_quran/qcf_quran.dart';
-import 'package:qcf_quran/src/data/quarters.dart' as qcf_quarters;
 
 enum WirdAmountType { quarter, halfHizb, hizb, juz, juzAndHalf, twoJuzs }
 
@@ -19,10 +18,6 @@ class WirdCalculator {
 
   static final List<int> _juzStartPages = _buildStartPages(
     (AyahRef ayahRef) => getJuzNumber(ayahRef.surah, ayahRef.ayah),
-  );
-
-  static final List<int> _hizbStartPages = _buildStartPages(
-    (AyahRef ayahRef) => getHizbNumber(ayahRef.surah, ayahRef.ayah),
   );
 
   static final List<int> _halfHizbStartPages = _partitionPages(
