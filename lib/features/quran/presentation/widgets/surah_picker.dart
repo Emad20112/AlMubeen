@@ -49,11 +49,11 @@ Future<int?> showSurahPicker(BuildContext context) {
 
       return Dialog(
         backgroundColor: backgroundColor,
-        insetPadding: const EdgeInsets.all(24),
+        insetPadding: EdgeInsets.zero,
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: math.min(size.width - 48, 760.0),
-            maxHeight: size.height * 0.82,
+            maxWidth: math.min(size.width, 760.0),
+            maxHeight: size.height,
           ),
           child: const _SurahPickerContent(),
         ),
@@ -67,32 +67,40 @@ class _SurahPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDark
         ? AppColors.darkSurface
         : AppColors.parchmentLight;
 
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: size.height * 0.86),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-          ),
-          child: const _SurahPickerContent(showDragHandle: true),
-        ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
       ),
+      child: const _SurahPickerContent(showDragHandle: true),
     );
   }
 }
 
-class _SurahPickerContent extends StatelessWidget {
+class _SurahPickerContent extends StatefulWidget {
   const _SurahPickerContent({this.showDragHandle = false});
 
   final bool showDragHandle;
+
+  @override
+  State<_SurahPickerContent> createState() => _SurahPickerContentState();
+}
+
+class _SurahPickerContentState extends State<_SurahPickerContent> {
+  final TextEditingController _searchController = TextEditingController();
+  final ValueNotifier<String> _query = ValueNotifier<String>('');
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _query.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +117,7 @@ class _SurahPickerContent extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (showDragHandle) ...[
+            if (widget.showDragHandle) ...[
               const SizedBox(height: 10),
               FractionallySizedBox(
                 widthFactor: 0.12,
@@ -152,8 +160,82 @@ class _SurahPickerContent extends StatelessWidget {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: ValueListenableBuilder<String>(
+                valueListenable: _query,
+                builder: (context, queryValue, _) {
+                  return SizedBox(
+                    height: 34,
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) => _query.value = val,
+                      textInputAction: TextInputAction.search,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: foregroundColor,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'ابحث عن سورة...',
+                        hintStyle: TextStyle(
+                          fontSize: 13,
+                          color: foregroundColor.withValues(alpha: 0.5),
+                        ),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 0,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          size: 16,
+                          color: foregroundColor.withValues(alpha: 0.5),
+                        ),
+                        suffixIcon: queryValue.isNotEmpty
+                            ? SizedBox(
+                                width: 32,
+                                child: IconButton(
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _query.value = '';
+                                  },
+                                  icon: Icon(
+                                    Icons.clear_rounded,
+                                    size: 16,
+                                    color: foregroundColor.withValues(alpha: 0.5),
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 0,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: foregroundColor.withValues(alpha: 0.06),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 0,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
             Divider(height: 1, color: foregroundColor.withValues(alpha: 0.18)),
-            const Expanded(child: _SurahPickerBody()),
+            Expanded(
+              child: ValueListenableBuilder<String>(
+                valueListenable: _query,
+                builder: (context, queryValue, _) {
+                  return _SurahPickerBody(query: queryValue);
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -162,10 +244,24 @@ class _SurahPickerContent extends StatelessWidget {
 }
 
 class _SurahPickerBody extends StatelessWidget {
-  const _SurahPickerBody();
+  const _SurahPickerBody({this.query = ''});
+
+  final String query;
 
   @override
   Widget build(BuildContext context) {
+    final allSurahs = List.generate(totalSurahCount, (i) => i + 1);
+    final filteredSurahs = query.isEmpty
+        ? allSurahs
+        : allSurahs.where((surah) {
+            final name = getSurahNameArabic(surah).toLowerCase();
+            final englishName = getSurahName(surah).toLowerCase();
+            final q = query.toLowerCase();
+            return name.contains(q) ||
+                englishName.contains(q) ||
+                surah.toString().contains(q);
+          }).toList();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -173,14 +269,29 @@ class _SurahPickerBody extends StatelessWidget {
         final textScale = MediaQuery.textScalerOf(context).scale(1);
         final isGrid = windowClass != AdaptiveWindowClass.compact;
 
+        if (filteredSurahs.isEmpty) {
+          return Center(
+            child: Text(
+              'لا توجد نتائج',
+              style: TextStyle(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withValues(alpha: 0.5),
+              ),
+            ),
+          );
+        }
+
         if (!isGrid) {
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
             itemBuilder: (context, index) {
-              return SurahPickerTile(surahNumber: index + 1);
+              return SurahPickerTile(surahNumber: filteredSurahs[index]);
             },
             separatorBuilder: (context, index) => const SizedBox(height: 8),
-            itemCount: totalSurahCount,
+            itemCount: filteredSurahs.length,
           );
         }
 
@@ -201,9 +312,9 @@ class _SurahPickerBody extends StatelessWidget {
             mainAxisExtent: itemExtent,
           ),
           itemBuilder: (context, index) {
-            return SurahPickerTile(surahNumber: index + 1);
+            return SurahPickerTile(surahNumber: filteredSurahs[index]);
           },
-          itemCount: totalSurahCount,
+          itemCount: filteredSurahs.length,
         );
       },
     );

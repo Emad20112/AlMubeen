@@ -14,10 +14,8 @@ void showAllahNameDetailSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => AllahNameDetailSheet(
-      entries: entries,
-      initialIndex: initialIndex,
-    ),
+    builder: (context) =>
+        AllahNameDetailSheet(entries: entries, initialIndex: initialIndex),
   );
 }
 
@@ -73,12 +71,11 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark
-        ? const Color(0xFF1E1715)
-        : AppColors.parchmentLight;
+    final bgColor = isDark ? const Color(0xFF1E1715) : AppColors.parchmentLight;
     final fgColor = isDark ? AppColors.darkInk : AppColors.maroon800;
-    final accentColor =
-        isDark ? AppColors.goldenAccentDark : AppColors.goldenAccent;
+    final accentColor = isDark
+        ? AppColors.goldenAccentDark
+        : AppColors.goldenAccent;
     final cardColor = isDark ? AppColors.darkSurfaceHigh : Colors.white;
 
     return Container(
@@ -86,9 +83,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: accentColor.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.3),
@@ -121,7 +116,10 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                   // Previous button
                   IconButton(
                     onPressed: _currentIndex > 0 ? _previousPage : null,
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 16,
+                    ),
                     visualDensity: VisualDensity.compact,
                     style: IconButton.styleFrom(
                       foregroundColor: fgColor,
@@ -129,9 +127,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(
-                          color: fgColor.withValues(alpha: 0.1),
-                        ),
+                        side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
                       ),
                     ),
                     tooltip: 'الاسم السابق',
@@ -140,8 +136,10 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
 
                   // Counter Badge
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: accentColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
@@ -163,8 +161,9 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
 
                   // Next button
                   IconButton(
-                    onPressed:
-                        _currentIndex < widget.entries.length - 1 ? _nextPage : null,
+                    onPressed: _currentIndex < widget.entries.length - 1
+                        ? _nextPage
+                        : null,
                     icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
                     visualDensity: VisualDensity.compact,
                     style: IconButton.styleFrom(
@@ -173,9 +172,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(
-                          color: fgColor.withValues(alpha: 0.1),
-                        ),
+                        side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
                       ),
                     ),
                     tooltip: 'الاسم التالي',
@@ -193,9 +190,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(
-                          color: fgColor.withValues(alpha: 0.1),
-                        ),
+                        side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
                       ),
                     ),
                     tooltip: 'إغلاق',
@@ -216,10 +211,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                 },
                 itemBuilder: (context, index) {
                   final entry = widget.entries[index];
-                  return _AllahNameDetailPage(
-                    entry: entry,
-                    isDark: isDark,
-                  );
+                  return _AllahNameDetailPage(entry: entry, isDark: isDark);
                 },
               ),
             ),
@@ -231,10 +223,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
 }
 
 class _AllahNameDetailPage extends StatelessWidget {
-  const _AllahNameDetailPage({
-    required this.entry,
-    required this.isDark,
-  });
+  const _AllahNameDetailPage({required this.entry, required this.isDark});
 
   final AllahNameEntry entry;
   final bool isDark;
@@ -244,8 +233,9 @@ class _AllahNameDetailPage extends StatelessWidget {
     final cardBg = isDark ? AppColors.darkSurfaceHigh : Colors.white;
     final fgColor = isDark ? AppColors.darkInk : AppColors.maroon800;
     final meaningColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final accentColor =
-        isDark ? AppColors.goldenAccentDark : AppColors.goldenAccent;
+    final accentColor = isDark
+        ? AppColors.goldenAccentDark
+        : AppColors.goldenAccent;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
@@ -256,12 +246,12 @@ class _AllahNameDetailPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: cardBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: accentColor.withValues(alpha: 0.35),
-            ),
+            border: Border.all(color: accentColor.withValues(alpha: 0.35)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.maroon900.withValues(alpha: isDark ? 0.2 : 0.08),
+                color: AppColors.maroon900.withValues(
+                  alpha: isDark ? 0.2 : 0.08,
+                ),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -271,9 +261,14 @@ class _AllahNameDetailPage extends StatelessWidget {
             children: [
               // Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.maroon700.withValues(alpha: isDark ? 0.25 : 0.08),
+                  color: AppColors.maroon700.withValues(
+                    alpha: isDark ? 0.25 : 0.08,
+                  ),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
                     color: AppColors.maroon700.withValues(alpha: 0.2),
@@ -297,7 +292,6 @@ class _AllahNameDetailPage extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: fgColor,
-                  fontFamily: 'DiwaniBent',
                   fontSize: 42,
                   height: 1.1,
                   fontWeight: FontWeight.w700,
@@ -327,7 +321,9 @@ class _AllahNameDetailPage extends StatelessWidget {
                     entry.meaning,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: meaningColor.withValues(alpha: isDark ? 0.95 : 0.88),
+                      color: meaningColor.withValues(
+                        alpha: isDark ? 0.95 : 0.88,
+                      ),
                       fontSize: 16.5,
                       fontWeight: FontWeight.w600,
                       height: 1.7,
@@ -360,9 +356,7 @@ class _AllahNameDetailPage extends StatelessWidget {
                     label: const Text('نسخ'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: fgColor,
-                      side: BorderSide(
-                        color: fgColor.withValues(alpha: 0.2),
-                      ),
+                      side: BorderSide(color: fgColor.withValues(alpha: 0.2)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

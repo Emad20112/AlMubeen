@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:al_mubeen/core/audio/audio_providers.dart';
 import 'package:al_mubeen/core/audio/download_manager.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
-import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
+import 'package:al_mubeen/features/quran/domain/repositories/quran_audio_repository.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -192,7 +192,10 @@ final class QuranAudioDownloadController
     );
 
     final baseDir = (await downloadManager.getBaseDownloadDirectory()).path;
-    final existingAyahKeys = await _loadExistingAyahKeys(baseDir: baseDir);
+    final existingAyahKeys = await _loadExistingAyahKeys(
+      baseDir: baseDir,
+      reciterId: recitation.id,
+    );
     var errors = 0;
 
     try {
@@ -211,77 +214,47 @@ final class QuranAudioDownloadController
           if (state.status != QuranAudioDownloadStatus.downloading) break;
 
           final verseCount = getVerseCount(surah);
+          final surahName = getSurahNameArabic(surah);
 
-          for (var ayah = 1; ayah <= verseCount; ayah++) {
-            if (state.status != QuranAudioDownloadStatus.downloading) break;
-
-            final currentVerse =
-                'سورة ${getSurahNameArabic(surah)} - آية $ayah';
-            _surahProgressMap[surah] = _completedDownloads / _totalDownloads;
-            _emitDownloadProgress(
-              completedCount: _completedDownloads,
-              totalCount: _totalDownloads,
-              currentVerse: currentVerse,
-              message: 'تحميل $currentVerse',
-            );
-
-            final verseKey = QuranVerseKey(surah: surah, ayah: ayah);
-            final result = await audioRepo.getAyahAudio(
-              verseKey: verseKey,
-              recitationId: recitation.id,
-            );
-
-            final audioFile = result.valueOrNull;
-            if (audioFile == null) {
-              errors++;
-              _completedDownloads++;
-              continue;
-            }
-
-            final extension = path.extension(audioFile.url.path).isNotEmpty
-                ? path.extension(audioFile.url.path)
-                : '.mp3';
-
-            final filePath = DownloadManager.ayahFilePath(
-              baseDir: baseDir,
-              reciterName: recitation.reciterName,
-              surahNumber: surah,
-              ayahNumber: ayah,
-              extension: extension.substring(1),
-            );
-
-            // Skip if already downloaded
-            final ayahKey = _ayahKey(surah, ayah);
-            if (existingAyahKeys.contains(ayahKey)) {
-              _completedDownloads++;
-              continue;
-            }
-
-            // Download using background_downloader
-            final taskId = await downloadManager.downloadFile(
-              url: audioFile.url,
-              directoryPath: path.dirname(filePath),
-              filename: path.basename(filePath),
-            );
-            _activeTaskIds.add(taskId);
-
-            // Wait for this specific download to complete
-            final completed = await _waitForTask(taskId, downloadManager);
-            if (completed) {
-              _activeTaskIds.remove(taskId);
-              existingAyahKeys.add(ayahKey);
-            }
-
-            _completedDownloads++;
+          // Batch-fetch all ayah files for this surah in one request.
+          final result = await audioRepo.getSurahAudioFiles(
+            chapterNumber: surah,
+            recitationId: recitation.id,
+          );
+          final audioFiles = result.valueOrNull;
+          if (audioFiles == null || audioFiles.isEmpty) {
+            errors++;
+            continue;
           }
+
+          final surahErrors = await _downloadAyahBatch(
+            downloadManager: downloadManager,
+            audioFiles: audioFiles,
+            baseDir: baseDir,
+            recitationId: recitation.id,
+            existingAyahKeys: existingAyahKeys,
+            surahNumber: surah,
+            verseCount: verseCount,
+            shouldContinue: () =>
+                state.status == QuranAudioDownloadStatus.downloading,
+            onProgress: (currentVerse, downloaded, total) =>
+                _emitDownloadProgress(
+                  completedCount: _completedDownloads + downloaded,
+                  totalCount: _totalDownloads,
+                  currentVerse: currentVerse,
+                  message: 'تحميل $currentVerse',
+                ),
+          );
+          errors += surahErrors;
+          _completedDownloads += verseCount;
 
           if (state.status == QuranAudioDownloadStatus.downloading) {
             _surahProgressMap[surah] = 1.0;
             _emitDownloadProgress(
               completedCount: _completedDownloads,
               totalCount: _totalDownloads,
-              currentVerse: 'اكتمل تحميل سورة ${getSurahNameArabic(surah)}.',
-              message: 'اكتمل تحميل سورة ${getSurahNameArabic(surah)}.',
+              currentVerse: 'اكتمل تحميل سورة $surahName.',
+              message: 'اكتمل تحميل سورة $surahName.',
               force: true,
             );
           }
@@ -324,6 +297,49 @@ final class QuranAudioDownloadController
     }
   }
 
+  /// Scans the local filesystem and rebuilds [QuranAudioDownloadState.surahDownloadProgress]
+  /// from the actual downloaded files for a given reciter.
+  /// This is needed after app restart, because the in-memory map is lost.
+  Future<void> refreshDownloadedSurahs({required int reciterId}) async {
+    final downloadManager = ref.read(downloadManagerProvider);
+    final baseDir = (await downloadManager.getBaseDownloadDirectory()).path;
+    final reciterDirectory = Directory(
+      path.join(baseDir, DownloadManager.reciterDirectoryName(reciterId)),
+    );
+
+    final Map<int, double> progressMap = {};
+
+    if (await reciterDirectory.exists()) {
+      await for (final surahEntity in reciterDirectory.list(
+        followLinks: false,
+      )) {
+        if (surahEntity is! Directory) continue;
+
+        final parsedSurah = _parseSurahDirectoryName(
+          path.basename(surahEntity.path),
+        );
+        if (parsedSurah == null) continue;
+
+        var ayahCount = 0;
+        await for (final ayahEntity in surahEntity.list(followLinks: false)) {
+          if (ayahEntity is! File) continue;
+          final parsedAyah = _parseAyahFileName(path.basename(ayahEntity.path));
+          if (parsedAyah != null) ayahCount++;
+        }
+
+        final verseCount = getVerseCount(parsedSurah);
+        progressMap[parsedSurah] = verseCount <= 0
+            ? 1.0
+            : (ayahCount / verseCount).clamp(0.0, 1.0).toDouble();
+      }
+    }
+
+    state = state.copyWith(
+      surahDownloadProgress: progressMap,
+      recitationId: reciterId,
+    );
+  }
+
   Future<void> downloadSurah({
     required int surahNumber,
     required QuranRecitation recitation,
@@ -358,9 +374,9 @@ final class QuranAudioDownloadController
     final baseDir = (await downloadManager.getBaseDownloadDirectory()).path;
     final existingAyahKeys = await _loadExistingAyahKeys(
       baseDir: baseDir,
+      reciterId: recitation.id,
       surahNumber: surahNumber,
     );
-    var downloaded = 0;
     var errors = 0;
 
     try {
@@ -373,75 +389,35 @@ final class QuranAudioDownloadController
       });
 
       try {
-        for (var ayah = 1; ayah <= verseCount; ayah++) {
-          if (state.status != QuranAudioDownloadStatus.downloading) break;
-
-          final currentVerse = 'سورة $surahName - آية $ayah';
-          _surahProgressMap[surahNumber] = downloaded / verseCount;
-          _emitDownloadProgress(
-            completedCount: downloaded,
-            totalCount: verseCount,
-            currentVerse: currentVerse,
-            message: 'تحميل $currentVerse',
-            downloadingSurahNumber: surahNumber,
-          );
-
-          final verseKey = QuranVerseKey(surah: surahNumber, ayah: ayah);
-          final result = await audioRepo.getAyahAudio(
-            verseKey: verseKey,
-            recitationId: recitation.id,
-          );
-
-          final audioFile = result.valueOrNull;
-          if (audioFile == null) {
-            errors++;
-            downloaded++;
-            continue;
-          }
-
-          final extension = path.extension(audioFile.url.path).isNotEmpty
-              ? path.extension(audioFile.url.path)
-              : '.mp3';
-
-          final filePath = DownloadManager.ayahFilePath(
-            baseDir: baseDir,
-            reciterName: recitation.reciterName,
-            surahNumber: surahNumber,
-            ayahNumber: ayah,
-            extension: extension.substring(1),
-          );
-
-          // Skip if already downloaded
-          final ayahKey = _ayahKey(surahNumber, ayah);
-          if (existingAyahKeys.contains(ayahKey)) {
-            downloaded++;
-            continue;
-          }
-
-          final taskId = await downloadManager.downloadFile(
-            url: audioFile.url,
-            directoryPath: path.dirname(filePath),
-            filename: path.basename(filePath),
-          );
-          _activeTaskIds.add(taskId);
-
-          final completed = await _waitForTask(taskId, downloadManager);
-          if (completed) {
-            _activeTaskIds.remove(taskId);
-            existingAyahKeys.add(ayahKey);
-          }
-
-          downloaded++;
-          _surahProgressMap[surahNumber] = downloaded / verseCount;
-          _emitDownloadProgress(
-            completedCount: downloaded,
-            totalCount: verseCount,
-            currentVerse: currentVerse,
-            message: 'تحميل $currentVerse',
-            downloadingSurahNumber: surahNumber,
-            force: true,
-          );
+        // Batch-fetch all ayah files for this surah in one request.
+        final result = await audioRepo.getSurahAudioFiles(
+          chapterNumber: surahNumber,
+          recitationId: recitation.id,
+        );
+        final audioFiles = result.valueOrNull;
+        if (audioFiles == null || audioFiles.isEmpty) {
+          throw StateError('لم يتم العثور على ملفات صوتية لسورة $surahName.');
         }
+
+        errors = await _downloadAyahBatch(
+          downloadManager: downloadManager,
+          audioFiles: audioFiles,
+          baseDir: baseDir,
+          recitationId: recitation.id,
+          existingAyahKeys: existingAyahKeys,
+          surahNumber: surahNumber,
+          verseCount: verseCount,
+          shouldContinue: () =>
+              state.status == QuranAudioDownloadStatus.downloading,
+          onProgress: (currentVerse, downloaded, total) =>
+              _emitDownloadProgress(
+                completedCount: downloaded,
+                totalCount: total,
+                currentVerse: currentVerse,
+                message: 'تحميل $currentVerse',
+                downloadingSurahNumber: surahNumber,
+              ),
+        );
 
         if (state.status == QuranAudioDownloadStatus.downloading) {
           state = state.copyWith(
@@ -485,6 +461,97 @@ final class QuranAudioDownloadController
     }
   }
 
+  /// Downloads a list of ayah audio files sequentially — one task at a time.
+  /// Files already present locally are skipped. Returns the number of files
+  /// that failed to download. Sequential processing avoids the platform
+  /// downloader and CDN stalling when many same-host downloads run at once.
+  Future<int> _downloadAyahBatch({
+    required DownloadManager downloadManager,
+    required List<QuranAudioFile> audioFiles,
+    required String baseDir,
+    required int recitationId,
+    required Set<String> existingAyahKeys,
+    required int surahNumber,
+    required int verseCount,
+    required bool Function() shouldContinue,
+    required void Function(String currentVerse, int downloaded, int total)
+    onProgress,
+  }) async {
+    final total = audioFiles.length;
+    var downloaded = 0;
+    var errors = 0;
+
+    void emit(int ayah) {
+      _surahProgressMap[surahNumber] = verseCount <= 0
+          ? 0
+          : downloaded / verseCount;
+      final currentVerse =
+          'سورة ${getSurahNameArabic(surahNumber)} - آية $ayah';
+      onProgress(currentVerse, downloaded, total);
+    }
+
+    for (final audioFile in audioFiles) {
+      if (!shouldContinue()) break;
+
+      final surah = audioFile.verseKey.surah;
+      final ayah = audioFile.verseKey.ayah;
+      final ayahKey = _ayahKey(surah, ayah);
+
+      if (existingAyahKeys.contains(ayahKey)) {
+        downloaded++;
+        emit(ayah);
+        continue;
+      }
+
+      final extension = path.extension(audioFile.url.path).isNotEmpty
+          ? path.extension(audioFile.url.path)
+          : '.mp3';
+      final filePath = DownloadManager.ayahFilePath(
+        baseDir: baseDir,
+        reciterId: recitationId,
+        surahNumber: surah,
+        ayahNumber: ayah,
+        extension: extension.substring(1),
+      );
+
+      emit(ayah);
+
+      // Ensure the target directory exists; the platform downloader may fail
+      // if it doesn't.
+      final directoryPath = path.dirname(filePath);
+      await Directory(directoryPath).create(recursive: true);
+
+      final taskId = await downloadManager.downloadFile(
+        url: audioFile.url,
+        directoryPath: directoryPath,
+        filename: path.basename(filePath),
+      );
+      _activeTaskIds.add(taskId);
+
+      var completed = false;
+      try {
+        completed = await _waitForTask(taskId, downloadManager);
+      } on Object {
+        // A failed download shouldn't abort the rest of the surah.
+        _activeTaskIds.remove(taskId);
+        errors++;
+        downloaded++;
+        continue;
+      }
+
+      if (completed) {
+        _activeTaskIds.remove(taskId);
+        existingAyahKeys.add(ayahKey);
+      } else {
+        errors++;
+      }
+
+      downloaded++;
+    }
+
+    return errors;
+  }
+
   /// Wait for a specific download task to reach a final state.
   /// Pause-like states do not complete this future; the same task is expected
   /// to continue after resume, and only a terminal state ends the wait.
@@ -492,6 +559,26 @@ final class QuranAudioDownloadController
     String taskId,
     DownloadManager downloadManager,
   ) async {
+    // If the task already reached a terminal state before this method
+    // subscribed, resolve immediately from the tracked status.
+    final current = downloadManager.getLastStatus(taskId);
+    if (current != null) {
+      switch (current) {
+        case DownloadStatus.completed:
+          return true;
+        case DownloadStatus.failed:
+        case DownloadStatus.notFound:
+          throw Exception('Download failed for task $taskId');
+        case DownloadStatus.cancelled:
+          return false;
+        case DownloadStatus.waiting:
+        case DownloadStatus.downloading:
+        case DownloadStatus.paused:
+        case DownloadStatus.awaitingWifi:
+          break;
+      }
+    }
+
     final completer = Completer<bool>();
 
     late final StreamSubscription sub;
@@ -629,51 +716,48 @@ final class QuranAudioDownloadController
 
   Future<Set<String>> _loadExistingAyahKeys({
     required String baseDir,
+    required int reciterId,
     int? surahNumber,
   }) async {
     final keys = <String>{};
-    final baseDirectory = Directory(baseDir);
-    if (!await baseDirectory.exists()) {
+    final reciterDirectory = Directory(
+      path.join(baseDir, DownloadManager.reciterDirectoryName(reciterId)),
+    );
+    if (!await reciterDirectory.exists()) {
       return keys;
     }
 
-    await for (final reciterEntity in baseDirectory.list(followLinks: false)) {
-      if (reciterEntity is! Directory) {
-        continue;
-      }
-
-      if (surahNumber != null) {
-        await _collectSurahAyahKeys(
-          keys: keys,
-          surahDirectory: Directory(
-            path.join(
-              reciterEntity.path,
-              'surah_${surahNumber.toString().padLeft(3, '0')}',
-            ),
+    if (surahNumber != null) {
+      await _collectSurahAyahKeys(
+        keys: keys,
+        surahDirectory: Directory(
+          path.join(
+            reciterDirectory.path,
+            'surah_${surahNumber.toString().padLeft(3, '0')}',
           ),
-          surahNumber: surahNumber,
-        );
+        ),
+        surahNumber: surahNumber,
+      );
+      return keys;
+    }
+
+    await for (final surahEntity in reciterDirectory.list(followLinks: false)) {
+      if (surahEntity is! Directory) {
         continue;
       }
 
-      await for (final surahEntity in reciterEntity.list(followLinks: false)) {
-        if (surahEntity is! Directory) {
-          continue;
-        }
-
-        final parsedSurah = _parseSurahDirectoryName(
-          path.basename(surahEntity.path),
-        );
-        if (parsedSurah == null) {
-          continue;
-        }
-
-        await _collectSurahAyahKeys(
-          keys: keys,
-          surahDirectory: surahEntity,
-          surahNumber: parsedSurah,
-        );
+      final parsedSurah = _parseSurahDirectoryName(
+        path.basename(surahEntity.path),
+      );
+      if (parsedSurah == null) {
+        continue;
       }
+
+      await _collectSurahAyahKeys(
+        keys: keys,
+        surahDirectory: surahEntity,
+        surahNumber: parsedSurah,
+      );
     }
 
     return keys;

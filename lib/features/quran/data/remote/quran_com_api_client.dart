@@ -147,28 +147,131 @@ final class HttpQuranComApiClient implements QuranComApiClient {
     Map<String, String> queryParameters = const {},
     RequestAbortHandle? abortHandle,
   }) async {
-    final result = await getJson(
-      path,
-      queryParameters: queryParameters,
-      abortHandle: abortHandle,
-    );
-    return result.when(
-      success: (json) {
-        for (final value in json.values) {
+    final uri = _resolve(path, queryParameters);
+
+    debugPrint('QuranBackendClient: GET $uri');
+    if (queryParameters.isNotEmpty) {
+      debugPrint('QuranBackendClient: queryParameters: $queryParameters');
+    }
+
+    try {
+      final request = await _httpClient.getUrl(uri).timeout(requestTimeout);
+      if (abortHandle?.isAborted == true) {
+        request.abort();
+        return _cancelledList(uri);
+      }
+
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      request.headers.set(HttpHeaders.userAgentHeader, 'AlMubeen/1.0');
+
+      for (final entry in _headers.entries) {
+        request.headers.set(entry.key, entry.value);
+      }
+
+      abortHandle?.attach(() => request.abort());
+
+      final response = await request.close().timeout(requestTimeout);
+      final responseBody = await utf8.decoder
+          .bind(response)
+          .join()
+          .timeout(requestTimeout);
+
+      debugPrint('QuranBackendClient: response status=${response.statusCode}');
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return _errorListFromBody(
+          statusCode: response.statusCode,
+          body: responseBody,
+          uri: uri,
+        );
+      }
+
+      final Object? decoded = jsonDecode(responseBody);
+      if (decoded is JsonList) {
+        return DataSuccess(decoded);
+      }
+
+      if (decoded is JsonMap) {
+        final ok = decoded['ok'];
+        if (ok == false) {
+          final error = decoded['error'];
+          final message = error is JsonMap
+              ? error['message']?.toString() ?? 'Backend request failed.'
+              : 'Backend request failed.';
+
+          return DataError(
+            DataFailure(
+              kind: DataFailureKind.network,
+              message: message,
+              uri: uri,
+            ),
+          );
+        }
+
+        final data = decoded['data'];
+        if (data is JsonList) {
+          return DataSuccess(data);
+        }
+
+        for (final value in decoded.values) {
           if (value is JsonList) {
             return DataSuccess(value);
           }
         }
+      }
 
-        return DataError(
-          DataFailure(
-            kind: DataFailureKind.invalidResponse,
-            message: 'Backend response did not contain a JSON list.',
-          ),
-        );
-      },
-      error: DataError.new,
-    );
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.invalidResponse,
+          message: 'Backend response did not contain a JSON list.',
+          uri: uri,
+        ),
+      );
+    } on TimeoutException catch (error, stackTrace) {
+      if (abortHandle?.isAborted == true) {
+        return _cancelledList(uri);
+      }
+
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.timeout,
+          message: 'Backend request timed out.',
+          uri: uri,
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    } on FormatException catch (error, stackTrace) {
+      if (abortHandle?.isAborted == true) {
+        return _cancelledList(uri);
+      }
+
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.parsing,
+          message: 'Unable to parse backend response.',
+          uri: uri,
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    } on Object catch (error, stackTrace) {
+      if (abortHandle?.isAborted == true) {
+        return _cancelledList(uri, cause: error, stackTrace: stackTrace);
+      }
+
+      return DataError(
+        DataFailure(
+          kind: DataFailureKind.network,
+          message: 'Unable to reach Al-Mubeen backend.',
+          uri: uri,
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    } finally {
+      abortHandle?.clear();
+    }
   }
 
   void dispose() {
@@ -267,6 +370,54 @@ final class HttpQuranComApiClient implements QuranComApiClient {
   }
 
   DataError<JsonMap> _cancelled(
+    Uri uri, {
+    Object? cause,
+    StackTrace? stackTrace,
+  }) {
+    return DataError(
+      DataFailure(
+        kind: DataFailureKind.cancelled,
+        message: 'The request was cancelled.',
+        uri: uri,
+        cause: cause,
+        stackTrace: stackTrace,
+      ),
+    );
+  }
+
+  DataError<JsonList> _errorListFromBody({
+    required int statusCode,
+    required String body,
+    required Uri uri,
+  }) {
+    try {
+      final Object? decoded = jsonDecode(body);
+      if (decoded is JsonMap && decoded['error'] is JsonMap) {
+        final message =
+            (decoded['error'] as JsonMap)['message']?.toString() ??
+            'Backend request failed with $statusCode.';
+        return DataError(
+          DataFailure(
+            kind: _failureKindForStatus(statusCode),
+            message: message,
+            code: statusCode.toString(),
+            uri: uri,
+          ),
+        );
+      }
+    } catch (_) {}
+
+    return DataError(
+      DataFailure(
+        kind: _failureKindForStatus(statusCode),
+        message: 'Backend request failed with $statusCode.',
+        code: statusCode.toString(),
+        uri: uri,
+      ),
+    );
+  }
+
+  DataError<JsonList> _cancelledList(
     Uri uri, {
     Object? cause,
     StackTrace? stackTrace,

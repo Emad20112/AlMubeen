@@ -159,6 +159,90 @@ class QuranBookmarks extends Table {
   ];
 }
 
+@DataClassName('WirdEntry')
+class WirdsTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withDefault(const Constant('Wird'))();
+  TextColumn get goalType => text().withDefault(const Constant('legacy'))();
+  TextColumn get status => text().withDefault(const Constant('active'))();
+  IntColumn get startPage => integer().withDefault(const Constant(1))();
+  IntColumn get endPage => integer().withDefault(const Constant(604))();
+  IntColumn get pagesPerDay => integer().nullable()();
+  DateTimeColumn get startDate => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get targetDate => dateTime().nullable()();
+  TextColumn get scheduleType => text().withDefault(const Constant('daily'))();
+  TextColumn get activeWeekdays =>
+      text().withDefault(const Constant('[1,2,3,4,5,6,7]'))();
+  BoolColumn get isFlexible => boolean().withDefault(const Constant(false))();
+  BoolColumn get allowCatchUp => boolean().withDefault(const Constant(false))();
+  BoolColumn get autoStartNextKhatma =>
+      boolean().withDefault(const Constant(false))();
+  IntColumn get currentCycle => integer().withDefault(const Constant(1))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+
+  // Legacy fields preserved for migration
+  TextColumn get amountType => text().nullable()();
+  IntColumn get amountMultiplier =>
+      integer().nullable().withDefault(const Constant(1))();
+  IntColumn get durationDays => integer().nullable()();
+  TextColumn get frequency => text().nullable()();
+  TextColumn get reminderTime => text().nullable()();
+  DateTimeColumn get lastReadDate => dateTime().nullable()();
+  IntColumn get completedDaysCount =>
+      integer().nullable().withDefault(const Constant(0))();
+}
+
+@DataClassName('WirdDailyProgressEntry')
+class WirdDailyProgressTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get wirdId =>
+      integer().references(WirdsTable, #id, onDelete: KeyAction.cascade)();
+  TextColumn get dateKey => text()(); // YYYY-MM-DD
+  IntColumn get plannedStartPage => integer()();
+  IntColumn get plannedEndPage => integer()();
+  IntColumn get actualStartPage => integer()();
+  IntColumn get actualEndPage => integer()();
+  IntColumn get targetPages => integer()();
+  IntColumn get completedPages => integer()();
+  TextColumn get status => text()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => [
+    {wirdId, dateKey},
+  ];
+}
+
+@DataClassName('WirdCycleHistoryEntry')
+class WirdCycleHistoryTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get wirdId =>
+      integer().references(WirdsTable, #id, onDelete: KeyAction.cascade)();
+  IntColumn get cycleNumber => integer()();
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get completedDate => dateTime().nullable()();
+  IntColumn get startPage => integer()();
+  IntColumn get endPage => integer()();
+  IntColumn get actualCompletedPages => integer()();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+@DataClassName('WirdAchievementEntry')
+class WirdAchievementsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => text()();
+  IntColumn get threshold => integer()();
+  BoolColumn get unlocked => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get unlockedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DataClassName('DownloadedTafsirEntry')
 @TableIndex(name: 'downloaded_tafsirs_resource_id', columns: {#resourceId})
 @TableIndex(name: 'downloaded_tafsirs_updated_at', columns: {#updatedAt})
@@ -295,6 +379,10 @@ class HisnContentItemCache extends Table {
     CategoryFavorites,
     QuranReadingProgressCache,
     QuranBookmarks,
+    WirdsTable,
+    WirdDailyProgressTable,
+    WirdCycleHistoryTable,
+    WirdAchievementsTable,
     DownloadedTafsirs,
     DownloadedTranslations,
     TafsirTextCache,
@@ -309,7 +397,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forExecutor(super.executor);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration {
@@ -336,6 +424,9 @@ class AppDatabase extends _$AppDatabase {
           await migrator.createTable(quranBookmarks);
         }
         if (from < 7) {
+          await migrator.createTable(wirdsTable);
+        }
+        if (from < 8) {
           await (migrator.database as AppDatabase).customStatement('''
             CREATE TABLE IF NOT EXISTS downloaded_tafsirs (
               resource_id INTEGER NOT NULL PRIMARY KEY,
@@ -376,7 +467,7 @@ class AppDatabase extends _$AppDatabase {
             ON tafsir_text_cache (cached_at)
           ''');
         }
-        if (from < 8) {
+        if (from < 9) {
           await (migrator.database as AppDatabase).customStatement('''
             CREATE TABLE IF NOT EXISTS downloaded_translations (
               resource_id INTEGER NOT NULL PRIMARY KEY,
@@ -417,12 +508,38 @@ class AppDatabase extends _$AppDatabase {
             ON translation_text_cache (cached_at)
           ''');
         }
-        if (from < 9) {
+        if (from < 10) {
           await migrator.createTable(hisnContentCache);
           await migrator.createTable(hisnContentItemCache);
         }
-        if (from < 10) {
+        if (from < 12) {
           await migrator.createTable(categoryFavorites);
+        }
+        if (from < 13) {
+          await migrator.addColumn(wirdsTable, wirdsTable.name);
+          await migrator.addColumn(wirdsTable, wirdsTable.goalType);
+          await migrator.addColumn(wirdsTable, wirdsTable.status);
+          await migrator.addColumn(wirdsTable, wirdsTable.startPage);
+          await migrator.addColumn(wirdsTable, wirdsTable.endPage);
+          await migrator.addColumn(wirdsTable, wirdsTable.pagesPerDay);
+          await migrator.addColumn(wirdsTable, wirdsTable.startDate);
+          await migrator.addColumn(wirdsTable, wirdsTable.targetDate);
+          await migrator.addColumn(wirdsTable, wirdsTable.scheduleType);
+          await migrator.addColumn(wirdsTable, wirdsTable.activeWeekdays);
+          await migrator.addColumn(wirdsTable, wirdsTable.isFlexible);
+          await migrator.addColumn(wirdsTable, wirdsTable.allowCatchUp);
+          await migrator.addColumn(wirdsTable, wirdsTable.autoStartNextKhatma);
+          await migrator.addColumn(wirdsTable, wirdsTable.currentCycle);
+          await migrator.addColumn(wirdsTable, wirdsTable.updatedAt);
+          await migrator.addColumn(wirdsTable, wirdsTable.completedAt);
+
+          // Alter existing columns to be nullable for migration if they weren't
+          // Drift handles this by making them optional in the companion.
+          // We need to ensure the database actually allows nulls if we want to move away from them.
+
+          await migrator.createTable(wirdDailyProgressTable);
+          await migrator.createTable(wirdCycleHistoryTable);
+          await migrator.createTable(wirdAchievementsTable);
         }
       },
     );

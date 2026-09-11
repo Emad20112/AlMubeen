@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
@@ -21,18 +22,19 @@ void showAyahOverlay({
   required bool isHighlighted,
   required VoidCallback onToggleHighlight,
   required VoidCallback onClearHighlight,
+  VoidCallback? onPlayRequested,
 }) {
   HapticFeedback.mediumImpact();
   showGeneralDialog(
     context: context,
-    barrierDismissible: true,
+    barrierDismissible: false,
     barrierLabel: 'Dismiss',
-    barrierColor: Colors.black.withValues(alpha: 0.1),
-    transitionDuration: const Duration(milliseconds: 300),
+    barrierColor: Colors.black.withValues(alpha: 0.12),
+    transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {
       return ScaleTransition(
-        scale: Tween<double>(begin: 0.95, end: 1.0).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+        scale: Tween<double>(begin: 0.97, end: 1.0).animate(
+          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
         ),
         child: FadeTransition(
           opacity: animation,
@@ -42,6 +44,7 @@ void showAyahOverlay({
             isHighlighted: isHighlighted,
             onToggleHighlight: onToggleHighlight,
             onClearHighlight: onClearHighlight,
+            onPlayRequested: onPlayRequested,
           ),
         ),
       );
@@ -56,6 +59,7 @@ class _AyahOverlayWidget extends ConsumerStatefulWidget {
     required this.isHighlighted,
     required this.onToggleHighlight,
     required this.onClearHighlight,
+    this.onPlayRequested,
   });
 
   final AyahRef ayahRef;
@@ -63,6 +67,7 @@ class _AyahOverlayWidget extends ConsumerStatefulWidget {
   final bool isHighlighted;
   final VoidCallback onToggleHighlight;
   final VoidCallback onClearHighlight;
+  final VoidCallback? onPlayRequested;
 
   @override
   ConsumerState<_AyahOverlayWidget> createState() => _AyahOverlayWidgetState();
@@ -70,7 +75,7 @@ class _AyahOverlayWidget extends ConsumerStatefulWidget {
 
 class _AyahOverlayWidgetState extends ConsumerState<_AyahOverlayWidget> {
   final GlobalKey _cardKey = GlobalKey();
-  double _cardHeight = 180.0; // Estimate, will update after build if needed
+  double _cardHeight = 148.0;
 
   @override
   void initState() {
@@ -96,34 +101,31 @@ class _AyahOverlayWidgetState extends ConsumerState<_AyahOverlayWidget> {
     final padding = MediaQuery.paddingOf(context);
     final dy = widget.globalPosition.dy;
 
-    // Determine positions
     final isTopHalf = dy < size.height / 2;
 
     double toolbarY;
     double? cardY;
     double? cardBottom;
 
-    final toolbarHeight = 85.0; // Increased for labels
+    const toolbarHeight = 68.0;
 
     if (isTopHalf) {
-      // Toolbar ABOVE tap, Card BELOW tap
-      toolbarY = dy - toolbarHeight - 20;
-      if (toolbarY < padding.top + 10) {
-        toolbarY = padding.top + 10;
+      toolbarY = dy - toolbarHeight - 14;
+      if (toolbarY < padding.top + 8) {
+        toolbarY = padding.top + 8;
       }
-      cardY = dy + 30;
-      if (cardY + _cardHeight > size.height - padding.bottom - 10) {
-        cardY = size.height - padding.bottom - _cardHeight - 10;
+      cardY = dy + 22;
+      if (cardY + _cardHeight > size.height - padding.bottom - 8) {
+        cardY = size.height - padding.bottom - _cardHeight - 8;
       }
     } else {
-      // Toolbar BELOW tap, Card ABOVE tap
-      toolbarY = dy + 20;
-      if (toolbarY + toolbarHeight > size.height - padding.bottom - 10) {
-        toolbarY = size.height - padding.bottom - toolbarHeight - 10;
+      toolbarY = dy + 14;
+      if (toolbarY + toolbarHeight > size.height - padding.bottom - 8) {
+        toolbarY = size.height - padding.bottom - toolbarHeight - 8;
       }
-      cardBottom = size.height - dy + 20;
-      if (size.height - cardBottom - _cardHeight < padding.top + 10) {
-        cardBottom = size.height - (padding.top + 10 + _cardHeight);
+      cardBottom = size.height - dy + 16;
+      if (size.height - cardBottom - _cardHeight < padding.top + 8) {
+        cardBottom = size.height - (padding.top + 8 + _cardHeight);
       }
     }
 
@@ -131,25 +133,32 @@ class _AyahOverlayWidgetState extends ConsumerState<_AyahOverlayWidget> {
       color: Colors.transparent,
       child: Stack(
         children: [
-          // Background tap to dismiss handled by GeneralDialog barrier
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Navigator.of(context).maybePop(),
+              child: const SizedBox.expand(),
+            ),
+          ),
           Positioned(
             top: toolbarY,
-            left: 20,
-            right: 20,
+            left: 16,
+            right: 16,
             child: Center(
               child: _GlassToolbar(
                 ayahRef: widget.ayahRef,
                 isHighlighted: widget.isHighlighted,
                 onToggleHighlight: widget.onToggleHighlight,
                 onClearHighlight: widget.onClearHighlight,
+                onPlayRequested: widget.onPlayRequested,
               ),
             ),
           ),
           Positioned(
             top: cardY,
             bottom: cardBottom,
-            left: 20,
-            right: 20,
+            left: 16,
+            right: 16,
             child: Center(
               child: _GlassCard(key: _cardKey, ayahRef: widget.ayahRef),
             ),
@@ -164,7 +173,7 @@ class _GlassContainer extends StatelessWidget {
   const _GlassContainer({
     required this.child,
     this.padding,
-    this.borderRadius = 20,
+    this.borderRadius = 18,
   });
 
   final Widget child;
@@ -178,7 +187,7 @@ class _GlassContainer extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
@@ -190,13 +199,13 @@ class _GlassContainer extends StatelessWidget {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.1)
                   : Colors.white.withValues(alpha: 0.5),
-              width: 1.5,
+              width: 1.1,
             ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -213,12 +222,14 @@ class _GlassToolbar extends ConsumerWidget {
     required this.isHighlighted,
     required this.onToggleHighlight,
     required this.onClearHighlight,
+    this.onPlayRequested,
   });
 
   final AyahRef ayahRef;
   final bool isHighlighted;
   final VoidCallback onToggleHighlight;
   final VoidCallback onClearHighlight;
+  final VoidCallback? onPlayRequested;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -226,35 +237,43 @@ class _GlassToolbar extends ConsumerWidget {
     final iconColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon700;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 400),
+      constraints: const BoxConstraints(maxWidth: 330),
       child: _GlassContainer(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        borderRadius: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        borderRadius: 20,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildPlayAction(context, ref, iconColor),
-            _buildIconBtn(context, 'نسخ', Icons.copy_rounded, iconColor, () {
-              Navigator.pop(context);
-              // Implement copy
-            }),
-            _buildIconBtn(
+            _buildActionButton(
               context,
-              'ترجمة',
-              Icons.g_translate_rounded,
-              iconColor,
-              () {
+              label: 'نسخ',
+              color: iconColor,
+              icon: Icon(Icons.copy_rounded, color: iconColor, size: 18),
+              onTap: () => Navigator.pop(context),
+            ),
+            _buildActionButton(
+              context,
+              label: 'ترجمة',
+              color: iconColor,
+              icon: Icon(Icons.g_translate_rounded, color: iconColor, size: 18),
+              onTap: () {
                 Navigator.pop(context);
                 showTranslationBottomSheet(context: context, ayahRef: ayahRef);
               },
             ),
-            _buildIconBtn(
+            _buildActionButton(
               context,
-              'حفظ',
-              Icons.bookmark_border_rounded,
-              iconColor,
-              () async {
+              label: 'حفظ',
+              color: iconColor,
+              icon: Icon(
+                isHighlighted
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
+                color: iconColor,
+                size: 18,
+              ),
+              onTap: () async {
                 await ref
                     .read(quranBookmarkServiceProvider)
                     .toggleAyahBookmark(ayahRef: ayahRef);
@@ -263,14 +282,12 @@ class _GlassToolbar extends ConsumerWidget {
                 }
               },
             ),
-            _buildIconBtn(
+            _buildActionButton(
               context,
-              'مشاركة',
-              Icons.share_rounded,
-              iconColor,
-              () {
-                Navigator.pop(context);
-              },
+              label: 'مشاركة',
+              color: iconColor,
+              icon: Icon(Icons.share_rounded, color: iconColor, size: 18),
+              onTap: () => Navigator.pop(context),
             ),
           ],
         ),
@@ -285,38 +302,44 @@ class _GlassToolbar extends ConsumerWidget {
   ) {
     final recitationsAsync = ref.watch(quranRecitationsProvider);
     final selectedRecitation = ref.watch(selectedQuranRecitationProvider);
+    final preferencesAsync = ref.watch(appUserPreferencesProvider);
+    final preferredReciterId = preferencesAsync.maybeWhen(
+      data: (p) => p.preferredReciterId,
+      orElse: () => null,
+    );
     final audioState = ref.watch(quranAudioControllerProvider);
 
     return recitationsAsync.when(
-      loading: () => _buildIconBtn(
+      loading: () => _buildActionButton(
         context,
-        'تشغيل',
-        Icons.play_arrow_rounded,
-        iconColor,
-        null,
+        label: 'تشغيل',
+        color: iconColor,
+        icon: Icon(Icons.play_arrow_rounded, color: iconColor, size: 18),
+        onTap: null,
       ),
-      error: (e, s) => _buildIconBtn(
+      error: (e, s) => _buildActionButton(
         context,
-        'تشغيل',
-        Icons.play_arrow_rounded,
-        iconColor,
-        null,
+        label: 'تشغيل',
+        color: iconColor,
+        icon: Icon(Icons.play_arrow_rounded, color: iconColor, size: 18),
+        onTap: null,
       ),
       data: (recitations) {
         if (recitations.isEmpty) {
-          return _buildIconBtn(
+          return _buildActionButton(
             context,
-            'تشغيل',
-            Icons.play_arrow_rounded,
-            iconColor,
-            null,
+            label: 'تشغيل',
+            color: iconColor,
+            icon: Icon(Icons.play_arrow_rounded, color: iconColor, size: 18),
+            onTap: null,
           );
         }
 
         QuranRecitation activeRecitation = recitations.first;
-        if (selectedRecitation != null) {
+        final targetId = selectedRecitation?.id ?? preferredReciterId;
+        if (targetId != null) {
           for (final r in recitations) {
-            if (r.id == selectedRecitation.id) {
+            if (r.id == targetId) {
               activeRecitation = r;
               break;
             }
@@ -331,79 +354,78 @@ class _GlassToolbar extends ConsumerWidget {
         final isPlaying = isCurrent && audioState.isPlaying;
 
         if (isLoading) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: iconColor,
-              ),
-            ),
-          );
-        } else if (isPlaying) {
-          return _buildIconBtn(
+          return _buildActionButton(
             context,
-            'إيقاف',
-            Icons.pause_rounded,
-            iconColor,
-            () {
-              Navigator.pop(context);
-              ref
-                  .read(quranAudioControllerProvider.notifier)
-                  .playOrToggleAyah(
-                    ayahRef: ayahRef,
-                    recitationId: activeRecitation.id,
-                  );
-            },
-          );
-        } else {
-          return _buildIconBtn(
-            context,
-            'تشغيل',
-            Icons.play_arrow_rounded,
-            iconColor,
-            () {
-              Navigator.pop(context);
-              ref
-                  .read(quranAudioControllerProvider.notifier)
-                  .playOrToggleAyah(
-                    ayahRef: ayahRef,
-                    recitationId: activeRecitation.id,
-                  );
-            },
+            label: 'تحميل',
+            color: iconColor,
+            icon: Icon(Icons.play_arrow_rounded, color: iconColor, size: 18),
+            onTap: null,
           );
         }
+
+        return _buildActionButton(
+          context,
+          label: isPlaying ? 'إيقاف' : 'تشغيل',
+          color: iconColor,
+          icon: Icon(
+            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+            color: iconColor,
+            size: 18,
+          ),
+          onTap: () {
+            Navigator.pop(context);
+            onPlayRequested?.call();
+            ref
+                .read(quranAudioControllerProvider.notifier)
+                .playOrToggleAyah(
+                  ayahRef: ayahRef,
+                  recitationId: activeRecitation.id,
+                );
+          },
+        );
       },
     );
   }
 
-  Widget _buildIconBtn(
-    BuildContext context,
-    String label,
-    IconData icon,
-    Color color,
-    VoidCallback? onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
+  Widget _buildActionButton(
+    BuildContext context, {
+    required String label,
+    required Color color,
+    required Widget icon,
+    required VoidCallback? onTap,
+  }) {
+    return SizedBox(
+      width: 52,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Center(child: icon),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -419,42 +441,61 @@ class _GlassCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon700;
-
+    final secondaryColor = isDark
+        ? AppColors.parchmentMuted
+        : AppColors.maroon700.withValues(alpha: 0.78);
     final surahName = getSurahNameArabic(ayahRef.surah);
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 400),
+      constraints: const BoxConstraints(maxWidth: 340),
       child: _GlassContainer(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header with close button
-            Stack(
-              alignment: Alignment.center,
+            Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(FlutterIslamicIcons.quran2, color: primaryColor, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'سورة $surahName - الآية ${ayahRef.ayah}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: primaryColor,
-                        fontFamily: 'DiwaniBent',
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'سورة $surahName',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: primaryColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        'الآية ${ayahRef.ayah}',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: secondaryColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
-                Positioned(
-                  left: 0,
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.close_rounded, color: primaryColor, size: 20),
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: primaryColor,
+                      size: 16,
+                    ),
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -462,11 +503,10 @@ class _GlassCard extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 _buildCardOption(
                   context,
@@ -523,28 +563,40 @@ class _GlassCard extends ConsumerWidget {
         Navigator.pop(context);
         onTap();
       },
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        width: 140,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        width: 150,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : color.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+              ? Colors.white.withValues(alpha: 0.04)
+              : color.withValues(alpha: 0.045),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.14)),
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(icon, color: color, size: 16),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ],
         ),

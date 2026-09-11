@@ -82,16 +82,10 @@ final class QuranAudioFileDto {
 
     final path = value.startsWith('/') ? value.substring(1) : value;
     final resolved = _audioBaseUri.resolve(path);
-    debugPrint('QuranAudioFileDto: relative path "$value" resolved to $resolved');
+    debugPrint(
+      'QuranAudioFileDto: relative path "$value" resolved to $resolved',
+    );
     return resolved;
-  }
-
-  static String _requiredString(JsonMap json, String key) {
-    final value = _stringValue(json[key]);
-    if (value == null || value.isEmpty) {
-      throw FormatException('Missing string field "$key".', json);
-    }
-    return value;
   }
 
   static int? _intValue(Object? value) {

@@ -1,4 +1,3 @@
-
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/features/quran/application/quran_surah_player_provider.dart';
 
@@ -154,7 +153,7 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                     _CircleButton(
                       label: 'إلغاء',
                       color: isActive
-                          ? Colors.red.withOpacity(0.2)
+                          ? Colors.red.withValues(alpha: 0.2)
                           : const Color(0xFF333333),
                       textColor: isActive ? Colors.red : Colors.white70,
                       onTap: () {
@@ -226,7 +225,7 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                             Icon(
                               Icons.arrow_forward_ios_rounded,
                               size: 14,
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                             ),
                           ],
                         ),

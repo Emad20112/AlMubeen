@@ -6,14 +6,19 @@ import 'package:qcf_quran/qcf_quran.dart';
 // ignore: implementation_imports
 import 'package:qcf_quran/src/data/quran_text.dart' as qcf_text;
 
+typedef QuranSearchRequest = ({String query, bool exactMatch});
+
 final quranSearchResultsProvider = Provider.autoDispose
-    .family<List<QuranSearchResult>, String>((ref, query) {
-      final trimmedQuery = query.trim();
+    .family<List<QuranSearchResult>, QuranSearchRequest>((ref, request) {
+      final trimmedQuery = request.query.trim();
       if (trimmedQuery.isEmpty) {
         return const <QuranSearchResult>[];
       }
 
-      return _searchQuranWords(trimmedQuery);
+      return _searchQuranWords(
+        query: trimmedQuery,
+        exactMatch: request.exactMatch,
+      );
     });
 
 void warmUpQuranSearchMetadata() {
@@ -139,9 +144,15 @@ class _QuranSearchMetadataCache {
   }
 }
 
-List<QuranSearchResult> _searchQuranWords(String query) {
+List<QuranSearchResult> _searchQuranWords({
+  required String query,
+  required bool exactMatch,
+}) {
   final metadataCache = _QuranSearchMetadataCache.instance;
   final highlightQuery = normalise(query).trim();
+  final exactCandidates = exactMatch
+      ? _exactSearchCandidates(query)
+      : const <String>{};
   final seenAyahs = <int>{};
   final results = <QuranSearchResult>[];
 
@@ -170,7 +181,9 @@ List<QuranSearchResult> _searchQuranWords(String query) {
       }
 
       final metadata = metadataCache.forAyah(surahNumber, verseNumber);
-      if (metadata == null) {
+      if (metadata == null ||
+          (exactMatch &&
+              !_verseContainsExactMatch(metadata.verseText, exactCandidates))) {
         continue;
       }
 
@@ -218,6 +231,66 @@ Iterable<String> _qcfSearchQueryCandidates(String query) sync* {
   add(_replaceWordFinalHehWithTaMarbuta(trimmed));
 
   yield* candidates;
+}
+
+Set<String> _exactSearchCandidates(String query) {
+  return {
+    for (final candidate in _qcfSearchQueryCandidates(query))
+      ..._normalizedWordTokens(candidate),
+  }..removeWhere((candidate) => candidate.isEmpty);
+}
+
+bool _verseContainsExactMatch(String verseText, Set<String> exactCandidates) {
+  if (exactCandidates.isEmpty) {
+    return false;
+  }
+
+  for (final token in _normalizedWordTokens(verseText)) {
+    if (exactCandidates.contains(token) ||
+        exactCandidates.contains(_withoutOneLetterArabicPrefix(token))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+Set<String> _normalizedWordTokens(String input) {
+  final normalizedForms = <String>{
+    _normalizeExactText(input),
+    _toQcfTextNormalSearchForm(input),
+  };
+
+  final tokens = <String>{};
+  final wordPattern = RegExp(r'[\u0621-\u064A\u066E-\u06D3]+');
+  for (final normalizedForm in normalizedForms) {
+    for (final match in wordPattern.allMatches(normalizedForm)) {
+      tokens.add(match.group(0) ?? '');
+    }
+  }
+
+  return tokens;
+}
+
+String _normalizeExactText(String input) {
+  return normalise(input)
+      .replaceAll('ٱ', 'ا')
+      .replaceAll(
+        RegExp(r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]'),
+        '',
+      )
+      .toLowerCase();
+}
+
+String _withoutOneLetterArabicPrefix(String token) {
+  if (token.length < 3) {
+    return token;
+  }
+
+  const prefixes = {'و', 'ف', 'ب', 'ك', 'ل'};
+  if (prefixes.contains(token.substring(0, 1))) {
+    return token.substring(1);
+  }
+  return token;
 }
 
 String _toQcfTextNormalSearchForm(String input) {

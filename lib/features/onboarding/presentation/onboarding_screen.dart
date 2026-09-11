@@ -188,7 +188,6 @@ class _PageContent extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: fgColor,
-                fontFamily: 'DiwaniBent',
                 fontWeight: FontWeight.w700,
                 height: 1.2,
               ),
@@ -244,7 +243,11 @@ class _BottomBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _PageIndicator(count: count, current: current, accentColor: accentColor),
+          _PageIndicator(
+            count: count,
+            current: current,
+            accentColor: accentColor,
+          ),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -254,8 +257,9 @@ class _BottomBar extends StatelessWidget {
                     onPressed: onComplete,
                     style: FilledButton.styleFrom(
                       backgroundColor: accentColor,
-                      foregroundColor:
-                          isDark ? AppColors.darkScaffold : AppColors.parchmentLight,
+                      foregroundColor: isDark
+                          ? AppColors.darkScaffold
+                          : AppColors.parchmentLight,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -270,7 +274,9 @@ class _BottomBar extends StatelessWidget {
                     onPressed: onNext,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: accentColor,
-                      side: BorderSide(color: accentColor.withValues(alpha: 0.5)),
+                      side: BorderSide(
+                        color: accentColor.withValues(alpha: 0.5),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),

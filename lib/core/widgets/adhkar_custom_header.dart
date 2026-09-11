@@ -7,12 +7,14 @@ class AdhkarCustomHeader extends StatefulWidget {
     required this.title,
     required this.onSearch,
     this.onBack,
+    this.tabs,
     super.key,
   });
 
   final String title;
   final void Function(String) onSearch;
   final VoidCallback? onBack;
+  final Widget? tabs;
 
   @override
   State<AdhkarCustomHeader> createState() => _AdhkarCustomHeaderState();
@@ -43,13 +45,22 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
     final hijriYear = gregorianYear - 622 + (gregorianYear - 622) ~/ 32;
     final hijriMonth = (now.month - 3 + 12) % 12 + 1;
     final hijriDay = now.day;
-    
+
     final arabicMonths = [
-      'محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 
-      'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
-      'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
+      'محرم',
+      'صفر',
+      'ربيع الأول',
+      'ربيع الآخر',
+      'جمادى الأولى',
+      'جمادى الآخرة',
+      'رجب',
+      'شعبان',
+      'رمضان',
+      'شوال',
+      'ذو القعدة',
+      'ذو الحجة',
     ];
-    
+
     setState(() {
       _hijriDate = '$hijriDay ${arabicMonths[hijriMonth - 1]} $hijriYear';
     });
@@ -61,9 +72,10 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
     final backgroundColor = isDark
         ? AppColors.darkSurface
         : AppColors.parchmentLight;
-    final foregroundColor = isDark
-        ? AppColors.parchmentLight
-        : AppColors.maroon800;
+    final foregroundColor = isDark ? AppColors.darkInk : AppColors.ink;
+    final accentColor = isDark
+        ? AppColors.goldenAccentDark
+        : AppColors.goldenAccent;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -71,7 +83,7 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
         color: backgroundColor,
         boxShadow: [
           BoxShadow(
-            color: AppColors.maroon900.withValues(alpha: 0.18),
+            color: AppColors.maroon900.withValues(alpha: isDark ? 0.28 : 0.10),
             blurRadius: 14,
             offset: const Offset(0, 7),
           ),
@@ -96,7 +108,6 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: foregroundColor,
                   fontWeight: FontWeight.w700,
-                  fontFamily: 'DiwaniBent',
                 ),
               ),
               Text(
@@ -113,13 +124,9 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
             height: 36,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceHigh
-                  : AppColors.parchment,
+              color: isDark ? AppColors.darkSurfaceHigh : AppColors.parchment,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: AppColors.maroon700.withValues(alpha: 0.2),
-              ),
+              border: Border.all(color: accentColor.withValues(alpha: 0.18)),
             ),
             child: TextField(
               onChanged: widget.onSearch,
@@ -138,12 +145,10 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
                 contentPadding: EdgeInsets.zero,
                 isDense: true,
               ),
-              style: TextStyle(
-                color: foregroundColor,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: foregroundColor, fontSize: 12),
             ),
           ),
+          if (widget.tabs != null) ...[const SizedBox(height: 8), widget.tabs!],
           const SizedBox(height: 12),
           Text(
             _hijriDate,

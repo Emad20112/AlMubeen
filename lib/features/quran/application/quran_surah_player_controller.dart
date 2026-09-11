@@ -343,26 +343,39 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
     _loadedKey = null;
 
     try {
-      // 1. Fetch the audio URL from the API
-      final urlResult = await ref
-          .read(quranAudioRepositoryProvider)
-          .getChapterAudioUrl(reciterId: recitationId, surahNumber: surah)
-          .timeout(_kStreamErrorTimeout);
+      // 1. If the surah is already downloaded, play straight from local
+      //    files — no network call is made, so it works fully offline.
+      final audioRepo = ref.read(audioRepositoryProvider);
+      final isLocal = await audioRepo.isSurahDownloaded(
+        reciterId: recitationId,
+        surahNumber: surah,
+      );
 
       if (reqId != _requestId) return;
 
-      final networkUrl = urlResult.valueOrNull;
-      if (networkUrl == null) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage:
-              'تعذر جلب رابط تلاوة سورة ${getSurahNameArabic(surah)}.',
-        );
-        return;
+      Uri? networkUrl;
+      if (!isLocal) {
+        // 1b. Fetch the audio URL from the API only when not downloaded.
+        final urlResult = await ref
+            .read(quranAudioRepositoryProvider)
+            .getChapterAudioUrl(reciterId: recitationId, surahNumber: surah)
+            .timeout(_kStreamErrorTimeout);
+
+        if (reqId != _requestId) return;
+
+        final fetched = urlResult.valueOrNull;
+        if (fetched == null) {
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage:
+                'تعذر جلب رابط تلاوة سورة ${getSurahNameArabic(surah)}.',
+          );
+          return;
+        }
+        networkUrl = fetched;
       }
 
-      // 2. Use AudioRepository to decide local vs network
-      final audioRepo = ref.read(audioRepositoryProvider);
+      // 2. Use AudioRepository to decide local files vs the network URL
       final resolved = await audioRepo.resolveSurahSource(
         reciterId: recitationId,
         surahNumber: surah,
@@ -374,9 +387,11 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
       // 3. Ensure player exists
       _ensurePlayer();
 
-      // 4. Set the audio source — either local file or network URI
+      // 4. Set the audio source — either local ayah files or a network URI.
       //    NO LockCachingAudioSource. NO proxy. NO cache.
-      final sourceFuture = _player!.setAudioSource(resolved.source);
+      //    setAudioSources lazy-prepares each child, so a downloaded surah
+      //    streams from local files without stutter or high memory usage.
+      final sourceFuture = _player!.setAudioSources(resolved.sources);
       final completer = Completer<void>();
       late final StreamSubscription<void> sub;
 

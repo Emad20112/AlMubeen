@@ -9,6 +9,7 @@ import 'package:al_mubeen/features/qibla/presentation/screens/qibla_compass_scre
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_audio_download_screen.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_surah_player_screen.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/wird_dialog.dart';
 import 'package:al_mubeen/features/tasbih/presentation/screens/tasbih_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -61,6 +62,13 @@ class QuranMoreScreen extends StatelessWidget {
                 subtitle: 'الوضع، الخط، الترجمة، وخيارات القراءة.',
                 accentColor: const Color(0xFF5E5B8A),
                 onTap: () => _runReaderAction(context, actions.onSettings),
+              ),
+              ContactStyleMenuItem(
+                icon: Icons.auto_stories_rounded,
+                title: 'ورد القرآن',
+                subtitle: 'حدد وردك اليومي وانتقل إلى بدايته.',
+                accentColor: const Color(0xFF5A3E3E),
+                onTap: () => _runReaderAction(context, actions.onWird),
               ),
               ContactStyleMenuItem(
                 icon: Icons.library_music_rounded,
@@ -132,7 +140,7 @@ class QuranMoreScreen extends StatelessWidget {
 
   void _runReaderAction(BuildContext context, VoidCallback action) {
     Navigator.of(context).pop();
-    unawaited(Future<void>.delayed(const Duration(milliseconds: 180), action));
+    WidgetsBinding.instance.addPostFrameCallback((_) => action());
   }
 }
 
@@ -143,6 +151,7 @@ class QuranReaderMoreActions {
     required this.onSurahPicker,
     required this.onBookmarks,
     required this.onSettings,
+    required this.onWird,
   });
 
   final int currentPage;
@@ -150,4 +159,5 @@ class QuranReaderMoreActions {
   final VoidCallback onSurahPicker;
   final VoidCallback onBookmarks;
   final VoidCallback onSettings;
+  final VoidCallback onWird;
 }

@@ -41,6 +41,8 @@ final class QuranRecitationDto {
       style: style,
       translatedName: translatedName,
       languageName: languageName,
+      hasAyahAudio: true,
+      hasSurahAudio: true,
     );
   }
 

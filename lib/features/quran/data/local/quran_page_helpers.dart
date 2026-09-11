@@ -168,6 +168,11 @@ AyahRef getFirstAyahOnPage(int pageNumber) {
   );
 }
 
+AyahRef getFirstAyahOnNextPage(int pageNumber) {
+  final targetPage = (pageNumber + 1).clamp(1, totalPagesCount);
+  return getFirstAyahOnPage(targetPage);
+}
+
 /// Returns the Rub' al-Hizb (quarter) number (1-240) for a given surah and verse.
 int getQuarterNumber(int surahNumber, int verseNumber) {
   return QuranQuarterMetadataCache.instance.quarterForAyah(

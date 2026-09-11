@@ -1,16 +1,23 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 
-const double kQuranReaderHeaderHeight = 74;
+const double kQuranReaderHeaderHeight = 56;
 
 class QuranReaderHeader extends StatelessWidget {
   const QuranReaderHeader({
     required this.onSearchTapped,
+    this.onSurahListTapped,
+    this.onSettingsTapped,
+    this.onWirdTapped,
     super.key,
   });
 
   final VoidCallback onSearchTapped;
+  final VoidCallback? onSurahListTapped;
+  final VoidCallback? onSettingsTapped;
+  final VoidCallback? onWirdTapped;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +37,9 @@ class QuranReaderHeader extends StatelessWidget {
     final searchHint = isDark
         ? Colors.white.withValues(alpha: 0.6)
         : Colors.black.withValues(alpha: 0.5);
+    final iconColor = isDark
+        ? Colors.white.withValues(alpha: 0.7)
+        : Colors.black.withValues(alpha: 0.6);
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -39,7 +49,7 @@ class QuranReaderHeader extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
             child: Container(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: scaffoldColor,
                 border: Border(
@@ -55,6 +65,12 @@ class QuranReaderHeader extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  _HeaderIconButton(
+                    icon: FlutterIslamicIcons.quran2,
+                    color: iconColor,
+                    onTap: onSurahListTapped,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _SearchBarButton(
                       borderColor: searchBorder,
@@ -63,10 +79,52 @@ class QuranReaderHeader extends StatelessWidget {
                       onTap: onSearchTapped,
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  if (onWirdTapped != null)
+                    _HeaderIconButton(
+                      icon: Icons.auto_stories_rounded,
+                      color: iconColor,
+                      onTap: onWirdTapped,
+                    ),
+                  const SizedBox(width: 8),
+                  _HeaderIconButton(
+                    icon: Icons.settings_rounded,
+                    color: iconColor,
+                    onTap: onSettingsTapped,
+                  ),
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          child: Icon(icon, size: 20, color: color),
         ),
       ),
     );
@@ -92,19 +150,19 @@ class _SearchBarButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: fillColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: borderColor),
           ),
           child: Row(
             children: [
-              Icon(Icons.search_rounded, size: 20, color: hintColor),
-              const SizedBox(width: 10),
+              Icon(Icons.search_rounded, size: 17, color: hintColor),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'بحث: الصفحة، السورة، القارئ...',
@@ -114,7 +172,7 @@ class _SearchBarButton extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: hintColor,
                     fontWeight: FontWeight.w600,
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
               ),

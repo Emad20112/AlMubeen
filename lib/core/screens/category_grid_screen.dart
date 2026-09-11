@@ -10,6 +10,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+class CategoryGridScreenTab {
+  const CategoryGridScreenTab({
+    required this.label,
+    required this.routePath,
+    required this.type,
+    required this.categoriesAsync,
+    required this.onCategoryTap,
+  });
+
+  final String label;
+  final String routePath;
+  final String type;
+  final AsyncValue<List<dynamic>> categoriesAsync;
+  final void Function(String categoryId) onCategoryTap;
+}
+
 class CategoryGridScreen extends ConsumerStatefulWidget {
   const CategoryGridScreen({
     required this.title,
@@ -18,6 +34,8 @@ class CategoryGridScreen extends ConsumerStatefulWidget {
     required this.type,
     this.backRoute = '/',
     this.loadingItemCount = 8,
+    this.tabs = const [],
+    this.selectedTabIndex = 0,
     super.key,
   });
 
@@ -27,18 +45,43 @@ class CategoryGridScreen extends ConsumerStatefulWidget {
   final String type;
   final String backRoute;
   final int loadingItemCount;
+  final List<CategoryGridScreenTab> tabs;
+  final int selectedTabIndex;
 
   @override
-  ConsumerState<CategoryGridScreen> createState() =>
-      _CategoryGridScreenState();
+  ConsumerState<CategoryGridScreen> createState() => _CategoryGridScreenState();
 }
 
 class _CategoryGridScreenState extends ConsumerState<CategoryGridScreen> {
+  String _query = '';
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(categoryFavoritesProvider.notifier).init(widget.type);
+      _initFavorites(widget.type);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant CategoryGridScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.type != widget.type) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _initFavorites(widget.type);
+        }
+      });
+    }
+  }
+
+  void _initFavorites(String type) {
+    ref.read(categoryFavoritesProvider.notifier).init(type);
+  }
+
+  void _updateQuery(String value) {
+    setState(() {
+      _query = value;
     });
   }
 
@@ -46,6 +89,15 @@ class _CategoryGridScreenState extends ConsumerState<CategoryGridScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.sizeOf(context).width;
+    final hasTabs = widget.tabs.isNotEmpty;
+    final selectedTabIndex = widget.selectedTabIndex.clamp(
+      0,
+      hasTabs ? widget.tabs.length - 1 : 0,
+    );
+    final activeTab = hasTabs ? widget.tabs[selectedTabIndex] : null;
+    final categoriesAsync =
+        activeTab?.categoriesAsync ?? widget.categoriesAsync;
+    final onCategoryTap = activeTab?.onCategoryTap ?? widget.onCategoryTap;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkScaffold : AppColors.parchment,
@@ -63,22 +115,27 @@ class _CategoryGridScreenState extends ConsumerState<CategoryGridScreen> {
             SliverToBoxAdapter(
               child: AdhkarCustomHeader(
                 title: widget.title,
-                onSearch: (query) {},
-                onBack: () => Navigator.of(context).pop(),
+                onSearch: _updateQuery,
+                tabs: hasTabs
+                    ? _CategoryTypeTabs(
+                        tabs: widget.tabs,
+                        selectedIndex: selectedTabIndex,
+                      )
+                    : null,
               ),
             ),
-            widget.categoriesAsync.when(
+            categoriesAsync.when(
               data: (categories) => _CategoryGrid(
                 categories: categories,
-                onCategoryTap: widget.onCategoryTap,
+                onCategoryTap: onCategoryTap,
                 screenWidth: screenWidth,
+                query: _query,
               ),
               loading: () => SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
                 sliver: SliverGrid.builder(
                   itemCount: widget.loadingItemCount,
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 12.0,
                     mainAxisSpacing: 12.0,
@@ -111,22 +168,35 @@ class _CategoryGrid extends ConsumerWidget {
     required this.categories,
     required this.onCategoryTap,
     required this.screenWidth,
+    required this.query,
   });
 
   final List<dynamic> categories;
   final void Function(String categoryId) onCategoryTap;
   final double screenWidth;
+  final String query;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final favoriteIds = ref.watch(categoryFavoritesProvider);
+    final trimmedQuery = query.trim().toLowerCase();
 
-    final sorted = List<dynamic>.from(categories)..sort((a, b) {
-      final aFav = favoriteIds.contains(a.id) ? 0 : 1;
-      final bFav = favoriteIds.contains(b.id) ? 0 : 1;
-      if (aFav != bFav) return aFav - bFav;
-      return a.priority.compareTo(b.priority);
-    });
+    final filtered = trimmedQuery.isEmpty
+        ? categories
+        : categories.where((category) {
+            final searchableText = '${category.title} ${category.subtitle}'
+                .toLowerCase();
+            return searchableText.contains(trimmedQuery);
+          }).toList();
+
+    final sorted = List<dynamic>.from(filtered)
+      ..sort((a, b) {
+        final aFav = favoriteIds.contains(a.id) ? 0 : 1;
+        final bFav = favoriteIds.contains(b.id) ? 0 : 1;
+        if (aFav != bFav) return aFav - bFav;
+        return a.priority.compareTo(b.priority);
+      });
 
     final windowClass = AdaptiveBreakpoints.fromWidth(screenWidth);
     final contentMaxWidth = switch (windowClass) {
@@ -135,6 +205,23 @@ class _CategoryGrid extends ConsumerWidget {
       AdaptiveWindowClass.expanded => 980.0,
     };
     final side = math.max((screenWidth - contentMaxWidth) / 2, 16.0);
+
+    if (sorted.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(side, 48, side, 24),
+          child: Center(
+            child: Text(
+              'لا توجد نتائج مطابقة',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: isDark ? AppColors.darkInk : AppColors.maroon800,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return SliverPadding(
       padding: EdgeInsets.fromLTRB(side, 10, side, 24),
@@ -165,6 +252,101 @@ class _CategoryGrid extends ConsumerWidget {
   }
 }
 
+class _CategoryTypeTabs extends StatelessWidget {
+  const _CategoryTypeTabs({required this.tabs, required this.selectedIndex});
+
+  final List<CategoryGridScreenTab> tabs;
+  final int selectedIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark
+        ? AppColors.darkSurfaceHigh
+        : AppColors.parchment;
+    final selectedColor = isDark
+        ? AppColors.goldenAccentDark
+        : AppColors.goldenAccent;
+    final textColor = isDark ? AppColors.darkInk : AppColors.maroon800;
+
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: selectedColor.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          for (var index = 0; index < tabs.length; index++)
+            Expanded(
+              child: _CategoryTypeTabButton(
+                label: tabs[index].label,
+                selected: index == selectedIndex,
+                selectedColor: selectedColor,
+                textColor: textColor,
+                onTap: () {
+                  if (index == selectedIndex) {
+                    return;
+                  }
+                  context.go(tabs[index].routePath);
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryTypeTabButton extends StatelessWidget {
+  const _CategoryTypeTabButton({
+    required this.label,
+    required this.selected,
+    required this.selectedColor,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final Color selectedColor;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: Duration.zero,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected
+                ? selectedColor.withValues(alpha: 0.18)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: selected ? textColor : textColor.withValues(alpha: 0.64),
+              fontWeight: FontWeight.w800,
+              height: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CategorySkeleton extends StatefulWidget {
   const _CategorySkeleton();
 
@@ -184,9 +366,10 @@ class _CategorySkeletonState extends State<_CategorySkeleton>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.3, end: 0.8).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.3,
+      end: 0.8,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

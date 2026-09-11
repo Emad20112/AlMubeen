@@ -106,6 +106,49 @@ final class QuranReciterLocalDataSource {
         );
   }
 
+  Future<DataResult<List<QuranRecitation>>> searchRecitations(
+    String query, {
+    String language = 'ar',
+  }) async {
+    return _guard(() async {
+      final trimmed = query.trim();
+      if (trimmed.isEmpty) {
+        return const DataSuccess<List<QuranRecitation>>([]);
+      }
+
+      final pattern = '%$trimmed%';
+      final rows = await _database.customSelect(
+        '''
+        SELECT recitation_id, language_code, reciter_name, style, translated_name, language_name
+        FROM quran_recitation_cache
+        WHERE reciter_name LIKE ? OR translated_name LIKE ? OR style LIKE ?
+        ORDER BY reciter_name ASC
+        LIMIT 20
+        ''',
+        variables: [
+          Variable.withString(pattern),
+          Variable.withString(pattern),
+          Variable.withString(pattern),
+        ],
+        readsFrom: {_database.quranRecitationCache},
+      ).get();
+
+      return DataSuccess(
+        rows.map((row) => _recitationFromRow(
+          QuranRecitationCacheEntry(
+            recitationId: row.read<int>('recitation_id'),
+            languageCode: row.read<String>('language_code'),
+            reciterName: row.read<String>('reciter_name'),
+            style: row.read<String?>('style'),
+            translatedName: row.read<String?>('translated_name'),
+            languageName: row.read<String?>('language_name'),
+            updatedAt: DateTime.now(),
+          ),
+        )).toList(growable: false),
+      );
+    });
+  }
+
   QuranRecitation _recitationFromRow(QuranRecitationCacheEntry row) {
     return QuranRecitation(
       id: row.recitationId,

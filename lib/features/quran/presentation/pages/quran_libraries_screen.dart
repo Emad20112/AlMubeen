@@ -16,7 +16,7 @@ class QuranLibrariesScreen extends StatelessWidget {
     return ContactStyleMenuScreen(
       title: 'المكتبات',
       subtitle: 'إدارة مكتبات القرآن الثلاثة: الصوت، التفسير، والترجمات.',
-      icon: Icons.local_library_rounded,
+      icon: null,
       sections: [
         ContactStyleMenuSection(
           items: [

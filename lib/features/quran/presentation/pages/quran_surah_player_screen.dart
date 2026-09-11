@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/widgets/network_error_banner.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
@@ -9,6 +7,7 @@ import 'package:al_mubeen/features/quran/application/quran_surah_player_provider
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_audio_download_screen.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_reciters_list_view.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,6 +58,28 @@ class _QuranSurahPlayerScreenState extends ConsumerState<QuranSurahPlayerScreen>
       data: (p) => p.preferredReciterId,
       orElse: () => null,
     );
+
+    // Restore download progress from disk whenever the reciter list is ready
+    // or the preferred reciter changes (covers app restart + reciter switch).
+    ref.listen(quranRecitationsProvider, (previous, next) {
+      next.maybeWhen(
+        data: (recitations) {
+          if (recitations.isEmpty) return;
+          final reciterId =
+              playerState.recitationId ??
+              preferredReciterId ??
+              recitations.first.id;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ref
+                  .read(quranAudioDownloadProvider.notifier)
+                  .refreshDownloadedSurahs(reciterId: reciterId);
+            }
+          });
+        },
+        orElse: () {},
+      );
+    });
 
     final activeRecitation = recitationsAsync.maybeWhen(
       data: (recitations) {
@@ -121,6 +142,16 @@ class _QuranSurahPlayerScreenState extends ConsumerState<QuranSurahPlayerScreen>
                       ref
                           .read(appUserPreferencesProvider.notifier)
                           .setPreferredReciter(recitation);
+                      // فحص الملفات المحلية للقارئ الجديد (islamic.app أو quran.com)
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          ref
+                              .read(quranAudioDownloadProvider.notifier)
+                              .refreshDownloadedSurahs(
+                                reciterId: recitation.id,
+                              );
+                        }
+                      });
                     },
                     onDownloadAll: activeRecitation != null
                         ? () => context.push(QuranAudioDownloadScreen.routePath)
@@ -255,7 +286,7 @@ class _ReciterRow extends StatelessWidget {
   }
 }
 
-// ─── Reciter dropdown ──────────────────────────────────────────
+// ─── Reciter selector chip ──────────────────────────────────────
 
 class _ReciterDropdown extends StatelessWidget {
   const _ReciterDropdown({
@@ -289,59 +320,70 @@ class _ReciterDropdown extends StatelessWidget {
       data: (recitations) {
         if (recitations.isEmpty) return const SizedBox.shrink();
 
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+        final label = activeRecitation != null
+            ? activeRecitation!.reciterName
+            : 'اختر القارئ';
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _openPickerSheet(context),
+            borderRadius: BorderRadius.circular(14),
+            child: Ink(
               decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: isDark ? 0.1 : 0.06),
+                color: accentColor.withValues(alpha: isDark ? 0.10 : 0.06),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: accentColor.withValues(alpha: 0.15)),
               ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: activeRecitation?.id,
-                  isExpanded: true,
-                  icon: Icon(
-                    Icons.unfold_more_rounded,
-                    color: accentColor,
-                    size: 18,
-                  ),
-                  dropdownColor: isDark
-                      ? AppColors.darkSurfaceHigh
-                      : AppColors.parchmentLight,
-                  style: TextStyle(
-                    color: isDark
-                        ? AppColors.parchmentLight
-                        : AppColors.maroon800,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  items: [
-                    for (final r in recitations)
-                      DropdownMenuItem<int>(
-                        value: r.id,
+              child: SizedBox(
+                height: 44,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.record_voice_over_rounded,
+                        size: 16,
+                        color: accentColor.withValues(alpha: 0.75),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
                         child: Text(
-                          _recitationLabel(r),
+                          label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.parchmentLight
+                                : AppColors.maroon800,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                  ],
-                  onChanged: (id) {
-                    if (id == null) return;
-                    final r = recitations.firstWhere((r) => r.id == id);
-                    onChanged(r);
-                  },
+                      Icon(
+                        Icons.unfold_more_rounded,
+                        color: accentColor,
+                        size: 18,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  void _openPickerSheet(BuildContext context) {
+    // We need an AyahRef for the picker — use a placeholder (surah 1, ayah 1)
+    // since this picker only changes the reciter preference, not playing a specific ayah.
+    showReciterPickerForSurahPlayer(
+      context: context,
+      activeRecitation: activeRecitation,
+      onChanged: onChanged,
     );
   }
 }
@@ -1411,14 +1453,6 @@ String _formatDuration(Duration d) {
   final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
   final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
   return '$minutes:$seconds';
-}
-
-String _recitationLabel(QuranRecitation recitation) {
-  final translatedName = recitation.translatedName;
-  if (translatedName != null && translatedName != recitation.reciterName) {
-    return '$translatedName - ${recitation.reciterName}';
-  }
-  return recitation.reciterName;
 }
 
 String _toArabicNum(int number) {

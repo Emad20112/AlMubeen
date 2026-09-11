@@ -1,3 +1,4 @@
+import 'package:al_mubeen/core/data/hisn_content_shared_store.dart';
 import 'package:al_mubeen/core/database/app_database_provider.dart';
 import 'package:al_mubeen/features/adhkar/data/data_sources/adhkar_db_data_source.dart';
 import 'package:al_mubeen/features/adhkar/data/data_sources/adhkar_local_data_source.dart';
@@ -10,7 +11,7 @@ import 'package:al_mubeen/features/adhkar/presentation/controllers/adhkar_progre
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final adhkarLocalDataSourceProvider = Provider<AdhkarLocalDataSource>((ref) {
-  return AdhkarLocalDataSource(ref.watch(appDatabaseProvider));
+  return AdhkarLocalDataSource(ref.watch(hisnContentSharedStoreProvider));
 });
 
 final adhkarDbDataSourceProvider = Provider<AdhkarDbDataSource>((ref) {
@@ -30,7 +31,9 @@ final adhkarRepositoryProvider = Provider<AdhkarRepository>((ref) {
   return repository;
 });
 
-final adhkarCategoriesProvider = FutureProvider<List<AdhkarCategory>>((ref) async {
+final adhkarCategoriesProvider = FutureProvider<List<AdhkarCategory>>((
+  ref,
+) async {
   final repository = ref.watch(adhkarRepositoryProvider);
   return repository.getCategories();
 });
@@ -49,7 +52,9 @@ final adhkarItemsProvider = FutureProvider.family<List<AdhkarItem>, String>((
   return ref.watch(adhkarRepositoryProvider).getItemsByCategory(categoryId);
 });
 
-final adhkarProgressSummaryProvider = Provider<({int total, int completed})>((ref) {
+final adhkarProgressSummaryProvider = Provider<({int total, int completed})>((
+  ref,
+) {
   final progressMap = ref.watch(adhkarProgressProvider);
   final categoriesAsync = ref.watch(adhkarCategoriesProvider);
 

@@ -127,7 +127,6 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: fgColor,
-                fontFamily: 'DiwaniBent',
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 height: 1.05,

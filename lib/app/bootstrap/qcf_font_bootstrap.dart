@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 final qcfFontBootstrapProvider =
     NotifierProvider<QcfFontBootstrapController, QcfFontBootstrapState>(
@@ -41,17 +45,56 @@ class QcfFontBootstrapState {
 }
 
 class QcfFontBootstrapController extends Notifier<QcfFontBootstrapState> {
+  Future<void>? _runningFuture;
+
   @override
   QcfFontBootstrapState build() {
     return const QcfFontBootstrapState.idle();
   }
 
   Future<void> start({bool force = false}) {
-    if (!force && state.status == QcfFontBootstrapStatus.ready) {
-      return Future<void>.value();
+    if (!force) {
+      if (state.status == QcfFontBootstrapStatus.ready) {
+        return Future<void>.value();
+      }
+      final running = _runningFuture;
+      if (running != null) {
+        return running;
+      }
     }
 
-    state = const QcfFontBootstrapState.ready();
-    return Future<void>.value();
+    final completer = Completer<void>();
+    _runningFuture = completer.future;
+
+    () async {
+      state = const QcfFontBootstrapState.loading(progress: 0.1);
+
+      try {
+        // Warm the QCF data access path and metadata caches.
+        getPageData(1);
+        QuranPageMetadataCache.instance.forPage(1);
+        QuranPageMetadataCache.instance.forPage(2);
+
+        state = const QcfFontBootstrapState.loading(progress: 0.6);
+
+        // Warm frequently-used Quran helpers.
+        getSurahNameArabic(1);
+        getJuzNumber(1, 1);
+        getHizbNumber(1, 1);
+        QuranSurahMetadataCache.instance.all.length;
+
+        state = const QcfFontBootstrapState.ready();
+        completer.complete();
+      } on Object catch (error, stackTrace) {
+        debugPrint('QCF bootstrap failed: $error');
+        debugPrint('$stackTrace');
+        state = QcfFontBootstrapState.failure(errorMessage: error.toString());
+        completer.complete();
+      } finally {
+        _runningFuture = null;
+      }
+    }();
+
+    return completer.future;
   }
 }

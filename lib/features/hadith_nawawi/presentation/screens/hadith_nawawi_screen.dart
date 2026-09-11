@@ -176,7 +176,6 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: fgColor,
-                fontFamily: 'DiwaniBent',
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
                 height: 1.05,

@@ -43,19 +43,19 @@ class DownloadRepository implements AudioDownloadRepository {
 
     final padSurah = surahNumber.toString().padLeft(3, '0');
     final padAyah = ayahNumber.toString().padLeft(3, '0');
+    final reciterPath = p.join(
+      reciterDir.path,
+      DownloadManager.reciterDirectoryName(reciterId),
+    );
+    final ayahFile = File(
+      p.join(reciterPath, 'surah_$padSurah', 'ayah_$padAyah.mp3'),
+    );
+    if (await ayahFile.exists()) return ayahFile.path;
 
-    await for (final entity in reciterDir.list()) {
-      if (entity is! Directory) continue;
-      final ayahFile = File(
-        p.join(entity.path, 'surah_$padSurah', 'ayah_$padAyah.mp3'),
-      );
-      if (await ayahFile.exists()) return ayahFile.path;
-
-      final ayahFileM4a = File(
-        p.join(entity.path, 'surah_$padSurah', 'ayah_$padAyah.m4a'),
-      );
-      if (await ayahFileM4a.exists()) return ayahFileM4a.path;
-    }
+    final ayahFileM4a = File(
+      p.join(reciterPath, 'surah_$padSurah', 'ayah_$padAyah.m4a'),
+    );
+    if (await ayahFileM4a.exists()) return ayahFileM4a.path;
 
     return null;
   }
@@ -68,7 +68,9 @@ class DownloadRepository implements AudioDownloadRepository {
     required String filePath,
     required int fileSizeBytes,
   }) async {
-    debugPrint('DownloadRepository: saved ayah $surahNumber:$ayahNumber -> $filePath');
+    debugPrint(
+      'DownloadRepository: saved ayah $surahNumber:$ayahNumber -> $filePath',
+    );
   }
 
   // ── Surah-level operations ──
@@ -85,34 +87,29 @@ class DownloadRepository implements AudioDownloadRepository {
     final reciterDir = Directory(baseDir);
     if (!await reciterDir.exists()) return null;
 
-    await for (final entity in reciterDir.list()) {
-      if (entity is! Directory) continue;
-      final surahDir = Directory(p.join(entity.path, 'surah_$padSurah'));
-      if (!await surahDir.exists()) continue;
+    final surahDir = Directory(
+      p.join(
+        reciterDir.path,
+        DownloadManager.reciterDirectoryName(reciterId),
+        'surah_$padSurah',
+      ),
+    );
+    if (!await surahDir.exists()) return null;
 
-      // Check if all ayah files exist
-      bool allExist = true;
-      for (var ayah = 1; ayah <= verseCount; ayah++) {
-        final padAyah = ayah.toString().padLeft(3, '0');
-        final hasMp3 = await File(
-          p.join(surahDir.path, 'ayah_$padAyah.mp3'),
-        ).exists();
-        final hasM4a = await File(
-          p.join(surahDir.path, 'ayah_$padAyah.m4a'),
-        ).exists();
-        if (!hasMp3 && !hasM4a) {
-          allExist = false;
-          break;
-        }
-      }
-
-      if (allExist) {
-        // Return path to the surah directory (not a single file)
-        return surahDir.path;
+    for (var ayah = 1; ayah <= verseCount; ayah++) {
+      final padAyah = ayah.toString().padLeft(3, '0');
+      final hasMp3 = await File(
+        p.join(surahDir.path, 'ayah_$padAyah.mp3'),
+      ).exists();
+      final hasM4a = await File(
+        p.join(surahDir.path, 'ayah_$padAyah.m4a'),
+      ).exists();
+      if (!hasMp3 && !hasM4a) {
+        return null;
       }
     }
 
-    return null;
+    return surahDir.path;
   }
 
   @override
@@ -128,6 +125,20 @@ class DownloadRepository implements AudioDownloadRepository {
   }
 
   @override
+  Future<bool> isAyahDownloaded({
+    required int reciterId,
+    required int surahNumber,
+    required int ayahNumber,
+  }) async {
+    final path = await getAyahFilePath(
+      reciterId: reciterId,
+      surahNumber: surahNumber,
+      ayahNumber: ayahNumber,
+    );
+    return path != null;
+  }
+
+  @override
   Future<void> deleteSurah({
     required int reciterId,
     required int surahNumber,
@@ -135,16 +146,16 @@ class DownloadRepository implements AudioDownloadRepository {
     final baseDir = await _getBaseDir();
     final padSurah = surahNumber.toString().padLeft(3, '0');
 
-    final reciterDir = Directory(baseDir);
-    if (!await reciterDir.exists()) return;
-
-    await for (final entity in reciterDir.list()) {
-      if (entity is! Directory) continue;
-      final surahDir = Directory(p.join(entity.path, 'surah_$padSurah'));
-      if (await surahDir.exists()) {
-        await surahDir.delete(recursive: true);
-        debugPrint('DownloadRepository: deleted surah $surahNumber');
-      }
+    final surahDir = Directory(
+      p.join(
+        baseDir,
+        DownloadManager.reciterDirectoryName(reciterId),
+        'surah_$padSurah',
+      ),
+    );
+    if (await surahDir.exists()) {
+      await surahDir.delete(recursive: true);
+      debugPrint('DownloadRepository: deleted surah $surahNumber');
     }
   }
 
@@ -202,13 +213,18 @@ class DownloadRepository implements AudioDownloadRepository {
 
   /// Get the number of downloaded ayah files for a surah.
   Future<int> getDownloadedAyahCount({
-    required String reciterName,
+    required int reciterId,
     required int surahNumber,
   }) async {
     final baseDir = await _getBaseDir();
     final padSurah = surahNumber.toString().padLeft(3, '0');
-    final sanitized = _sanitizeFileName(reciterName);
-    final surahDir = Directory(p.join(baseDir, sanitized, 'surah_$padSurah'));
+    final surahDir = Directory(
+      p.join(
+        baseDir,
+        DownloadManager.reciterDirectoryName(reciterId),
+        'surah_$padSurah',
+      ),
+    );
 
     if (!await surahDir.exists()) return 0;
 
@@ -217,13 +233,6 @@ class DownloadRepository implements AudioDownloadRepository {
       if (entity is File) count++;
     }
     return count;
-  }
-
-  static String _sanitizeFileName(String input) {
-    return input
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '')
-        .replaceAll(RegExp(r'\s+'), '_')
-        .replaceAll(RegExp(r'[^\w\-_.]'), '');
   }
 
   /// Delete corrupted or empty files in a directory.

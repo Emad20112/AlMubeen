@@ -1,7 +1,27 @@
 import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+
+@immutable
+final class TafsirSearchResult {
+  const TafsirSearchResult({
+    required this.resourceId,
+    required this.resourceName,
+    required this.chapterId,
+    required this.ayahNumber,
+    required this.verseKey,
+    required this.text,
+  });
+
+  final int resourceId;
+  final String resourceName;
+  final int chapterId;
+  final int ayahNumber;
+  final String verseKey;
+  final String text;
+}
 
 class TafsirLocalDataSource {
   const TafsirLocalDataSource({required AppDatabase database})
@@ -268,6 +288,46 @@ class TafsirLocalDataSource {
     ''',
       [resourceId],
     );
+  }
+
+  Future<List<TafsirSearchResult>> searchTafsirTexts(
+    String query, {
+    int limit = 30,
+  }) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return const <TafsirSearchResult>[];
+
+    final pattern = '%$trimmed%';
+    final rows = await _database.customSelect(
+      '''
+      SELECT
+        t.resource_id,
+        t.resource_name,
+        t.chapter_id,
+        t.ayah_number,
+        t.tafsir_text
+      FROM tafsir_text_cache t
+      INNER JOIN downloaded_tafsirs d ON d.resource_id = t.resource_id
+      WHERE t.tafsir_text LIKE ?
+      ORDER BY t.chapter_id ASC, t.ayah_number ASC
+      LIMIT ?
+      ''',
+      variables: [Variable.withString(pattern), Variable.withInt(limit)],
+      readsFrom: {_database.tafsirTextCache, _database.downloadedTafsirs},
+    ).get();
+
+    return rows.map((row) {
+      final chapterId = row.read<int>('chapter_id');
+      final ayahNumber = row.read<int>('ayah_number');
+      return TafsirSearchResult(
+        resourceId: row.read<int>('resource_id'),
+        resourceName: row.read<String>('resource_name'),
+        chapterId: chapterId,
+        ayahNumber: ayahNumber,
+        verseKey: '$chapterId:$ayahNumber',
+        text: row.read<String>('tafsir_text'),
+      );
+    }).toList(growable: false);
   }
 
   int _ayahNumberFromVerseKey(String? verseKey) {

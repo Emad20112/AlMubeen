@@ -104,8 +104,25 @@ class _QuranAudioDownloadScreenState
                       );
                     }
 
+                    // Downloads are per-ayah files, so only reciters that
+                    // support ayah-level audio can be downloaded.
+                    final playable = recitations
+                        .where((r) => r.hasAyahAudio)
+                        .toList();
+
+                    if (playable.isEmpty) {
+                      return _AudioLibraryMessageView(
+                        icon: Icons.record_voice_over_outlined,
+                        title: 'لا توجد تلاوات قابلة للتنزيل الآن',
+                        message: 'جرّب تحديث القائمة بعد قليل.',
+                        actionLabel: 'تحديث',
+                        onAction: () =>
+                            ref.invalidate(quranRecitationsProvider),
+                      );
+                    }
+
                     final effectiveSelected = _resolveSelectedRecitation(
-                      recitations: recitations,
+                      recitations: playable,
                       selectedRecitation: selectedRecitation,
                       preferredReciterId: preferredReciterId,
                     );
@@ -121,7 +138,7 @@ class _QuranAudioDownloadScreenState
                     }
 
                     final filteredRecitations = _filterRecitations(
-                      recitations,
+                      playable,
                       _query,
                     );
 
@@ -146,7 +163,7 @@ class _QuranAudioDownloadScreenState
                                     controller: _searchController,
                                     query: _query,
                                     resultCount: filteredRecitations.length,
-                                    totalCount: recitations.length,
+                                    totalCount: playable.length,
                                     onQueryChanged: (value) {
                                       setState(() => _query = value);
                                     },

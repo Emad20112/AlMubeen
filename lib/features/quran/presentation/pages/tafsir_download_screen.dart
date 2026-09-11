@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class TafsirDownloadScreen extends ConsumerStatefulWidget {
-  const TafsirDownloadScreen({super.key});
+  const TafsirDownloadScreen({super.key, this.initialResourceId});
 
   static const String routeName = '/tafsir-download';
+
+  final int? initialResourceId;
 
   @override
   ConsumerState<TafsirDownloadScreen> createState() =>
@@ -19,6 +21,17 @@ class _TafsirDownloadScreenState extends ConsumerState<TafsirDownloadScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   _TafsirLibraryFilter _filter = _TafsirLibraryFilter.all;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialResourceId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(selectedTafsirProvider.notifier).state =
+            widget.initialResourceId!;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -460,104 +473,137 @@ class _TafsirSearchFilterBar extends StatelessWidget {
     final accentColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF231A17) : Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: accentColor.withValues(alpha: 0.14)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.manage_search_rounded, color: accentColor),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'البحث والفلترة',
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'ابحث عن تفسير أو مفسر ثم اختر حالة العرض.',
-                        style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black54,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: controller,
+            onChanged: onQueryChanged,
+            textInputAction: TextInputAction.search,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 14,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.search_rounded, color: accentColor, size: 20),
+              prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              suffixIcon: query.isEmpty
+                  ? null
+                  : IconButton(
+                      onPressed: onClearQuery,
+                      icon: Icon(Icons.clear_rounded, size: 18, color: accentColor),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+              hintText: 'ابحث عن تفسير أو مفسر',
+              hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 14),
+              filled: true,
+              fillColor: isDark ? const Color(0xFF2B201C) : AppColors.parchmentLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '$resultCount من $totalCount',
+                  style: TextStyle(
+                    color: isDark ? Colors.white54 : Colors.black45,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: controller,
-              onChanged: onQueryChanged,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: query.isEmpty
-                    ? null
-                    : IconButton(
-                        onPressed: onClearQuery,
-                        icon: const Icon(Icons.clear_rounded),
-                        tooltip: 'مسح البحث',
-                      ),
-                hintText: 'ابحث عن تفسير أو مفسر',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                filled: true,
-                fillColor: isDark
-                    ? const Color(0xFF2B201C)
-                    : AppColors.parchment,
               ),
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ChoiceChip(
-                  label: const Text('الكل'),
-                  selected: filter == _TafsirLibraryFilter.all,
-                  onSelected: (_) => onFilterChanged(_TafsirLibraryFilter.all),
-                ),
-                ChoiceChip(
-                  label: const Text('المحمّل'),
-                  selected: filter == _TafsirLibraryFilter.downloaded,
-                  onSelected: (_) =>
-                      onFilterChanged(_TafsirLibraryFilter.downloaded),
-                ),
-                ChoiceChip(
-                  label: const Text('غير المحمّل'),
-                  selected: filter == _TafsirLibraryFilter.notDownloaded,
-                  onSelected: (_) =>
-                      onFilterChanged(_TafsirLibraryFilter.notDownloaded),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'عرض $resultCount من $totalCount كتاب',
-              style: TextStyle(
-                color: isDark ? Colors.white70 : Colors.black54,
-                fontSize: 12,
+              _CompactFilterChip(
+                label: 'الكل',
+                isSelected: filter == _TafsirLibraryFilter.all,
+                isDark: isDark,
+                onTap: () => onFilterChanged(_TafsirLibraryFilter.all),
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              _CompactFilterChip(
+                label: 'المحمّل',
+                isSelected: filter == _TafsirLibraryFilter.downloaded,
+                isDark: isDark,
+                onTap: () => onFilterChanged(_TafsirLibraryFilter.downloaded),
+              ),
+              const SizedBox(width: 6),
+              _CompactFilterChip(
+                label: 'غير المحمّل',
+                isSelected: filter == _TafsirLibraryFilter.notDownloaded,
+                isDark: isDark,
+                onTap: () => onFilterChanged(_TafsirLibraryFilter.notDownloaded),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactFilterChip extends StatelessWidget {
+  const _CompactFilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+    final bgColor = isSelected
+        ? accentColor.withValues(alpha: 0.14)
+        : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04));
+    final borderColor = isSelected
+        ? accentColor.withValues(alpha: 0.35)
+        : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.08));
+    final textColor = isSelected
+        ? accentColor
+        : (isDark ? Colors.white70 : Colors.black54);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isSelected) ...[
+                Icon(Icons.check_rounded, size: 13, color: accentColor),
+                const SizedBox(width: 3),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

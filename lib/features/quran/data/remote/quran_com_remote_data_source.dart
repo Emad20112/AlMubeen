@@ -17,6 +17,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
 
   static const int maxVersesPerPage = 50;
   static const int maxChapterTextPageSize = 300;
+  static const int maxAudioVersesPerPage = 300;
 
   static const _verseFields =
       'text_uthmani,text_uthmani_simple,verse_key,verse_number,'
@@ -264,10 +265,10 @@ final class QuranComRemoteDataSource implements QuranDataSource {
     }
 
     final result = await _apiClient.getJson(
-      'api/chapter-reciters/$recitationId/chapter/$chapterNumber',
+      'api/recitations/$recitationId/by_chapter/$chapterNumber',
       queryParameters: {
-        'chapter_number': '$chapterNumber',
-        'fields': 'duration', // Fetch durations as well!
+        'per_page': '$maxAudioVersesPerPage',
+        'fields': 'id,verse_key,url,format,duration',
       },
     );
 

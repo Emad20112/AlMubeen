@@ -1,18 +1,18 @@
-## TODO - Quran Surah Player Slider Fix
+# TODO — ميزة التخزين المحلي للتلاوات واستخدامها في شاشة القراءة
 
-- [ ] Update `QuranSurahPlayerController`:
-  - [ ] Add cached prefix durations for current batch to compute `totalPosition` efficiently.
-  - [ ] Fix `_syncPlaybackProgress` to avoid repeated heavy calculations and guard against double state updates.
-  - [ ] Ensure `currentAyah` updates only when index changes.
-  - [ ] Ensure `totalDuration` is computed once from the 5 loaded ayahs.
+## الأهداف
+- تحميل تلاوة سورة وقارئ معين من شاشة الاستماع.
+- استخدام الملفات المحلية في شاشة قراءة القرآن لنفس السورة والقارئ.
+- العمل دون اتصال عند توفر الملفات محلياً.
 
-- [ ] Update `QuranSurahPlayerScreen` seek bar widget:
-  - [ ] Remove elapsed/remaining time display.
-  - [ ] Show current ayah number text from `playerState.currentAyah`.
-  - [ ] Keep Slider value/max based on `totalPosition/totalDuration`.
-
-- [ ] Verification:
-  - [ ] Hot restart and verify Slider movement.
-  - [ ] Verify seeking updates current ayah text correctly.
-  - [ ] Verify max value uses current batch total duration.
+## الخطوات
+- [x] 1. إضافة `isAyahDownloaded()` إلى `AudioRepository` وواجهة `AudioDownloadRepository` (الملف: `lib/core/audio/audio_repository.dart`)
+- [x] 2. تنفيذ `isAyahDownloaded()` في `DownloadRepository` (الملف: `lib/core/audio/download_repository.dart`)
+- [x] 3. تعديل `quran_audio_controller.dart`:
+  - [x] 3.1 فحص الملف المحلي أولاً قبل جلب رابط الشبكة في `_resolveAyahSourceForPlayback`
+  - [x] 3.2 تعديل منطق إيقاف التشغيل عند انقطاع الإنترنت ليعمل فقط مع المصدر الشبكي
+- [x] 4. إضافة `refreshDownloadedSurahs()` إلى `quran_audio_download_controller.dart` لقراءة حالة التحميل من القرص
+- [x] 5. ربط `refreshDownloadedSurahs()` في شاشة الاستماع `quran_surah_player_screen.dart`
+- [x] 6. تشغيل `flutter analyze` على الملفات المعدّلة — **لا توجد أخطاء** ✅ (والتحليل الكامل للمشروع قيد التشغيل)
+- [ ] 7. اختبار: تحميل سورة → تشغيلها في شاشة القراءة → وضع الطيران (Offline)
 

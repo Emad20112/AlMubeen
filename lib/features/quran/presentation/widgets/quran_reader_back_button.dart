@@ -27,13 +27,15 @@ class QuranReaderBackButton extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: isDark
-                    ? const Color(0xFF2A2320).withOpacity(.82)
-                    : const Color(0xFFFDF8F0).withOpacity(.88),
+                    ? const Color(0xFF2A2320).withValues(alpha: .82)
+                    : const Color(0xFFFDF8F0).withValues(alpha: .88),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.maroon700.withOpacity(.08)),
+                border: Border.all(
+                  color: AppColors.maroon700.withValues(alpha: .08),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(.12),
+                    color: Colors.black.withValues(alpha: .12),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),

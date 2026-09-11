@@ -121,11 +121,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
   ) {
     ref
         .read(adhkarProgressProvider.notifier)
-        .incrementProgress(
-          item.id,
-          widget.categoryId,
-          item.repeatCount,
-        );
+        .incrementProgress(item.id, widget.categoryId, item.repeatCount);
 
     final newProgress = ref.read(adhkarProgressProvider)[item.id];
     final newCount = newProgress?.completedCount ?? 0;
@@ -143,8 +139,9 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
   Widget build(BuildContext context) {
     final categoryAsync = widget.categoryAsync;
     final itemsAsync = widget.itemsAsync;
-    final progressMap =
-        _isProgressMode ? ref.watch(adhkarProgressProvider) : null;
+    final progressMap = _isProgressMode
+        ? ref.watch(adhkarProgressProvider)
+        : null;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return categoryAsync.when(
@@ -167,8 +164,9 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
       data: (category) {
         if (category == null) {
           return Scaffold(
-            backgroundColor:
-                isDark ? AppColors.darkScaffold : AppColors.parchment,
+            backgroundColor: isDark
+                ? AppColors.darkScaffold
+                : AppColors.parchment,
             body: AppErrorView(
               title: 'لم يتم العثور على القسم',
               message: 'تعذر تحميل هذا القسم.',
@@ -182,28 +180,32 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
 
         return itemsAsync.when(
           loading: () => Scaffold(
-            backgroundColor:
-                isDark ? AppColors.darkScaffold : AppColors.parchment,
+            backgroundColor: isDark
+                ? AppColors.darkScaffold
+                : AppColors.parchment,
             body: const AppLoadingView(
               title: 'جاري تحميل المحتوى',
               message: 'يتم جلب النصوص.',
             ),
           ),
           error: (error, stackTrace) => Scaffold(
-            backgroundColor:
-                isDark ? AppColors.darkScaffold : AppColors.parchment,
+            backgroundColor: isDark
+                ? AppColors.darkScaffold
+                : AppColors.parchment,
             body: AppErrorView(
               title: 'تعذر تحميل البيانات',
               message: 'حدث خطأ غير متوقع أثناء تحميل المحتوى.',
               actionLabel: 'إعادة المحاولة',
-              onActionPressed: widget.onRetry ?? () => Navigator.of(context).pop(),
+              onActionPressed:
+                  widget.onRetry ?? () => Navigator.of(context).pop(),
             ),
           ),
           data: (rawItems) {
             if (rawItems.isEmpty) {
               return Scaffold(
-                backgroundColor:
-                    isDark ? AppColors.darkScaffold : AppColors.parchment,
+                backgroundColor: isDark
+                    ? AppColors.darkScaffold
+                    : AppColors.parchment,
                 body: AppErrorView(
                   title: 'لا يوجد محتوى',
                   message: 'لم يتم العثور على عناصر في هذا القسم.',
@@ -213,17 +215,21 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
               );
             }
 
-            final items =
-                rawItems.map((e) => UnifiedContentItem.fromDynamic(e)).toList();
+            final items = rawItems
+                .map((e) => UnifiedContentItem.fromDynamic(e))
+                .toList();
 
             return Scaffold(
-              backgroundColor:
-                  isDark ? AppColors.darkScaffold : AppColors.parchment,
+              backgroundColor: isDark
+                  ? AppColors.darkScaffold
+                  : AppColors.parchment,
               body: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final width = constraints.maxWidth;
-                    final maxWidth = switch (AdaptiveBreakpoints.fromWidth(width)) {
+                    final maxWidth = switch (AdaptiveBreakpoints.fromWidth(
+                      width,
+                    )) {
                       AdaptiveWindowClass.compact => width,
                       AdaptiveWindowClass.medium => 720.0,
                       AdaptiveWindowClass.expanded => 820.0,
@@ -255,8 +261,8 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
                                 final item = items[index];
                                 final itemProgress =
                                     _isProgressMode && progressMap != null
-                                        ? progressMap[item.id]
-                                        : null;
+                                    ? progressMap[item.id]
+                                    : null;
                                 final completedCount =
                                     itemProgress?.completedCount ?? 0;
                                 final isCompleted =
@@ -301,11 +307,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
     );
   }
 
-  Widget _buildHeader(
-    BuildContext context,
-    String categoryTitle,
-    bool isDark,
-  ) {
+  Widget _buildHeader(BuildContext context, String categoryTitle, bool isDark) {
     return Row(
       children: [
         IconButton(
@@ -316,21 +318,11 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
         Expanded(
           child: Text(
             categoryTitle,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
-        if (_isProgressMode)
-          IconButton(
-            icon: const Icon(Icons.refresh, size: 22),
-            tooltip: 'تصفير التقدم',
-            onPressed: () {
-              ref
-                  .read(adhkarProgressProvider.notifier)
-                  .resetCategory(widget.categoryId);
-            },
-          ),
         IconButton(
           icon: const Icon(Icons.text_fields, size: 22),
           tooltip: 'حجم الخط',
@@ -351,8 +343,8 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
               color: index <= _currentIndex
                   ? (isDark ? Colors.white : AppColors.maroon800)
                   : (isDark
-                      ? Colors.white30
-                      : AppColors.maroon800.withValues(alpha: 0.2)),
+                        ? Colors.white30
+                        : AppColors.maroon800.withValues(alpha: 0.2)),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -363,7 +355,9 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
 
   Widget _buildSmallBottomNav(List<UnifiedContentItem> items) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final buttonBg = isDark ? AppColors.darkSurfaceHigh : AppColors.parchmentLight;
+    final buttonBg = isDark
+        ? AppColors.darkSurfaceHigh
+        : AppColors.parchmentLight;
     final fgColor = isDark ? Colors.white : AppColors.maroon800;
 
     return Row(
@@ -381,7 +375,10 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
                   ? () => _selectItem(_currentIndex - 1, items)
                   : null,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -429,7 +426,10 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
                   ? () => _selectItem(_currentIndex + 1, items)
                   : null,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -606,10 +606,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 duration: Duration(seconds: 1),
-                content: Text(
-                  'تم نسخ النص',
-                  textAlign: TextAlign.right,
-                ),
+                content: Text('تم نسخ النص', textAlign: TextAlign.right),
               ),
             );
           },

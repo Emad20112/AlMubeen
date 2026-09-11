@@ -1,7 +1,27 @@
 import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+
+@immutable
+final class TranslationSearchResult {
+  const TranslationSearchResult({
+    required this.resourceId,
+    required this.resourceName,
+    required this.chapterId,
+    required this.ayahNumber,
+    required this.verseKey,
+    required this.text,
+  });
+
+  final int resourceId;
+  final String resourceName;
+  final int chapterId;
+  final int ayahNumber;
+  final String verseKey;
+  final String text;
+}
 
 class TranslationLocalDataSource {
   const TranslationLocalDataSource({required AppDatabase database})
@@ -229,6 +249,46 @@ class TranslationLocalDataSource {
     ''',
       [resourceId],
     );
+  }
+
+  Future<List<TranslationSearchResult>> searchTexts(
+    String query, {
+    int limit = 30,
+  }) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return const <TranslationSearchResult>[];
+
+    final pattern = '%$trimmed%';
+    final rows = await _database.customSelect(
+      '''
+      SELECT
+        t.resource_id,
+        t.resource_name,
+        t.chapter_id,
+        t.ayah_number,
+        t.translation_text
+      FROM translation_text_cache t
+      INNER JOIN downloaded_translations d ON d.resource_id = t.resource_id
+      WHERE t.translation_text LIKE ?
+      ORDER BY t.chapter_id ASC, t.ayah_number ASC
+      LIMIT ?
+      ''',
+      variables: [Variable.withString(pattern), Variable.withInt(limit)],
+      readsFrom: {_database.translationTextCache, _database.downloadedTranslations},
+    ).get();
+
+    return rows.map((row) {
+      final chapterId = row.read<int>('chapter_id');
+      final ayahNumber = row.read<int>('ayah_number');
+      return TranslationSearchResult(
+        resourceId: row.read<int>('resource_id'),
+        resourceName: row.read<String>('resource_name'),
+        chapterId: chapterId,
+        ayahNumber: ayahNumber,
+        verseKey: '$chapterId:$ayahNumber',
+        text: row.read<String>('translation_text'),
+      );
+    }).toList(growable: false);
   }
 
   int _ayahNumberFromVerseKey(String? verseKey) {

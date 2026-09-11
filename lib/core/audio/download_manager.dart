@@ -30,6 +30,7 @@ class DownloadManager {
 
   final Map<String, DownloadTask> _activeTasks = {};
   final Map<String, DownloadProgress> _lastProgress = {};
+  final Map<String, DownloadStatus> _lastStatus = {};
 
   // ── Public API ──
 
@@ -41,10 +42,25 @@ class DownloadManager {
     required String filename,
     bool requiresWiFi = false,
   }) async {
+    // background_downloader resolves the destination as
+    // `<baseDirectory>/<directory>/<filename>`, where the base is the
+    // application documents directory. An absolute path would therefore be
+    // nested under the documents directory and the file would never be found
+    // again by the app, so a directory relative to the documents dir is used.
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final relativeDirectory = p.relative(
+      directoryPath,
+      from: documentsDir.path,
+    );
+    if (relativeDirectory.isEmpty ||
+        p.split(relativeDirectory).contains('..')) {
+      throw DownloadException('Invalid download directory: $directoryPath');
+    }
+
     final task = DownloadTask(
       url: url.toString(),
       filename: filename,
-      directory: directoryPath,
+      directory: relativeDirectory,
       requiresWiFi: requiresWiFi,
       updates: Updates.statusAndProgress,
       allowPause: true,
@@ -80,6 +96,7 @@ class DownloadManager {
     await _downloader.cancelTaskWithId(taskId);
     _activeTasks.remove(taskId);
     _lastProgress.remove(taskId);
+    _lastStatus.remove(taskId);
   }
 
   /// Cancel all active downloads.
@@ -87,6 +104,7 @@ class DownloadManager {
     await _downloader.reset();
     _activeTasks.clear();
     _lastProgress.clear();
+    _lastStatus.clear();
   }
 
   /// Check if a file was downloaded successfully and is not corrupted.
@@ -128,6 +146,9 @@ class DownloadManager {
   /// Get the last known progress for a task.
   DownloadProgress? getProgress(String taskId) => _lastProgress[taskId];
 
+  /// Get the last known status for a task, if any.
+  DownloadStatus? getLastStatus(String taskId) => _lastStatus[taskId];
+
   /// Restore tasks that were interrupted by app restart.
   Future<List<Task>> restoreInterruptedTasks() async {
     final tasks = await _downloader.allTasks();
@@ -157,17 +178,16 @@ class DownloadManager {
   /// Build the save path for an ayah audio file.
   static String ayahFilePath({
     required String baseDir,
-    required String reciterName,
+    required int reciterId,
     required int surahNumber,
     required int ayahNumber,
     required String extension,
   }) {
     final padSurah = surahNumber.toString().padLeft(3, '0');
     final padAyah = ayahNumber.toString().padLeft(3, '0');
-    final sanitizedReciter = _sanitizeFileName(reciterName);
     return p.join(
       baseDir,
-      sanitizedReciter,
+      reciterDirectoryName(reciterId),
       'surah_$padSurah',
       'ayah_$padAyah.$extension',
     );
@@ -176,12 +196,11 @@ class DownloadManager {
   /// Build the directory path for a surah.
   static String surahDirectoryPath({
     required String baseDir,
-    required String reciterName,
+    required int reciterId,
     required int surahNumber,
   }) {
     final padSurah = surahNumber.toString().padLeft(3, '0');
-    final sanitizedReciter = _sanitizeFileName(reciterName);
-    return p.join(baseDir, sanitizedReciter, 'surah_$padSurah');
+    return p.join(baseDir, reciterDirectoryName(reciterId), 'surah_$padSurah');
   }
 
   // ── Callbacks ──
@@ -194,10 +213,12 @@ class DownloadManager {
   }
 
   void _onTaskStatus(TaskStatusUpdate update) {
+    final status = _mapStatus(update.status);
+    _lastStatus[update.task.taskId] = status;
     _statusController.add(
       DownloadStatusUpdate(
         taskId: update.task.taskId,
-        status: _mapStatus(update.status),
+        status: status,
       ),
     );
 
@@ -234,11 +255,9 @@ class DownloadManager {
 
   // ── Helpers ──
 
-  static String _sanitizeFileName(String input) {
-    return input
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '')
-        .replaceAll(RegExp(r'\s+'), '_')
-        .replaceAll(RegExp(r'[^\w\-_.]'), '');
+  static String reciterDirectoryName(int reciterId) {
+    final prefix = reciterId < 0 ? 'islamic_app' : 'quran_com';
+    return '${prefix}_$reciterId';
   }
 
   void dispose() {

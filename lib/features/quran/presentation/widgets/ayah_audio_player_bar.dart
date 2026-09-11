@@ -1,7 +1,13 @@
+import 'dart:async';
+
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/core/widgets/network_error_banner.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
+import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
+import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
+import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reciters_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +38,9 @@ class AyahAudioErrorBanner extends ConsumerWidget {
         message: audioState.errorMessage,
         onRetry: () {
           if (audioState.recitationId != null) {
-            ref.read(quranAudioControllerProvider.notifier).playOrToggleAyah(
+            ref
+                .read(quranAudioControllerProvider.notifier)
+                .playOrToggleAyah(
                   ayahRef: audioState.currentAyah!,
                   recitationId: audioState.recitationId!,
                 );
@@ -44,42 +52,62 @@ class AyahAudioErrorBanner extends ConsumerWidget {
 }
 
 class AyahRightAudioControls extends ConsumerWidget {
-  const AyahRightAudioControls({super.key});
+  const AyahRightAudioControls({required this.currentPage, super.key});
+
+  final int currentPage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasAudio = ref.watch(
+    final audioState = ref.watch(
       quranAudioControllerProvider.select(
-        (state) => state.currentAyah != null,
+        (state) =>
+            (currentAyah: state.currentAyah, recitationId: state.recitationId),
       ),
     );
 
-    if (!hasAudio) return const SizedBox.shrink();
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+    final firstAyahOnPage = getFirstAyahOnPage(currentPage);
+    final hasActiveAyah = audioState.currentAyah != null;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _CompactIconButton(
+          icon: Icons.play_arrow_rounded,
+          tooltip: hasActiveAyah
+              ? 'أوقف التلاوة الحالية أولاً'
+              : 'تشغيل من بداية الصفحة',
+          primaryColor: primaryColor,
+          onTap: hasActiveAyah
+              ? null
+              : () {
+                  unawaited(_playFromPageStart(context, ref, firstAyahOnPage));
+                },
+        ),
+        const SizedBox(width: 2),
+        _CompactIconButton(
           icon: Icons.stop_rounded,
           tooltip: 'إيقاف',
           primaryColor: primaryColor,
-          onTap: () {
-            ref.read(quranAudioControllerProvider.notifier).stop();
-          },
+          onTap: hasActiveAyah
+              ? () {
+                  ref.read(quranAudioControllerProvider.notifier).stop();
+                }
+              : null,
         ),
         const SizedBox(width: 2),
         _CompactIconButton(
           icon: Icons.forward_10_rounded,
           tooltip: 'تقديم',
           primaryColor: primaryColor,
-          onTap: () {
-            ref
-                .read(quranAudioControllerProvider.notifier)
-                .seekForward(seconds: 10);
-          },
+          onTap: hasActiveAyah
+              ? () {
+                  ref
+                      .read(quranAudioControllerProvider.notifier)
+                      .seekForward(seconds: 10);
+                }
+              : null,
         ),
       ],
     );
@@ -87,23 +115,23 @@ class AyahRightAudioControls extends ConsumerWidget {
 }
 
 class AyahLeftAudioControls extends ConsumerWidget {
-  const AyahLeftAudioControls({super.key});
+  const AyahLeftAudioControls({required this.currentPage, super.key});
+
+  final int currentPage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final audioState = ref.watch(
       quranAudioControllerProvider.select(
-        (state) => (
-          currentAyah: state.currentAyah,
-          recitationId: state.recitationId,
-        ),
+        (state) =>
+            (currentAyah: state.currentAyah, recitationId: state.recitationId),
       ),
     );
 
-    if (audioState.currentAyah == null) return const SizedBox.shrink();
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+    final pickerAyah =
+        audioState.currentAyah ?? getFirstAyahOnPage(currentPage);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -112,11 +140,13 @@ class AyahLeftAudioControls extends ConsumerWidget {
           icon: Icons.replay_10_rounded,
           tooltip: 'تأخير',
           primaryColor: primaryColor,
-          onTap: () {
-            ref
-                .read(quranAudioControllerProvider.notifier)
-                .seekBackward(seconds: 10);
-          },
+          onTap: audioState.currentAyah != null
+              ? () {
+                  ref
+                      .read(quranAudioControllerProvider.notifier)
+                      .seekBackward(seconds: 10);
+                }
+              : null,
         ),
         const SizedBox(width: 2),
         _CompactIconButton(
@@ -125,7 +155,7 @@ class AyahLeftAudioControls extends ConsumerWidget {
           primaryColor: primaryColor,
           onTap: () => _showListeningOptionsSheet(
             context,
-            currentAyah: audioState.currentAyah!,
+            currentAyah: pickerAyah,
             recitationId: audioState.recitationId,
           ),
         ),
@@ -138,14 +168,73 @@ class AyahLeftAudioControls extends ConsumerWidget {
     required AyahRef currentAyah,
     required int? recitationId,
   }) {
-    return showModalBottomSheet<void>(
+    return showReciterPickerSheet(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _RecitersBottomSheet(
-        currentAyah: currentAyah,
-        recitationId: recitationId,
+      currentAyah: currentAyah,
+      currentRecitationId: recitationId,
+      playOnSelect: false,
+    );
+  }
+}
+
+class _CompactLoadingPlayButton extends StatefulWidget {
+  const _CompactLoadingPlayButton({
+    required this.primaryColor,
+    required this.isLoading,
+  });
+
+  final Color primaryColor;
+  final bool isLoading;
+
+  @override
+  State<_CompactLoadingPlayButton> createState() =>
+      _CompactLoadingPlayButtonState();
+}
+
+class _CompactLoadingPlayButtonState extends State<_CompactLoadingPlayButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void didUpdateWidget(_CompactLoadingPlayButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.isLoading) {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'جاري تحميل التلاوة',
+      child: SizedBox(
+        width: 26,
+        height: 26,
+        child: Center(
+          child: RotationTransition(
+            turns: _controller,
+            child: Icon(
+              Icons.play_arrow_rounded,
+              color: widget.primaryColor,
+              size: 17,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -156,16 +245,20 @@ class _CompactIconButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.primaryColor,
-    required this.onTap,
+    this.onTap,
   });
 
   final IconData icon;
   final String tooltip;
   final Color primaryColor;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = onTap == null
+        ? primaryColor.withValues(alpha: 0.35)
+        : primaryColor;
+
     return Tooltip(
       message: tooltip,
       child: Material(
@@ -177,7 +270,7 @@ class _CompactIconButton extends StatelessWidget {
             width: 26,
             height: 26,
             decoration: const BoxDecoration(shape: BoxShape.circle),
-            child: Icon(icon, color: primaryColor, size: 17),
+            child: Icon(icon, color: effectiveColor, size: 17),
           ),
         ),
       ),
@@ -185,116 +278,70 @@ class _CompactIconButton extends StatelessWidget {
   }
 }
 
-class _RecitersBottomSheet extends StatelessWidget {
-  const _RecitersBottomSheet({
-    required this.currentAyah,
-    required this.recitationId,
-  });
+Future<void> _playFromPageStart(
+  BuildContext context,
+  WidgetRef ref,
+  AyahRef firstAyahOnPage,
+) async {
+  final recitationId = await _resolveActiveRecitationId(ref);
+  if (recitationId == null) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تعذر تحميل قائمة القراء.')));
+    }
+    return;
+  }
 
-  final AyahRef currentAyah;
-  final int? recitationId;
+  await ref
+      .read(quranAudioControllerProvider.notifier)
+      .playAyahFromBeginning(
+        ayahRef: firstAyahOnPage,
+        recitationId: recitationId,
+      );
+}
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor =
-        isDark ? AppColors.darkSurface : AppColors.parchmentLight;
-    final titleColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+Future<int?> _resolveActiveRecitationId(WidgetRef ref) async {
+  final selectedRecitation = ref.read(selectedQuranRecitationProvider);
+  if (selectedRecitation != null && selectedRecitation.hasAyahAudio) {
+    return selectedRecitation.id;
+  }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.12),
-            blurRadius: 20,
-            offset: const Offset(0, -6),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.58,
-          minChildSize: 0.38,
-          maxChildSize: 0.86,
-          builder: (context, scrollController) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              child: ListView(
-                controller: scrollController,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.maroon800.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.maroon800.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.headphones_rounded,
-                          color: AppColors.maroon800,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'اختر القارئ',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    color: titleColor,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'اختر القارئ المفضل لديك.',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: mutedColor),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  QuranRecitersListView(
-                    currentAyah: currentAyah,
-                    recitationId: recitationId,
-                  ),
-                ],
-              ),
-            );
+  final preferredReciterId = ref
+      .read(appUserPreferencesProvider)
+      .maybeWhen(data: (value) => value.preferredReciterId, orElse: () => null);
+  if (preferredReciterId != null) {
+    final preferredSupportsAyah = ref
+        .read(quranRecitationsProvider)
+        .maybeWhen(
+          data: (recitations) {
+            for (final recitation in recitations) {
+              if (recitation.id == preferredReciterId) {
+                return recitation.hasAyahAudio;
+              }
+            }
+            return false;
           },
-        ),
-      ),
-    );
+          orElse: () => true,
+        );
+    if (preferredSupportsAyah) {
+      return preferredReciterId;
+    }
+  }
+
+  try {
+    final recitations = await ref.read(quranRecitationsProvider.future);
+    return _firstAyahRecitation(recitations)?.id;
+  } on Object {
+    return null;
   }
 }
+
+QuranRecitation? _firstAyahRecitation(List<QuranRecitation> recitations) {
+  for (final recitation in recitations) {
+    if (recitation.hasAyahAudio) return recitation;
+  }
+  return null;
+}
+
+// _RecitersBottomSheet removed — now handled by showReciterPickerSheet() in quran_reciters_list_view.dart

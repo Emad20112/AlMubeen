@@ -11,12 +11,14 @@ import 'package:al_mubeen/features/quran/presentation/widgets/ayah_audio_player_
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_interaction_overlay.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_bookmarks_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_bottom_panel.dart';
-import 'package:al_mubeen/features/quran/presentation/widgets/quran_reciters_list_view.dart';
+
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_header.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_icon_nav_bar.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_search_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_settings_sheet.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_scrim.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/wird_dialog.dart';
+
 import 'package:al_mubeen/features/quran/presentation/widgets/surah_picker.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_more_screen.dart';
 import 'package:flutter/material.dart';
@@ -96,10 +98,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     WidgetsBinding.instance.removeObserver(this);
     _saveProgressDebounce?.cancel();
-    // Note: _persistCurrentPage intentionally not called here because it uses
-    // `ref.read()` which is unsafe in dispose() (BuildContext is deactivated).
-    // The page is already persisted via _schedulePersistCurrentPage on change
-    // and via didChangeAppLifecycleState when the app goes to background.
     _pageController.dispose();
     _currentPage.dispose();
     _highlightController.dispose();
@@ -165,6 +163,18 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     });
   }
 
+  void _showOverlay() {
+    if (_isOverlayVisible) {
+      return;
+    }
+
+    setState(() {
+      _isOverlayVisible = true;
+      _overlayAnimation.forward();
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    });
+  }
+
   void _hideOverlay() {
     if (!_isOverlayVisible) {
       return;
@@ -196,11 +206,8 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
   // --- Quran page header/footer helpers ---
 
-  // Pre-computed cache: built once, used on every page build.
   static final QuranPageMetadataCache _pageMeta =
       QuranPageMetadataCache.instance;
-
-  // --- Quran page header/footer helpers ---
 
   Widget _buildPageView(
     BuildContext context,
@@ -208,10 +215,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     bool isDark,
     double fontScale,
   ) {
-    const headerHeight = 38.0;
-    const footerHeight = 24.0;
-
-    // Convert highlights list to a Map keyed by (surah, verse) for O(1) lookup.
     final Map<(int, int), Color> highlightMap = highlights.isEmpty
         ? const {}
         : {for (final h in highlights) (h.surah, h.verseNumber): h.color};
@@ -221,22 +224,14 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Compute verseHeight so 15 Mushaf lines fit the screen exactly.
-        // QcfPage internally adds padding: top 38 + bottom 24 = 62 px.
         final availableHeight = constraints.maxHeight;
         const int linesPerPage = 15;
         const double internalPadding = 62.0;
         final fontSize = getFontSize(1, context);
 
-        // Screen-adaptive scaling: reference width is 390px (standard phone).
-        // Smaller phones get smaller fonts, larger tablets get larger fonts.
         final screenWidth = MediaQuery.sizeOf(context).width;
         final screenAdaptiveFactor = (screenWidth / 390).clamp(0.82, 1.18);
 
-        // The Madina Mushaf layout cannot handle horizontal wrapping.
-        // We tightly clamp the fontScale for the Mushaf text to prevent
-        // lines from breaking, while letting the full fontScale apply
-        // to Tafsir/Translations via the global text scaler.
         final safeFontScale = (fontScale * screenAdaptiveFactor).clamp(
           0.55,
           1.15,
@@ -248,7 +243,22 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
             (linesPerPage * effectiveFontSize);
 
         final baseTheme = isDark ? QcfThemeData.dark() : const QcfThemeData();
-        final theme = baseTheme.copyWith(verseHeight: computedVerseHeight);
+        final theme = baseTheme.copyWith(
+          verseHeight: computedVerseHeight,
+          headerTextColor: isDark ? const Color(0xFF2A070D) : null,
+        );
+
+        // Vivid, high-contrast colors for header/footer text
+        final headerTextColor = isDark
+            ? const Color(0xFFE8C860) // golden warm — highly readable on dark
+            : const Color(0xFF2A070D); // maroon900 — deep & crisp on parchment
+
+        final footerTextColor = isDark
+            ? const Color(0xFFD8B457).withValues(alpha: 0.95)
+            : const Color(0xFF3F1D20); // maroon800
+
+        const headerHeight = 44.0;
+        const footerHeight = 32.0;
 
         return PageView.builder(
           controller: _pageController,
@@ -258,9 +268,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
           itemBuilder: (context, index) {
             final pageNumber = index + 1;
             final meta = _pageMeta.forPage(pageNumber);
-            final textColor = isDark
-                ? const Color(0xFFE0E0E0)
-                : const Color(0xFF3A3A3A);
 
             return Stack(
               children: [
@@ -274,7 +281,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                     sp: safeFontScale,
                   ),
                 ),
-                // Header: Juz/Hizb (right) & Surah name (left)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -283,26 +289,43 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                   child: Directionality(
                     textDirection: TextDirection.rtl,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             meta.juzHizbText,
                             style: TextStyle(
-                              fontSize: 12,
-                              color: textColor,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 15,
+                              color: headerTextColor,
+                              fontWeight: FontWeight.w700,
                               height: 1.2,
+                              shadows: [
+                                Shadow(
+                                  color: isDark
+                                      ? Colors.black.withValues(alpha: 0.5)
+                                      : Colors.white.withValues(alpha: 0.6),
+                                  blurRadius: 3,
+                                ),
+                              ],
                             ),
                           ),
                           const Spacer(),
                           Text(
                             meta.surahNameArabic,
                             style: TextStyle(
-                              fontSize: 12,
-                              color: textColor,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              color: headerTextColor,
+                              fontWeight: FontWeight.w800,
                               height: 1.2,
+                              shadows: [
+                                Shadow(
+                                  color: isDark
+                                      ? Colors.black.withValues(alpha: 0.5)
+                                      : Colors.white.withValues(alpha: 0.6),
+                                  blurRadius: 3,
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -310,7 +333,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                     ),
                   ),
                 ),
-                // Footer: Page number (right side)
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -319,16 +341,26 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                   child: Directionality(
                     textDirection: TextDirection.rtl,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             convertToArabicDigits(pageNumber),
                             style: TextStyle(
-                              fontSize: 12,
-                              color: textColor,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 15,
+                              color: footerTextColor,
+                              fontWeight: FontWeight.w700,
                               height: 1.2,
+                              letterSpacing: 0.5,
+                              shadows: [
+                                Shadow(
+                                  color: isDark
+                                      ? Colors.black.withValues(alpha: 0.4)
+                                      : Colors.white.withValues(alpha: 0.6),
+                                  blurRadius: 3,
+                                ),
+                              ],
                             ),
                           ),
                           const Spacer(),
@@ -345,13 +377,13 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     );
   }
 
-  /// Sync highlight and page position to the currently-playing ayah.
+  /// 🛡️ حل مشكلة إعادة الآية الثانية وتضليل التالية
   void _syncAudioHighlight({
     required AyahRef? currentAyah,
     required bool isPlaying,
   }) {
+    // 1. إذا توقف الصوت، نظّف التظليل وارجع
     if (currentAyah == null || !isPlaying) {
-      // Audio stopped – clear the audio-driven highlight.
       if (_lastSyncedAyah != null) {
         _lastSyncedAyah = null;
         _highlightController.clear();
@@ -359,19 +391,22 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
       return;
     }
 
-    // Already synced to this ayah.
-    if (_lastSyncedAyah != null &&
-        _lastSyncedAyah!.surah == currentAyah.surah &&
-        _lastSyncedAyah!.ayah == currentAyah.ayah) {
+    // 2. إذا كانت الآية هي نفسها التي تم مزامنتها مسبقاً، تجاهل الطلب لمنع الحلقة المفرغة
+    if (_lastSyncedAyah?.surah == currentAyah.surah &&
+        _lastSyncedAyah?.ayah == currentAyah.ayah) {
       return;
     }
 
     _lastSyncedAyah = currentAyah;
+
+    // 3. نكتفي بتحديث التظليل فقط بصمت بدون إعادة تحريك الصفحة إذا كنا في نفس الصفحة
     _highlightController.highlightSingle(currentAyah, _highlightColor(context));
 
-    // Auto-navigate to the page that contains this ayah.
+    // 4. لا ننتقل للصفحة إلا إذا كانت الآية الجديدة في صفحة "مختلفة تماماً" عن الصفحة المعروضة حالياً
     if (currentAyah.page != _currentPage.value) {
-      _goToPage(currentAyah.page);
+      // نغير الصفحة بصمت وبدون إرسال إشارات إعادة تشغيل للمشغل
+      _pageController.jumpToPage(currentAyah.page - 1);
+      _currentPage.value = currentAyah.page;
     }
   }
 
@@ -397,6 +432,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
         _highlightController.toggleSingle(ayahRef, _highlightColor(context));
       },
       onClearHighlight: _highlightController.clear,
+      onPlayRequested: _showOverlay,
     );
   }
 
@@ -421,6 +457,22 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     await showQuranReaderSettingsSheet(
       context: context,
       currentPage: _currentPage.value,
+    );
+  }
+
+  Future<void> _navigateToWirdBoundary(int endPage) async {
+    final boundary = getFirstAyahOnNextPage(endPage);
+    _highlightController.highlightSingle(boundary, _highlightColor(context));
+    _lastSyncedAyah = null;
+    await _goToPage(boundary.page);
+    _hideOverlay();
+  }
+
+  Future<void> _openWirdDialog() async {
+    await showWirdHotelDoorsDialog(
+      context,
+      onNavigateToPage: _goToPage,
+      onNavigateToWirdEnd: _navigateToWirdBoundary,
     );
   }
 
@@ -471,7 +523,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
   @override
   Widget build(BuildContext context) {
-    // Listen to audio state changes and sync the highlight / page.
     ref.listen(
       quranAudioControllerProvider.select(
         (state) => (
@@ -486,7 +537,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
           isPlaying: next.isPlaying,
         );
 
-        // Show elegant snackbar if there's an error (e.g., no internet)
         if (next.errorMessage != null &&
             next.errorMessage != previous?.errorMessage) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -538,7 +588,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
         fit: StackFit.expand,
         children: [
           Positioned.fill(
-            // Ensure taps hit the scrim overlay first when visible.
             child: GestureDetector(
               onTap: _toggleOverlay,
               behavior: HitTestBehavior.opaque,
@@ -588,9 +637,12 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                         QuranReaderBottomPanel(
                           currentPage: page,
                           onPageSelected: _goToPage,
-                          rightControls: const AyahRightAudioControls(),
-                          leftControls: const AyahLeftAudioControls(),
-                          reciterButton: const _ReciterButton(),
+                          rightControls: AyahRightAudioControls(
+                            currentPage: page,
+                          ),
+                          leftControls: AyahLeftAudioControls(
+                            currentPage: page,
+                          ),
                         ),
                       ],
                     ),
@@ -620,6 +672,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                       onSurahPicker: _openSurahPicker,
                       onBookmarks: _openBookmarksSheet,
                       onSettings: _openSettingsSheet,
+                      onWird: _openWirdDialog,
                     ),
                   ),
                 ),
@@ -634,171 +687,16 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
             child: RepaintBoundary(
               child: _buildAnimatedOverlay(
                 beginOffset: const Offset(0, -1),
-                child: QuranReaderHeader(onSearchTapped: _openSearchSheet),
+                child: QuranReaderHeader(
+                  onSearchTapped: _openSearchSheet,
+                  onSurahListTapped: _openSurahPicker,
+                  onSettingsTapped: _openSettingsSheet,
+                  onWirdTapped: _openWirdDialog,
+                ),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ReciterButton extends ConsumerWidget {
-  const _ReciterButton();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final audioState = ref.watch(
-      quranAudioControllerProvider.select(
-        (state) =>
-            (currentAyah: state.currentAyah, recitationId: state.recitationId),
-      ),
-    );
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
-
-    return Tooltip(
-      message: 'القارئ',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            final currentAyah =
-                audioState.currentAyah ??
-                const AyahRef(surah: 1, ayah: 1, page: 1);
-            showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              useSafeArea: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => _RecitersSheet(
-                currentAyah: currentAyah,
-                recitationId: audioState.recitationId,
-              ),
-            );
-          },
-          customBorder: const CircleBorder(),
-          child: Container(
-            width: 26,
-            height: 26,
-            decoration: const BoxDecoration(shape: BoxShape.circle),
-            child: Icon(
-              Icons.headphones_rounded,
-              color: primaryColor,
-              size: 17,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RecitersSheet extends StatelessWidget {
-  const _RecitersSheet({required this.currentAyah, required this.recitationId});
-
-  final AyahRef currentAyah;
-  final int? recitationId;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark
-        ? AppColors.darkSurface
-        : AppColors.parchmentLight;
-    final titleColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.12),
-            blurRadius: 20,
-            offset: const Offset(0, -6),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.55,
-          minChildSize: 0.35,
-          maxChildSize: 0.85,
-          builder: (context, scrollController) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              child: ListView(
-                controller: scrollController,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.maroon800.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.maroon800.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.headphones_rounded,
-                          color: AppColors.maroon800,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'اختر القارئ',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    color: titleColor,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'اختر القارئ المفضل لديك.',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: mutedColor),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  QuranRecitersListView(
-                    currentAyah: currentAyah,
-                    recitationId: recitationId,
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
       ),
     );
   }

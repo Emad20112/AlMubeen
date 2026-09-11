@@ -3,7 +3,6 @@ import 'package:al_mubeen/core/screens/category_grid_screen.dart';
 import 'package:al_mubeen/core/screens/content_details_screen.dart';
 import 'package:al_mubeen/features/about/presentation/screens/about_app_screen.dart';
 import 'package:al_mubeen/features/adhkar/data/adhkar_providers.dart';
-import 'package:al_mubeen/features/adhkar/presentation/screens/adhkar_dua_hub_screen.dart';
 import 'package:al_mubeen/features/dua/data/dua_providers.dart';
 import 'package:al_mubeen/features/hadith_nawawi/presentation/screens/hadith_nawawi_screen.dart';
 import 'package:al_mubeen/features/names_of_allah/presentation/screens/names_of_allah_screen.dart';
@@ -22,19 +21,33 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (context, state) => const AppBootstrap()),
     GoRoute(
-      path: AdhkarDuaHubScreen.routePath,
-      builder: (context, state) => const AdhkarDuaHubScreen(),
-    ),
-    GoRoute(
       path: '/adhkar',
       builder: (context, state) => Consumer(
         builder: (context, ref, _) {
           final categoriesAsync = ref.watch(adhkarCategoriesProvider);
+          final duasAsync = ref.watch(duaCategoriesProvider);
           return CategoryGridScreen(
-            title: 'الأذكار',
+            title: 'الأذكار والأدعية',
             categoriesAsync: categoriesAsync,
             onCategoryTap: (id) => context.push('/adhkar/$id'),
             type: 'adhkar',
+            selectedTabIndex: 0,
+            tabs: [
+              CategoryGridScreenTab(
+                label: 'الأذكار',
+                routePath: '/adhkar',
+                type: 'adhkar',
+                categoriesAsync: categoriesAsync,
+                onCategoryTap: (id) => context.push('/adhkar/$id'),
+              ),
+              CategoryGridScreenTab(
+                label: 'الأدعية',
+                routePath: '/duas',
+                type: 'dua',
+                categoriesAsync: duasAsync,
+                onCategoryTap: (id) => context.push('/duas/$id'),
+              ),
+            ],
           );
         },
       ),
@@ -45,14 +58,17 @@ final appRouter = GoRouter(
             final categoryId = state.pathParameters['categoryId'] ?? '';
             return Consumer(
               builder: (context, ref, _) {
-                final categoryAsync = ref.watch(adhkarCategoryProvider(categoryId));
+                final categoryAsync = ref.watch(
+                  adhkarCategoryProvider(categoryId),
+                );
                 final itemsAsync = ref.watch(adhkarItemsProvider(categoryId));
                 return ContentDetailsScreen(
                   categoryId: categoryId,
                   categoryAsync: categoryAsync,
                   itemsAsync: itemsAsync,
                   enableProgress: true,
-                  onRetry: () => ref.invalidate(adhkarItemsProvider(categoryId)),
+                  onRetry: () =>
+                      ref.invalidate(adhkarItemsProvider(categoryId)),
                 );
               },
             );
@@ -80,11 +96,13 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: TafsirDownloadScreen.routeName,
-      builder: (context, state) => const TafsirDownloadScreen(),
+      builder: (context, state) =>
+          TafsirDownloadScreen(initialResourceId: state.extra as int?),
     ),
     GoRoute(
       path: TranslationDownloadScreen.routeName,
-      builder: (context, state) => const TranslationDownloadScreen(),
+      builder: (context, state) =>
+          TranslationDownloadScreen(initialResourceId: state.extra as int?),
     ),
     GoRoute(
       path: NamesOfAllahScreen.routePath,
@@ -99,11 +117,29 @@ final appRouter = GoRouter(
       builder: (context, state) => Consumer(
         builder: (context, ref, _) {
           final categoriesAsync = ref.watch(duaCategoriesProvider);
+          final adhkarAsync = ref.watch(adhkarCategoriesProvider);
           return CategoryGridScreen(
-            title: 'الأدعية',
+            title: 'الأذكار والأدعية',
             categoriesAsync: categoriesAsync,
             onCategoryTap: (id) => context.push('/duas/$id'),
             type: 'dua',
+            selectedTabIndex: 1,
+            tabs: [
+              CategoryGridScreenTab(
+                label: 'الأذكار',
+                routePath: '/adhkar',
+                type: 'adhkar',
+                categoriesAsync: adhkarAsync,
+                onCategoryTap: (id) => context.push('/adhkar/$id'),
+              ),
+              CategoryGridScreenTab(
+                label: 'الأدعية',
+                routePath: '/duas',
+                type: 'dua',
+                categoriesAsync: categoriesAsync,
+                onCategoryTap: (id) => context.push('/duas/$id'),
+              ),
+            ],
           );
         },
       ),
@@ -114,7 +150,9 @@ final appRouter = GoRouter(
             final categoryId = state.pathParameters['categoryId'] ?? '';
             return Consumer(
               builder: (context, ref, _) {
-                final categoryAsync = ref.watch(duaCategoryProvider(categoryId));
+                final categoryAsync = ref.watch(
+                  duaCategoryProvider(categoryId),
+                );
                 final itemsAsync = ref.watch(duaItemsProvider(categoryId));
                 return ContentDetailsScreen(
                   categoryId: categoryId,

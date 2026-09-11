@@ -3852,6 +3852,3112 @@ class QuranBookmarksCompanion extends UpdateCompanion<QuranBookmarkEntry> {
   }
 }
 
+class $WirdsTableTable extends WirdsTable
+    with TableInfo<$WirdsTableTable, WirdEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WirdsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Wird'),
+  );
+  static const VerificationMeta _goalTypeMeta = const VerificationMeta(
+    'goalType',
+  );
+  @override
+  late final GeneratedColumn<String> goalType = GeneratedColumn<String>(
+    'goal_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('legacy'),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  static const VerificationMeta _startPageMeta = const VerificationMeta(
+    'startPage',
+  );
+  @override
+  late final GeneratedColumn<int> startPage = GeneratedColumn<int>(
+    'start_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _endPageMeta = const VerificationMeta(
+    'endPage',
+  );
+  @override
+  late final GeneratedColumn<int> endPage = GeneratedColumn<int>(
+    'end_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(604),
+  );
+  static const VerificationMeta _pagesPerDayMeta = const VerificationMeta(
+    'pagesPerDay',
+  );
+  @override
+  late final GeneratedColumn<int> pagesPerDay = GeneratedColumn<int>(
+    'pages_per_day',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _targetDateMeta = const VerificationMeta(
+    'targetDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> targetDate = GeneratedColumn<DateTime>(
+    'target_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _scheduleTypeMeta = const VerificationMeta(
+    'scheduleType',
+  );
+  @override
+  late final GeneratedColumn<String> scheduleType = GeneratedColumn<String>(
+    'schedule_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('daily'),
+  );
+  static const VerificationMeta _activeWeekdaysMeta = const VerificationMeta(
+    'activeWeekdays',
+  );
+  @override
+  late final GeneratedColumn<String> activeWeekdays = GeneratedColumn<String>(
+    'active_weekdays',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[1,2,3,4,5,6,7]'),
+  );
+  static const VerificationMeta _isFlexibleMeta = const VerificationMeta(
+    'isFlexible',
+  );
+  @override
+  late final GeneratedColumn<bool> isFlexible = GeneratedColumn<bool>(
+    'is_flexible',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_flexible" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _allowCatchUpMeta = const VerificationMeta(
+    'allowCatchUp',
+  );
+  @override
+  late final GeneratedColumn<bool> allowCatchUp = GeneratedColumn<bool>(
+    'allow_catch_up',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("allow_catch_up" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _autoStartNextKhatmaMeta =
+      const VerificationMeta('autoStartNextKhatma');
+  @override
+  late final GeneratedColumn<bool> autoStartNextKhatma = GeneratedColumn<bool>(
+    'auto_start_next_khatma',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("auto_start_next_khatma" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _currentCycleMeta = const VerificationMeta(
+    'currentCycle',
+  );
+  @override
+  late final GeneratedColumn<int> currentCycle = GeneratedColumn<int>(
+    'current_cycle',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _amountTypeMeta = const VerificationMeta(
+    'amountType',
+  );
+  @override
+  late final GeneratedColumn<String> amountType = GeneratedColumn<String>(
+    'amount_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _amountMultiplierMeta = const VerificationMeta(
+    'amountMultiplier',
+  );
+  @override
+  late final GeneratedColumn<int> amountMultiplier = GeneratedColumn<int>(
+    'amount_multiplier',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _durationDaysMeta = const VerificationMeta(
+    'durationDays',
+  );
+  @override
+  late final GeneratedColumn<int> durationDays = GeneratedColumn<int>(
+    'duration_days',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _frequencyMeta = const VerificationMeta(
+    'frequency',
+  );
+  @override
+  late final GeneratedColumn<String> frequency = GeneratedColumn<String>(
+    'frequency',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reminderTimeMeta = const VerificationMeta(
+    'reminderTime',
+  );
+  @override
+  late final GeneratedColumn<String> reminderTime = GeneratedColumn<String>(
+    'reminder_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastReadDateMeta = const VerificationMeta(
+    'lastReadDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastReadDate = GeneratedColumn<DateTime>(
+    'last_read_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _completedDaysCountMeta =
+      const VerificationMeta('completedDaysCount');
+  @override
+  late final GeneratedColumn<int> completedDaysCount = GeneratedColumn<int>(
+    'completed_days_count',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    goalType,
+    status,
+    startPage,
+    endPage,
+    pagesPerDay,
+    startDate,
+    targetDate,
+    scheduleType,
+    activeWeekdays,
+    isFlexible,
+    allowCatchUp,
+    autoStartNextKhatma,
+    currentCycle,
+    createdAt,
+    updatedAt,
+    completedAt,
+    amountType,
+    amountMultiplier,
+    durationDays,
+    frequency,
+    reminderTime,
+    lastReadDate,
+    completedDaysCount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wirds_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WirdEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('goal_type')) {
+      context.handle(
+        _goalTypeMeta,
+        goalType.isAcceptableOrUnknown(data['goal_type']!, _goalTypeMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('start_page')) {
+      context.handle(
+        _startPageMeta,
+        startPage.isAcceptableOrUnknown(data['start_page']!, _startPageMeta),
+      );
+    }
+    if (data.containsKey('end_page')) {
+      context.handle(
+        _endPageMeta,
+        endPage.isAcceptableOrUnknown(data['end_page']!, _endPageMeta),
+      );
+    }
+    if (data.containsKey('pages_per_day')) {
+      context.handle(
+        _pagesPerDayMeta,
+        pagesPerDay.isAcceptableOrUnknown(
+          data['pages_per_day']!,
+          _pagesPerDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    }
+    if (data.containsKey('target_date')) {
+      context.handle(
+        _targetDateMeta,
+        targetDate.isAcceptableOrUnknown(data['target_date']!, _targetDateMeta),
+      );
+    }
+    if (data.containsKey('schedule_type')) {
+      context.handle(
+        _scheduleTypeMeta,
+        scheduleType.isAcceptableOrUnknown(
+          data['schedule_type']!,
+          _scheduleTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('active_weekdays')) {
+      context.handle(
+        _activeWeekdaysMeta,
+        activeWeekdays.isAcceptableOrUnknown(
+          data['active_weekdays']!,
+          _activeWeekdaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_flexible')) {
+      context.handle(
+        _isFlexibleMeta,
+        isFlexible.isAcceptableOrUnknown(data['is_flexible']!, _isFlexibleMeta),
+      );
+    }
+    if (data.containsKey('allow_catch_up')) {
+      context.handle(
+        _allowCatchUpMeta,
+        allowCatchUp.isAcceptableOrUnknown(
+          data['allow_catch_up']!,
+          _allowCatchUpMeta,
+        ),
+      );
+    }
+    if (data.containsKey('auto_start_next_khatma')) {
+      context.handle(
+        _autoStartNextKhatmaMeta,
+        autoStartNextKhatma.isAcceptableOrUnknown(
+          data['auto_start_next_khatma']!,
+          _autoStartNextKhatmaMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_cycle')) {
+      context.handle(
+        _currentCycleMeta,
+        currentCycle.isAcceptableOrUnknown(
+          data['current_cycle']!,
+          _currentCycleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('amount_type')) {
+      context.handle(
+        _amountTypeMeta,
+        amountType.isAcceptableOrUnknown(data['amount_type']!, _amountTypeMeta),
+      );
+    }
+    if (data.containsKey('amount_multiplier')) {
+      context.handle(
+        _amountMultiplierMeta,
+        amountMultiplier.isAcceptableOrUnknown(
+          data['amount_multiplier']!,
+          _amountMultiplierMeta,
+        ),
+      );
+    }
+    if (data.containsKey('duration_days')) {
+      context.handle(
+        _durationDaysMeta,
+        durationDays.isAcceptableOrUnknown(
+          data['duration_days']!,
+          _durationDaysMeta,
+        ),
+      );
+    }
+    if (data.containsKey('frequency')) {
+      context.handle(
+        _frequencyMeta,
+        frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta),
+      );
+    }
+    if (data.containsKey('reminder_time')) {
+      context.handle(
+        _reminderTimeMeta,
+        reminderTime.isAcceptableOrUnknown(
+          data['reminder_time']!,
+          _reminderTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_read_date')) {
+      context.handle(
+        _lastReadDateMeta,
+        lastReadDate.isAcceptableOrUnknown(
+          data['last_read_date']!,
+          _lastReadDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('completed_days_count')) {
+      context.handle(
+        _completedDaysCountMeta,
+        completedDaysCount.isAcceptableOrUnknown(
+          data['completed_days_count']!,
+          _completedDaysCountMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WirdEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WirdEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      goalType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}goal_type'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      startPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_page'],
+      )!,
+      endPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_page'],
+      )!,
+      pagesPerDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages_per_day'],
+      ),
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_date'],
+      )!,
+      targetDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}target_date'],
+      ),
+      scheduleType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}schedule_type'],
+      )!,
+      activeWeekdays: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}active_weekdays'],
+      )!,
+      isFlexible: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_flexible'],
+      )!,
+      allowCatchUp: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}allow_catch_up'],
+      )!,
+      autoStartNextKhatma: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_start_next_khatma'],
+      )!,
+      currentCycle: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}current_cycle'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      amountType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}amount_type'],
+      ),
+      amountMultiplier: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_multiplier'],
+      ),
+      durationDays: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_days'],
+      ),
+      frequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}frequency'],
+      ),
+      reminderTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reminder_time'],
+      ),
+      lastReadDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_read_date'],
+      ),
+      completedDaysCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completed_days_count'],
+      ),
+    );
+  }
+
+  @override
+  $WirdsTableTable createAlias(String alias) {
+    return $WirdsTableTable(attachedDatabase, alias);
+  }
+}
+
+class WirdEntry extends DataClass implements Insertable<WirdEntry> {
+  final int id;
+  final String name;
+  final String goalType;
+  final String status;
+  final int startPage;
+  final int endPage;
+  final int? pagesPerDay;
+  final DateTime startDate;
+  final DateTime? targetDate;
+  final String scheduleType;
+  final String activeWeekdays;
+  final bool isFlexible;
+  final bool allowCatchUp;
+  final bool autoStartNextKhatma;
+  final int currentCycle;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? completedAt;
+  final String? amountType;
+  final int? amountMultiplier;
+  final int? durationDays;
+  final String? frequency;
+  final String? reminderTime;
+  final DateTime? lastReadDate;
+  final int? completedDaysCount;
+  const WirdEntry({
+    required this.id,
+    required this.name,
+    required this.goalType,
+    required this.status,
+    required this.startPage,
+    required this.endPage,
+    this.pagesPerDay,
+    required this.startDate,
+    this.targetDate,
+    required this.scheduleType,
+    required this.activeWeekdays,
+    required this.isFlexible,
+    required this.allowCatchUp,
+    required this.autoStartNextKhatma,
+    required this.currentCycle,
+    required this.createdAt,
+    required this.updatedAt,
+    this.completedAt,
+    this.amountType,
+    this.amountMultiplier,
+    this.durationDays,
+    this.frequency,
+    this.reminderTime,
+    this.lastReadDate,
+    this.completedDaysCount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['goal_type'] = Variable<String>(goalType);
+    map['status'] = Variable<String>(status);
+    map['start_page'] = Variable<int>(startPage);
+    map['end_page'] = Variable<int>(endPage);
+    if (!nullToAbsent || pagesPerDay != null) {
+      map['pages_per_day'] = Variable<int>(pagesPerDay);
+    }
+    map['start_date'] = Variable<DateTime>(startDate);
+    if (!nullToAbsent || targetDate != null) {
+      map['target_date'] = Variable<DateTime>(targetDate);
+    }
+    map['schedule_type'] = Variable<String>(scheduleType);
+    map['active_weekdays'] = Variable<String>(activeWeekdays);
+    map['is_flexible'] = Variable<bool>(isFlexible);
+    map['allow_catch_up'] = Variable<bool>(allowCatchUp);
+    map['auto_start_next_khatma'] = Variable<bool>(autoStartNextKhatma);
+    map['current_cycle'] = Variable<int>(currentCycle);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    if (!nullToAbsent || amountType != null) {
+      map['amount_type'] = Variable<String>(amountType);
+    }
+    if (!nullToAbsent || amountMultiplier != null) {
+      map['amount_multiplier'] = Variable<int>(amountMultiplier);
+    }
+    if (!nullToAbsent || durationDays != null) {
+      map['duration_days'] = Variable<int>(durationDays);
+    }
+    if (!nullToAbsent || frequency != null) {
+      map['frequency'] = Variable<String>(frequency);
+    }
+    if (!nullToAbsent || reminderTime != null) {
+      map['reminder_time'] = Variable<String>(reminderTime);
+    }
+    if (!nullToAbsent || lastReadDate != null) {
+      map['last_read_date'] = Variable<DateTime>(lastReadDate);
+    }
+    if (!nullToAbsent || completedDaysCount != null) {
+      map['completed_days_count'] = Variable<int>(completedDaysCount);
+    }
+    return map;
+  }
+
+  WirdsTableCompanion toCompanion(bool nullToAbsent) {
+    return WirdsTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      goalType: Value(goalType),
+      status: Value(status),
+      startPage: Value(startPage),
+      endPage: Value(endPage),
+      pagesPerDay: pagesPerDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pagesPerDay),
+      startDate: Value(startDate),
+      targetDate: targetDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetDate),
+      scheduleType: Value(scheduleType),
+      activeWeekdays: Value(activeWeekdays),
+      isFlexible: Value(isFlexible),
+      allowCatchUp: Value(allowCatchUp),
+      autoStartNextKhatma: Value(autoStartNextKhatma),
+      currentCycle: Value(currentCycle),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      amountType: amountType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(amountType),
+      amountMultiplier: amountMultiplier == null && nullToAbsent
+          ? const Value.absent()
+          : Value(amountMultiplier),
+      durationDays: durationDays == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationDays),
+      frequency: frequency == null && nullToAbsent
+          ? const Value.absent()
+          : Value(frequency),
+      reminderTime: reminderTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderTime),
+      lastReadDate: lastReadDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastReadDate),
+      completedDaysCount: completedDaysCount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedDaysCount),
+    );
+  }
+
+  factory WirdEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WirdEntry(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      goalType: serializer.fromJson<String>(json['goalType']),
+      status: serializer.fromJson<String>(json['status']),
+      startPage: serializer.fromJson<int>(json['startPage']),
+      endPage: serializer.fromJson<int>(json['endPage']),
+      pagesPerDay: serializer.fromJson<int?>(json['pagesPerDay']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      targetDate: serializer.fromJson<DateTime?>(json['targetDate']),
+      scheduleType: serializer.fromJson<String>(json['scheduleType']),
+      activeWeekdays: serializer.fromJson<String>(json['activeWeekdays']),
+      isFlexible: serializer.fromJson<bool>(json['isFlexible']),
+      allowCatchUp: serializer.fromJson<bool>(json['allowCatchUp']),
+      autoStartNextKhatma: serializer.fromJson<bool>(
+        json['autoStartNextKhatma'],
+      ),
+      currentCycle: serializer.fromJson<int>(json['currentCycle']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      amountType: serializer.fromJson<String?>(json['amountType']),
+      amountMultiplier: serializer.fromJson<int?>(json['amountMultiplier']),
+      durationDays: serializer.fromJson<int?>(json['durationDays']),
+      frequency: serializer.fromJson<String?>(json['frequency']),
+      reminderTime: serializer.fromJson<String?>(json['reminderTime']),
+      lastReadDate: serializer.fromJson<DateTime?>(json['lastReadDate']),
+      completedDaysCount: serializer.fromJson<int?>(json['completedDaysCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'goalType': serializer.toJson<String>(goalType),
+      'status': serializer.toJson<String>(status),
+      'startPage': serializer.toJson<int>(startPage),
+      'endPage': serializer.toJson<int>(endPage),
+      'pagesPerDay': serializer.toJson<int?>(pagesPerDay),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'targetDate': serializer.toJson<DateTime?>(targetDate),
+      'scheduleType': serializer.toJson<String>(scheduleType),
+      'activeWeekdays': serializer.toJson<String>(activeWeekdays),
+      'isFlexible': serializer.toJson<bool>(isFlexible),
+      'allowCatchUp': serializer.toJson<bool>(allowCatchUp),
+      'autoStartNextKhatma': serializer.toJson<bool>(autoStartNextKhatma),
+      'currentCycle': serializer.toJson<int>(currentCycle),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'amountType': serializer.toJson<String?>(amountType),
+      'amountMultiplier': serializer.toJson<int?>(amountMultiplier),
+      'durationDays': serializer.toJson<int?>(durationDays),
+      'frequency': serializer.toJson<String?>(frequency),
+      'reminderTime': serializer.toJson<String?>(reminderTime),
+      'lastReadDate': serializer.toJson<DateTime?>(lastReadDate),
+      'completedDaysCount': serializer.toJson<int?>(completedDaysCount),
+    };
+  }
+
+  WirdEntry copyWith({
+    int? id,
+    String? name,
+    String? goalType,
+    String? status,
+    int? startPage,
+    int? endPage,
+    Value<int?> pagesPerDay = const Value.absent(),
+    DateTime? startDate,
+    Value<DateTime?> targetDate = const Value.absent(),
+    String? scheduleType,
+    String? activeWeekdays,
+    bool? isFlexible,
+    bool? allowCatchUp,
+    bool? autoStartNextKhatma,
+    int? currentCycle,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> completedAt = const Value.absent(),
+    Value<String?> amountType = const Value.absent(),
+    Value<int?> amountMultiplier = const Value.absent(),
+    Value<int?> durationDays = const Value.absent(),
+    Value<String?> frequency = const Value.absent(),
+    Value<String?> reminderTime = const Value.absent(),
+    Value<DateTime?> lastReadDate = const Value.absent(),
+    Value<int?> completedDaysCount = const Value.absent(),
+  }) => WirdEntry(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    goalType: goalType ?? this.goalType,
+    status: status ?? this.status,
+    startPage: startPage ?? this.startPage,
+    endPage: endPage ?? this.endPage,
+    pagesPerDay: pagesPerDay.present ? pagesPerDay.value : this.pagesPerDay,
+    startDate: startDate ?? this.startDate,
+    targetDate: targetDate.present ? targetDate.value : this.targetDate,
+    scheduleType: scheduleType ?? this.scheduleType,
+    activeWeekdays: activeWeekdays ?? this.activeWeekdays,
+    isFlexible: isFlexible ?? this.isFlexible,
+    allowCatchUp: allowCatchUp ?? this.allowCatchUp,
+    autoStartNextKhatma: autoStartNextKhatma ?? this.autoStartNextKhatma,
+    currentCycle: currentCycle ?? this.currentCycle,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    amountType: amountType.present ? amountType.value : this.amountType,
+    amountMultiplier: amountMultiplier.present
+        ? amountMultiplier.value
+        : this.amountMultiplier,
+    durationDays: durationDays.present ? durationDays.value : this.durationDays,
+    frequency: frequency.present ? frequency.value : this.frequency,
+    reminderTime: reminderTime.present ? reminderTime.value : this.reminderTime,
+    lastReadDate: lastReadDate.present ? lastReadDate.value : this.lastReadDate,
+    completedDaysCount: completedDaysCount.present
+        ? completedDaysCount.value
+        : this.completedDaysCount,
+  );
+  WirdEntry copyWithCompanion(WirdsTableCompanion data) {
+    return WirdEntry(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      goalType: data.goalType.present ? data.goalType.value : this.goalType,
+      status: data.status.present ? data.status.value : this.status,
+      startPage: data.startPage.present ? data.startPage.value : this.startPage,
+      endPage: data.endPage.present ? data.endPage.value : this.endPage,
+      pagesPerDay: data.pagesPerDay.present
+          ? data.pagesPerDay.value
+          : this.pagesPerDay,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      targetDate: data.targetDate.present
+          ? data.targetDate.value
+          : this.targetDate,
+      scheduleType: data.scheduleType.present
+          ? data.scheduleType.value
+          : this.scheduleType,
+      activeWeekdays: data.activeWeekdays.present
+          ? data.activeWeekdays.value
+          : this.activeWeekdays,
+      isFlexible: data.isFlexible.present
+          ? data.isFlexible.value
+          : this.isFlexible,
+      allowCatchUp: data.allowCatchUp.present
+          ? data.allowCatchUp.value
+          : this.allowCatchUp,
+      autoStartNextKhatma: data.autoStartNextKhatma.present
+          ? data.autoStartNextKhatma.value
+          : this.autoStartNextKhatma,
+      currentCycle: data.currentCycle.present
+          ? data.currentCycle.value
+          : this.currentCycle,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      amountType: data.amountType.present
+          ? data.amountType.value
+          : this.amountType,
+      amountMultiplier: data.amountMultiplier.present
+          ? data.amountMultiplier.value
+          : this.amountMultiplier,
+      durationDays: data.durationDays.present
+          ? data.durationDays.value
+          : this.durationDays,
+      frequency: data.frequency.present ? data.frequency.value : this.frequency,
+      reminderTime: data.reminderTime.present
+          ? data.reminderTime.value
+          : this.reminderTime,
+      lastReadDate: data.lastReadDate.present
+          ? data.lastReadDate.value
+          : this.lastReadDate,
+      completedDaysCount: data.completedDaysCount.present
+          ? data.completedDaysCount.value
+          : this.completedDaysCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WirdEntry(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('goalType: $goalType, ')
+          ..write('status: $status, ')
+          ..write('startPage: $startPage, ')
+          ..write('endPage: $endPage, ')
+          ..write('pagesPerDay: $pagesPerDay, ')
+          ..write('startDate: $startDate, ')
+          ..write('targetDate: $targetDate, ')
+          ..write('scheduleType: $scheduleType, ')
+          ..write('activeWeekdays: $activeWeekdays, ')
+          ..write('isFlexible: $isFlexible, ')
+          ..write('allowCatchUp: $allowCatchUp, ')
+          ..write('autoStartNextKhatma: $autoStartNextKhatma, ')
+          ..write('currentCycle: $currentCycle, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('amountType: $amountType, ')
+          ..write('amountMultiplier: $amountMultiplier, ')
+          ..write('durationDays: $durationDays, ')
+          ..write('frequency: $frequency, ')
+          ..write('reminderTime: $reminderTime, ')
+          ..write('lastReadDate: $lastReadDate, ')
+          ..write('completedDaysCount: $completedDaysCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    name,
+    goalType,
+    status,
+    startPage,
+    endPage,
+    pagesPerDay,
+    startDate,
+    targetDate,
+    scheduleType,
+    activeWeekdays,
+    isFlexible,
+    allowCatchUp,
+    autoStartNextKhatma,
+    currentCycle,
+    createdAt,
+    updatedAt,
+    completedAt,
+    amountType,
+    amountMultiplier,
+    durationDays,
+    frequency,
+    reminderTime,
+    lastReadDate,
+    completedDaysCount,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WirdEntry &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.goalType == this.goalType &&
+          other.status == this.status &&
+          other.startPage == this.startPage &&
+          other.endPage == this.endPage &&
+          other.pagesPerDay == this.pagesPerDay &&
+          other.startDate == this.startDate &&
+          other.targetDate == this.targetDate &&
+          other.scheduleType == this.scheduleType &&
+          other.activeWeekdays == this.activeWeekdays &&
+          other.isFlexible == this.isFlexible &&
+          other.allowCatchUp == this.allowCatchUp &&
+          other.autoStartNextKhatma == this.autoStartNextKhatma &&
+          other.currentCycle == this.currentCycle &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.completedAt == this.completedAt &&
+          other.amountType == this.amountType &&
+          other.amountMultiplier == this.amountMultiplier &&
+          other.durationDays == this.durationDays &&
+          other.frequency == this.frequency &&
+          other.reminderTime == this.reminderTime &&
+          other.lastReadDate == this.lastReadDate &&
+          other.completedDaysCount == this.completedDaysCount);
+}
+
+class WirdsTableCompanion extends UpdateCompanion<WirdEntry> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> goalType;
+  final Value<String> status;
+  final Value<int> startPage;
+  final Value<int> endPage;
+  final Value<int?> pagesPerDay;
+  final Value<DateTime> startDate;
+  final Value<DateTime?> targetDate;
+  final Value<String> scheduleType;
+  final Value<String> activeWeekdays;
+  final Value<bool> isFlexible;
+  final Value<bool> allowCatchUp;
+  final Value<bool> autoStartNextKhatma;
+  final Value<int> currentCycle;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> completedAt;
+  final Value<String?> amountType;
+  final Value<int?> amountMultiplier;
+  final Value<int?> durationDays;
+  final Value<String?> frequency;
+  final Value<String?> reminderTime;
+  final Value<DateTime?> lastReadDate;
+  final Value<int?> completedDaysCount;
+  const WirdsTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.goalType = const Value.absent(),
+    this.status = const Value.absent(),
+    this.startPage = const Value.absent(),
+    this.endPage = const Value.absent(),
+    this.pagesPerDay = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.targetDate = const Value.absent(),
+    this.scheduleType = const Value.absent(),
+    this.activeWeekdays = const Value.absent(),
+    this.isFlexible = const Value.absent(),
+    this.allowCatchUp = const Value.absent(),
+    this.autoStartNextKhatma = const Value.absent(),
+    this.currentCycle = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.amountType = const Value.absent(),
+    this.amountMultiplier = const Value.absent(),
+    this.durationDays = const Value.absent(),
+    this.frequency = const Value.absent(),
+    this.reminderTime = const Value.absent(),
+    this.lastReadDate = const Value.absent(),
+    this.completedDaysCount = const Value.absent(),
+  });
+  WirdsTableCompanion.insert({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.goalType = const Value.absent(),
+    this.status = const Value.absent(),
+    this.startPage = const Value.absent(),
+    this.endPage = const Value.absent(),
+    this.pagesPerDay = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.targetDate = const Value.absent(),
+    this.scheduleType = const Value.absent(),
+    this.activeWeekdays = const Value.absent(),
+    this.isFlexible = const Value.absent(),
+    this.allowCatchUp = const Value.absent(),
+    this.autoStartNextKhatma = const Value.absent(),
+    this.currentCycle = const Value.absent(),
+    required DateTime createdAt,
+    this.updatedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.amountType = const Value.absent(),
+    this.amountMultiplier = const Value.absent(),
+    this.durationDays = const Value.absent(),
+    this.frequency = const Value.absent(),
+    this.reminderTime = const Value.absent(),
+    this.lastReadDate = const Value.absent(),
+    this.completedDaysCount = const Value.absent(),
+  }) : createdAt = Value(createdAt);
+  static Insertable<WirdEntry> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? goalType,
+    Expression<String>? status,
+    Expression<int>? startPage,
+    Expression<int>? endPage,
+    Expression<int>? pagesPerDay,
+    Expression<DateTime>? startDate,
+    Expression<DateTime>? targetDate,
+    Expression<String>? scheduleType,
+    Expression<String>? activeWeekdays,
+    Expression<bool>? isFlexible,
+    Expression<bool>? allowCatchUp,
+    Expression<bool>? autoStartNextKhatma,
+    Expression<int>? currentCycle,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? completedAt,
+    Expression<String>? amountType,
+    Expression<int>? amountMultiplier,
+    Expression<int>? durationDays,
+    Expression<String>? frequency,
+    Expression<String>? reminderTime,
+    Expression<DateTime>? lastReadDate,
+    Expression<int>? completedDaysCount,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (goalType != null) 'goal_type': goalType,
+      if (status != null) 'status': status,
+      if (startPage != null) 'start_page': startPage,
+      if (endPage != null) 'end_page': endPage,
+      if (pagesPerDay != null) 'pages_per_day': pagesPerDay,
+      if (startDate != null) 'start_date': startDate,
+      if (targetDate != null) 'target_date': targetDate,
+      if (scheduleType != null) 'schedule_type': scheduleType,
+      if (activeWeekdays != null) 'active_weekdays': activeWeekdays,
+      if (isFlexible != null) 'is_flexible': isFlexible,
+      if (allowCatchUp != null) 'allow_catch_up': allowCatchUp,
+      if (autoStartNextKhatma != null)
+        'auto_start_next_khatma': autoStartNextKhatma,
+      if (currentCycle != null) 'current_cycle': currentCycle,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (amountType != null) 'amount_type': amountType,
+      if (amountMultiplier != null) 'amount_multiplier': amountMultiplier,
+      if (durationDays != null) 'duration_days': durationDays,
+      if (frequency != null) 'frequency': frequency,
+      if (reminderTime != null) 'reminder_time': reminderTime,
+      if (lastReadDate != null) 'last_read_date': lastReadDate,
+      if (completedDaysCount != null)
+        'completed_days_count': completedDaysCount,
+    });
+  }
+
+  WirdsTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? goalType,
+    Value<String>? status,
+    Value<int>? startPage,
+    Value<int>? endPage,
+    Value<int?>? pagesPerDay,
+    Value<DateTime>? startDate,
+    Value<DateTime?>? targetDate,
+    Value<String>? scheduleType,
+    Value<String>? activeWeekdays,
+    Value<bool>? isFlexible,
+    Value<bool>? allowCatchUp,
+    Value<bool>? autoStartNextKhatma,
+    Value<int>? currentCycle,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? completedAt,
+    Value<String?>? amountType,
+    Value<int?>? amountMultiplier,
+    Value<int?>? durationDays,
+    Value<String?>? frequency,
+    Value<String?>? reminderTime,
+    Value<DateTime?>? lastReadDate,
+    Value<int?>? completedDaysCount,
+  }) {
+    return WirdsTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      goalType: goalType ?? this.goalType,
+      status: status ?? this.status,
+      startPage: startPage ?? this.startPage,
+      endPage: endPage ?? this.endPage,
+      pagesPerDay: pagesPerDay ?? this.pagesPerDay,
+      startDate: startDate ?? this.startDate,
+      targetDate: targetDate ?? this.targetDate,
+      scheduleType: scheduleType ?? this.scheduleType,
+      activeWeekdays: activeWeekdays ?? this.activeWeekdays,
+      isFlexible: isFlexible ?? this.isFlexible,
+      allowCatchUp: allowCatchUp ?? this.allowCatchUp,
+      autoStartNextKhatma: autoStartNextKhatma ?? this.autoStartNextKhatma,
+      currentCycle: currentCycle ?? this.currentCycle,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      completedAt: completedAt ?? this.completedAt,
+      amountType: amountType ?? this.amountType,
+      amountMultiplier: amountMultiplier ?? this.amountMultiplier,
+      durationDays: durationDays ?? this.durationDays,
+      frequency: frequency ?? this.frequency,
+      reminderTime: reminderTime ?? this.reminderTime,
+      lastReadDate: lastReadDate ?? this.lastReadDate,
+      completedDaysCount: completedDaysCount ?? this.completedDaysCount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (goalType.present) {
+      map['goal_type'] = Variable<String>(goalType.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (startPage.present) {
+      map['start_page'] = Variable<int>(startPage.value);
+    }
+    if (endPage.present) {
+      map['end_page'] = Variable<int>(endPage.value);
+    }
+    if (pagesPerDay.present) {
+      map['pages_per_day'] = Variable<int>(pagesPerDay.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (targetDate.present) {
+      map['target_date'] = Variable<DateTime>(targetDate.value);
+    }
+    if (scheduleType.present) {
+      map['schedule_type'] = Variable<String>(scheduleType.value);
+    }
+    if (activeWeekdays.present) {
+      map['active_weekdays'] = Variable<String>(activeWeekdays.value);
+    }
+    if (isFlexible.present) {
+      map['is_flexible'] = Variable<bool>(isFlexible.value);
+    }
+    if (allowCatchUp.present) {
+      map['allow_catch_up'] = Variable<bool>(allowCatchUp.value);
+    }
+    if (autoStartNextKhatma.present) {
+      map['auto_start_next_khatma'] = Variable<bool>(autoStartNextKhatma.value);
+    }
+    if (currentCycle.present) {
+      map['current_cycle'] = Variable<int>(currentCycle.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (amountType.present) {
+      map['amount_type'] = Variable<String>(amountType.value);
+    }
+    if (amountMultiplier.present) {
+      map['amount_multiplier'] = Variable<int>(amountMultiplier.value);
+    }
+    if (durationDays.present) {
+      map['duration_days'] = Variable<int>(durationDays.value);
+    }
+    if (frequency.present) {
+      map['frequency'] = Variable<String>(frequency.value);
+    }
+    if (reminderTime.present) {
+      map['reminder_time'] = Variable<String>(reminderTime.value);
+    }
+    if (lastReadDate.present) {
+      map['last_read_date'] = Variable<DateTime>(lastReadDate.value);
+    }
+    if (completedDaysCount.present) {
+      map['completed_days_count'] = Variable<int>(completedDaysCount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WirdsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('goalType: $goalType, ')
+          ..write('status: $status, ')
+          ..write('startPage: $startPage, ')
+          ..write('endPage: $endPage, ')
+          ..write('pagesPerDay: $pagesPerDay, ')
+          ..write('startDate: $startDate, ')
+          ..write('targetDate: $targetDate, ')
+          ..write('scheduleType: $scheduleType, ')
+          ..write('activeWeekdays: $activeWeekdays, ')
+          ..write('isFlexible: $isFlexible, ')
+          ..write('allowCatchUp: $allowCatchUp, ')
+          ..write('autoStartNextKhatma: $autoStartNextKhatma, ')
+          ..write('currentCycle: $currentCycle, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('amountType: $amountType, ')
+          ..write('amountMultiplier: $amountMultiplier, ')
+          ..write('durationDays: $durationDays, ')
+          ..write('frequency: $frequency, ')
+          ..write('reminderTime: $reminderTime, ')
+          ..write('lastReadDate: $lastReadDate, ')
+          ..write('completedDaysCount: $completedDaysCount')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WirdDailyProgressTableTable extends WirdDailyProgressTable
+    with TableInfo<$WirdDailyProgressTableTable, WirdDailyProgressEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WirdDailyProgressTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _wirdIdMeta = const VerificationMeta('wirdId');
+  @override
+  late final GeneratedColumn<int> wirdId = GeneratedColumn<int>(
+    'wird_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES wirds_table (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _dateKeyMeta = const VerificationMeta(
+    'dateKey',
+  );
+  @override
+  late final GeneratedColumn<String> dateKey = GeneratedColumn<String>(
+    'date_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _plannedStartPageMeta = const VerificationMeta(
+    'plannedStartPage',
+  );
+  @override
+  late final GeneratedColumn<int> plannedStartPage = GeneratedColumn<int>(
+    'planned_start_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _plannedEndPageMeta = const VerificationMeta(
+    'plannedEndPage',
+  );
+  @override
+  late final GeneratedColumn<int> plannedEndPage = GeneratedColumn<int>(
+    'planned_end_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _actualStartPageMeta = const VerificationMeta(
+    'actualStartPage',
+  );
+  @override
+  late final GeneratedColumn<int> actualStartPage = GeneratedColumn<int>(
+    'actual_start_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _actualEndPageMeta = const VerificationMeta(
+    'actualEndPage',
+  );
+  @override
+  late final GeneratedColumn<int> actualEndPage = GeneratedColumn<int>(
+    'actual_end_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetPagesMeta = const VerificationMeta(
+    'targetPages',
+  );
+  @override
+  late final GeneratedColumn<int> targetPages = GeneratedColumn<int>(
+    'target_pages',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedPagesMeta = const VerificationMeta(
+    'completedPages',
+  );
+  @override
+  late final GeneratedColumn<int> completedPages = GeneratedColumn<int>(
+    'completed_pages',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    wirdId,
+    dateKey,
+    plannedStartPage,
+    plannedEndPage,
+    actualStartPage,
+    actualEndPage,
+    targetPages,
+    completedPages,
+    status,
+    completedAt,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wird_daily_progress_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WirdDailyProgressEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('wird_id')) {
+      context.handle(
+        _wirdIdMeta,
+        wirdId.isAcceptableOrUnknown(data['wird_id']!, _wirdIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_wirdIdMeta);
+    }
+    if (data.containsKey('date_key')) {
+      context.handle(
+        _dateKeyMeta,
+        dateKey.isAcceptableOrUnknown(data['date_key']!, _dateKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateKeyMeta);
+    }
+    if (data.containsKey('planned_start_page')) {
+      context.handle(
+        _plannedStartPageMeta,
+        plannedStartPage.isAcceptableOrUnknown(
+          data['planned_start_page']!,
+          _plannedStartPageMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_plannedStartPageMeta);
+    }
+    if (data.containsKey('planned_end_page')) {
+      context.handle(
+        _plannedEndPageMeta,
+        plannedEndPage.isAcceptableOrUnknown(
+          data['planned_end_page']!,
+          _plannedEndPageMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_plannedEndPageMeta);
+    }
+    if (data.containsKey('actual_start_page')) {
+      context.handle(
+        _actualStartPageMeta,
+        actualStartPage.isAcceptableOrUnknown(
+          data['actual_start_page']!,
+          _actualStartPageMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_actualStartPageMeta);
+    }
+    if (data.containsKey('actual_end_page')) {
+      context.handle(
+        _actualEndPageMeta,
+        actualEndPage.isAcceptableOrUnknown(
+          data['actual_end_page']!,
+          _actualEndPageMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_actualEndPageMeta);
+    }
+    if (data.containsKey('target_pages')) {
+      context.handle(
+        _targetPagesMeta,
+        targetPages.isAcceptableOrUnknown(
+          data['target_pages']!,
+          _targetPagesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetPagesMeta);
+    }
+    if (data.containsKey('completed_pages')) {
+      context.handle(
+        _completedPagesMeta,
+        completedPages.isAcceptableOrUnknown(
+          data['completed_pages']!,
+          _completedPagesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_completedPagesMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
+          _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {wirdId, dateKey},
+  ];
+  @override
+  WirdDailyProgressEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WirdDailyProgressEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      wirdId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wird_id'],
+      )!,
+      dateKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_key'],
+      )!,
+      plannedStartPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}planned_start_page'],
+      )!,
+      plannedEndPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}planned_end_page'],
+      )!,
+      actualStartPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}actual_start_page'],
+      )!,
+      actualEndPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}actual_end_page'],
+      )!,
+      targetPages: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_pages'],
+      )!,
+      completedPages: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completed_pages'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WirdDailyProgressTableTable createAlias(String alias) {
+    return $WirdDailyProgressTableTable(attachedDatabase, alias);
+  }
+}
+
+class WirdDailyProgressEntry extends DataClass
+    implements Insertable<WirdDailyProgressEntry> {
+  final int id;
+  final int wirdId;
+  final String dateKey;
+  final int plannedStartPage;
+  final int plannedEndPage;
+  final int actualStartPage;
+  final int actualEndPage;
+  final int targetPages;
+  final int completedPages;
+  final String status;
+  final DateTime? completedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const WirdDailyProgressEntry({
+    required this.id,
+    required this.wirdId,
+    required this.dateKey,
+    required this.plannedStartPage,
+    required this.plannedEndPage,
+    required this.actualStartPage,
+    required this.actualEndPage,
+    required this.targetPages,
+    required this.completedPages,
+    required this.status,
+    this.completedAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['wird_id'] = Variable<int>(wirdId);
+    map['date_key'] = Variable<String>(dateKey);
+    map['planned_start_page'] = Variable<int>(plannedStartPage);
+    map['planned_end_page'] = Variable<int>(plannedEndPage);
+    map['actual_start_page'] = Variable<int>(actualStartPage);
+    map['actual_end_page'] = Variable<int>(actualEndPage);
+    map['target_pages'] = Variable<int>(targetPages);
+    map['completed_pages'] = Variable<int>(completedPages);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  WirdDailyProgressTableCompanion toCompanion(bool nullToAbsent) {
+    return WirdDailyProgressTableCompanion(
+      id: Value(id),
+      wirdId: Value(wirdId),
+      dateKey: Value(dateKey),
+      plannedStartPage: Value(plannedStartPage),
+      plannedEndPage: Value(plannedEndPage),
+      actualStartPage: Value(actualStartPage),
+      actualEndPage: Value(actualEndPage),
+      targetPages: Value(targetPages),
+      completedPages: Value(completedPages),
+      status: Value(status),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory WirdDailyProgressEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WirdDailyProgressEntry(
+      id: serializer.fromJson<int>(json['id']),
+      wirdId: serializer.fromJson<int>(json['wirdId']),
+      dateKey: serializer.fromJson<String>(json['dateKey']),
+      plannedStartPage: serializer.fromJson<int>(json['plannedStartPage']),
+      plannedEndPage: serializer.fromJson<int>(json['plannedEndPage']),
+      actualStartPage: serializer.fromJson<int>(json['actualStartPage']),
+      actualEndPage: serializer.fromJson<int>(json['actualEndPage']),
+      targetPages: serializer.fromJson<int>(json['targetPages']),
+      completedPages: serializer.fromJson<int>(json['completedPages']),
+      status: serializer.fromJson<String>(json['status']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'wirdId': serializer.toJson<int>(wirdId),
+      'dateKey': serializer.toJson<String>(dateKey),
+      'plannedStartPage': serializer.toJson<int>(plannedStartPage),
+      'plannedEndPage': serializer.toJson<int>(plannedEndPage),
+      'actualStartPage': serializer.toJson<int>(actualStartPage),
+      'actualEndPage': serializer.toJson<int>(actualEndPage),
+      'targetPages': serializer.toJson<int>(targetPages),
+      'completedPages': serializer.toJson<int>(completedPages),
+      'status': serializer.toJson<String>(status),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  WirdDailyProgressEntry copyWith({
+    int? id,
+    int? wirdId,
+    String? dateKey,
+    int? plannedStartPage,
+    int? plannedEndPage,
+    int? actualStartPage,
+    int? actualEndPage,
+    int? targetPages,
+    int? completedPages,
+    String? status,
+    Value<DateTime?> completedAt = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => WirdDailyProgressEntry(
+    id: id ?? this.id,
+    wirdId: wirdId ?? this.wirdId,
+    dateKey: dateKey ?? this.dateKey,
+    plannedStartPage: plannedStartPage ?? this.plannedStartPage,
+    plannedEndPage: plannedEndPage ?? this.plannedEndPage,
+    actualStartPage: actualStartPage ?? this.actualStartPage,
+    actualEndPage: actualEndPage ?? this.actualEndPage,
+    targetPages: targetPages ?? this.targetPages,
+    completedPages: completedPages ?? this.completedPages,
+    status: status ?? this.status,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  WirdDailyProgressEntry copyWithCompanion(
+    WirdDailyProgressTableCompanion data,
+  ) {
+    return WirdDailyProgressEntry(
+      id: data.id.present ? data.id.value : this.id,
+      wirdId: data.wirdId.present ? data.wirdId.value : this.wirdId,
+      dateKey: data.dateKey.present ? data.dateKey.value : this.dateKey,
+      plannedStartPage: data.plannedStartPage.present
+          ? data.plannedStartPage.value
+          : this.plannedStartPage,
+      plannedEndPage: data.plannedEndPage.present
+          ? data.plannedEndPage.value
+          : this.plannedEndPage,
+      actualStartPage: data.actualStartPage.present
+          ? data.actualStartPage.value
+          : this.actualStartPage,
+      actualEndPage: data.actualEndPage.present
+          ? data.actualEndPage.value
+          : this.actualEndPage,
+      targetPages: data.targetPages.present
+          ? data.targetPages.value
+          : this.targetPages,
+      completedPages: data.completedPages.present
+          ? data.completedPages.value
+          : this.completedPages,
+      status: data.status.present ? data.status.value : this.status,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WirdDailyProgressEntry(')
+          ..write('id: $id, ')
+          ..write('wirdId: $wirdId, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('plannedStartPage: $plannedStartPage, ')
+          ..write('plannedEndPage: $plannedEndPage, ')
+          ..write('actualStartPage: $actualStartPage, ')
+          ..write('actualEndPage: $actualEndPage, ')
+          ..write('targetPages: $targetPages, ')
+          ..write('completedPages: $completedPages, ')
+          ..write('status: $status, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    wirdId,
+    dateKey,
+    plannedStartPage,
+    plannedEndPage,
+    actualStartPage,
+    actualEndPage,
+    targetPages,
+    completedPages,
+    status,
+    completedAt,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WirdDailyProgressEntry &&
+          other.id == this.id &&
+          other.wirdId == this.wirdId &&
+          other.dateKey == this.dateKey &&
+          other.plannedStartPage == this.plannedStartPage &&
+          other.plannedEndPage == this.plannedEndPage &&
+          other.actualStartPage == this.actualStartPage &&
+          other.actualEndPage == this.actualEndPage &&
+          other.targetPages == this.targetPages &&
+          other.completedPages == this.completedPages &&
+          other.status == this.status &&
+          other.completedAt == this.completedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class WirdDailyProgressTableCompanion
+    extends UpdateCompanion<WirdDailyProgressEntry> {
+  final Value<int> id;
+  final Value<int> wirdId;
+  final Value<String> dateKey;
+  final Value<int> plannedStartPage;
+  final Value<int> plannedEndPage;
+  final Value<int> actualStartPage;
+  final Value<int> actualEndPage;
+  final Value<int> targetPages;
+  final Value<int> completedPages;
+  final Value<String> status;
+  final Value<DateTime?> completedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const WirdDailyProgressTableCompanion({
+    this.id = const Value.absent(),
+    this.wirdId = const Value.absent(),
+    this.dateKey = const Value.absent(),
+    this.plannedStartPage = const Value.absent(),
+    this.plannedEndPage = const Value.absent(),
+    this.actualStartPage = const Value.absent(),
+    this.actualEndPage = const Value.absent(),
+    this.targetPages = const Value.absent(),
+    this.completedPages = const Value.absent(),
+    this.status = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  WirdDailyProgressTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int wirdId,
+    required String dateKey,
+    required int plannedStartPage,
+    required int plannedEndPage,
+    required int actualStartPage,
+    required int actualEndPage,
+    required int targetPages,
+    required int completedPages,
+    required String status,
+    this.completedAt = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : wirdId = Value(wirdId),
+       dateKey = Value(dateKey),
+       plannedStartPage = Value(plannedStartPage),
+       plannedEndPage = Value(plannedEndPage),
+       actualStartPage = Value(actualStartPage),
+       actualEndPage = Value(actualEndPage),
+       targetPages = Value(targetPages),
+       completedPages = Value(completedPages),
+       status = Value(status),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<WirdDailyProgressEntry> custom({
+    Expression<int>? id,
+    Expression<int>? wirdId,
+    Expression<String>? dateKey,
+    Expression<int>? plannedStartPage,
+    Expression<int>? plannedEndPage,
+    Expression<int>? actualStartPage,
+    Expression<int>? actualEndPage,
+    Expression<int>? targetPages,
+    Expression<int>? completedPages,
+    Expression<String>? status,
+    Expression<DateTime>? completedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (wirdId != null) 'wird_id': wirdId,
+      if (dateKey != null) 'date_key': dateKey,
+      if (plannedStartPage != null) 'planned_start_page': plannedStartPage,
+      if (plannedEndPage != null) 'planned_end_page': plannedEndPage,
+      if (actualStartPage != null) 'actual_start_page': actualStartPage,
+      if (actualEndPage != null) 'actual_end_page': actualEndPage,
+      if (targetPages != null) 'target_pages': targetPages,
+      if (completedPages != null) 'completed_pages': completedPages,
+      if (status != null) 'status': status,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  WirdDailyProgressTableCompanion copyWith({
+    Value<int>? id,
+    Value<int>? wirdId,
+    Value<String>? dateKey,
+    Value<int>? plannedStartPage,
+    Value<int>? plannedEndPage,
+    Value<int>? actualStartPage,
+    Value<int>? actualEndPage,
+    Value<int>? targetPages,
+    Value<int>? completedPages,
+    Value<String>? status,
+    Value<DateTime?>? completedAt,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return WirdDailyProgressTableCompanion(
+      id: id ?? this.id,
+      wirdId: wirdId ?? this.wirdId,
+      dateKey: dateKey ?? this.dateKey,
+      plannedStartPage: plannedStartPage ?? this.plannedStartPage,
+      plannedEndPage: plannedEndPage ?? this.plannedEndPage,
+      actualStartPage: actualStartPage ?? this.actualStartPage,
+      actualEndPage: actualEndPage ?? this.actualEndPage,
+      targetPages: targetPages ?? this.targetPages,
+      completedPages: completedPages ?? this.completedPages,
+      status: status ?? this.status,
+      completedAt: completedAt ?? this.completedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (wirdId.present) {
+      map['wird_id'] = Variable<int>(wirdId.value);
+    }
+    if (dateKey.present) {
+      map['date_key'] = Variable<String>(dateKey.value);
+    }
+    if (plannedStartPage.present) {
+      map['planned_start_page'] = Variable<int>(plannedStartPage.value);
+    }
+    if (plannedEndPage.present) {
+      map['planned_end_page'] = Variable<int>(plannedEndPage.value);
+    }
+    if (actualStartPage.present) {
+      map['actual_start_page'] = Variable<int>(actualStartPage.value);
+    }
+    if (actualEndPage.present) {
+      map['actual_end_page'] = Variable<int>(actualEndPage.value);
+    }
+    if (targetPages.present) {
+      map['target_pages'] = Variable<int>(targetPages.value);
+    }
+    if (completedPages.present) {
+      map['completed_pages'] = Variable<int>(completedPages.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WirdDailyProgressTableCompanion(')
+          ..write('id: $id, ')
+          ..write('wirdId: $wirdId, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('plannedStartPage: $plannedStartPage, ')
+          ..write('plannedEndPage: $plannedEndPage, ')
+          ..write('actualStartPage: $actualStartPage, ')
+          ..write('actualEndPage: $actualEndPage, ')
+          ..write('targetPages: $targetPages, ')
+          ..write('completedPages: $completedPages, ')
+          ..write('status: $status, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WirdCycleHistoryTableTable extends WirdCycleHistoryTable
+    with TableInfo<$WirdCycleHistoryTableTable, WirdCycleHistoryEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WirdCycleHistoryTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _wirdIdMeta = const VerificationMeta('wirdId');
+  @override
+  late final GeneratedColumn<int> wirdId = GeneratedColumn<int>(
+    'wird_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES wirds_table (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _cycleNumberMeta = const VerificationMeta(
+    'cycleNumber',
+  );
+  @override
+  late final GeneratedColumn<int> cycleNumber = GeneratedColumn<int>(
+    'cycle_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedDateMeta = const VerificationMeta(
+    'completedDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedDate =
+      GeneratedColumn<DateTime>(
+        'completed_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _startPageMeta = const VerificationMeta(
+    'startPage',
+  );
+  @override
+  late final GeneratedColumn<int> startPage = GeneratedColumn<int>(
+    'start_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endPageMeta = const VerificationMeta(
+    'endPage',
+  );
+  @override
+  late final GeneratedColumn<int> endPage = GeneratedColumn<int>(
+    'end_page',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _actualCompletedPagesMeta =
+      const VerificationMeta('actualCompletedPages');
+  @override
+  late final GeneratedColumn<int> actualCompletedPages = GeneratedColumn<int>(
+    'actual_completed_pages',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    wirdId,
+    cycleNumber,
+    startDate,
+    completedDate,
+    startPage,
+    endPage,
+    actualCompletedPages,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wird_cycle_history_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WirdCycleHistoryEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('wird_id')) {
+      context.handle(
+        _wirdIdMeta,
+        wirdId.isAcceptableOrUnknown(data['wird_id']!, _wirdIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_wirdIdMeta);
+    }
+    if (data.containsKey('cycle_number')) {
+      context.handle(
+        _cycleNumberMeta,
+        cycleNumber.isAcceptableOrUnknown(
+          data['cycle_number']!,
+          _cycleNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_cycleNumberMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('completed_date')) {
+      context.handle(
+        _completedDateMeta,
+        completedDate.isAcceptableOrUnknown(
+          data['completed_date']!,
+          _completedDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('start_page')) {
+      context.handle(
+        _startPageMeta,
+        startPage.isAcceptableOrUnknown(data['start_page']!, _startPageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startPageMeta);
+    }
+    if (data.containsKey('end_page')) {
+      context.handle(
+        _endPageMeta,
+        endPage.isAcceptableOrUnknown(data['end_page']!, _endPageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endPageMeta);
+    }
+    if (data.containsKey('actual_completed_pages')) {
+      context.handle(
+        _actualCompletedPagesMeta,
+        actualCompletedPages.isAcceptableOrUnknown(
+          data['actual_completed_pages']!,
+          _actualCompletedPagesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_actualCompletedPagesMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WirdCycleHistoryEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WirdCycleHistoryEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      wirdId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}wird_id'],
+      )!,
+      cycleNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cycle_number'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_date'],
+      )!,
+      completedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_date'],
+      ),
+      startPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_page'],
+      )!,
+      endPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_page'],
+      )!,
+      actualCompletedPages: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}actual_completed_pages'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $WirdCycleHistoryTableTable createAlias(String alias) {
+    return $WirdCycleHistoryTableTable(attachedDatabase, alias);
+  }
+}
+
+class WirdCycleHistoryEntry extends DataClass
+    implements Insertable<WirdCycleHistoryEntry> {
+  final int id;
+  final int wirdId;
+  final int cycleNumber;
+  final DateTime startDate;
+  final DateTime? completedDate;
+  final int startPage;
+  final int endPage;
+  final int actualCompletedPages;
+  final DateTime createdAt;
+  const WirdCycleHistoryEntry({
+    required this.id,
+    required this.wirdId,
+    required this.cycleNumber,
+    required this.startDate,
+    this.completedDate,
+    required this.startPage,
+    required this.endPage,
+    required this.actualCompletedPages,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['wird_id'] = Variable<int>(wirdId);
+    map['cycle_number'] = Variable<int>(cycleNumber);
+    map['start_date'] = Variable<DateTime>(startDate);
+    if (!nullToAbsent || completedDate != null) {
+      map['completed_date'] = Variable<DateTime>(completedDate);
+    }
+    map['start_page'] = Variable<int>(startPage);
+    map['end_page'] = Variable<int>(endPage);
+    map['actual_completed_pages'] = Variable<int>(actualCompletedPages);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  WirdCycleHistoryTableCompanion toCompanion(bool nullToAbsent) {
+    return WirdCycleHistoryTableCompanion(
+      id: Value(id),
+      wirdId: Value(wirdId),
+      cycleNumber: Value(cycleNumber),
+      startDate: Value(startDate),
+      completedDate: completedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedDate),
+      startPage: Value(startPage),
+      endPage: Value(endPage),
+      actualCompletedPages: Value(actualCompletedPages),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory WirdCycleHistoryEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WirdCycleHistoryEntry(
+      id: serializer.fromJson<int>(json['id']),
+      wirdId: serializer.fromJson<int>(json['wirdId']),
+      cycleNumber: serializer.fromJson<int>(json['cycleNumber']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      completedDate: serializer.fromJson<DateTime?>(json['completedDate']),
+      startPage: serializer.fromJson<int>(json['startPage']),
+      endPage: serializer.fromJson<int>(json['endPage']),
+      actualCompletedPages: serializer.fromJson<int>(
+        json['actualCompletedPages'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'wirdId': serializer.toJson<int>(wirdId),
+      'cycleNumber': serializer.toJson<int>(cycleNumber),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'completedDate': serializer.toJson<DateTime?>(completedDate),
+      'startPage': serializer.toJson<int>(startPage),
+      'endPage': serializer.toJson<int>(endPage),
+      'actualCompletedPages': serializer.toJson<int>(actualCompletedPages),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  WirdCycleHistoryEntry copyWith({
+    int? id,
+    int? wirdId,
+    int? cycleNumber,
+    DateTime? startDate,
+    Value<DateTime?> completedDate = const Value.absent(),
+    int? startPage,
+    int? endPage,
+    int? actualCompletedPages,
+    DateTime? createdAt,
+  }) => WirdCycleHistoryEntry(
+    id: id ?? this.id,
+    wirdId: wirdId ?? this.wirdId,
+    cycleNumber: cycleNumber ?? this.cycleNumber,
+    startDate: startDate ?? this.startDate,
+    completedDate: completedDate.present
+        ? completedDate.value
+        : this.completedDate,
+    startPage: startPage ?? this.startPage,
+    endPage: endPage ?? this.endPage,
+    actualCompletedPages: actualCompletedPages ?? this.actualCompletedPages,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  WirdCycleHistoryEntry copyWithCompanion(WirdCycleHistoryTableCompanion data) {
+    return WirdCycleHistoryEntry(
+      id: data.id.present ? data.id.value : this.id,
+      wirdId: data.wirdId.present ? data.wirdId.value : this.wirdId,
+      cycleNumber: data.cycleNumber.present
+          ? data.cycleNumber.value
+          : this.cycleNumber,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      completedDate: data.completedDate.present
+          ? data.completedDate.value
+          : this.completedDate,
+      startPage: data.startPage.present ? data.startPage.value : this.startPage,
+      endPage: data.endPage.present ? data.endPage.value : this.endPage,
+      actualCompletedPages: data.actualCompletedPages.present
+          ? data.actualCompletedPages.value
+          : this.actualCompletedPages,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WirdCycleHistoryEntry(')
+          ..write('id: $id, ')
+          ..write('wirdId: $wirdId, ')
+          ..write('cycleNumber: $cycleNumber, ')
+          ..write('startDate: $startDate, ')
+          ..write('completedDate: $completedDate, ')
+          ..write('startPage: $startPage, ')
+          ..write('endPage: $endPage, ')
+          ..write('actualCompletedPages: $actualCompletedPages, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    wirdId,
+    cycleNumber,
+    startDate,
+    completedDate,
+    startPage,
+    endPage,
+    actualCompletedPages,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WirdCycleHistoryEntry &&
+          other.id == this.id &&
+          other.wirdId == this.wirdId &&
+          other.cycleNumber == this.cycleNumber &&
+          other.startDate == this.startDate &&
+          other.completedDate == this.completedDate &&
+          other.startPage == this.startPage &&
+          other.endPage == this.endPage &&
+          other.actualCompletedPages == this.actualCompletedPages &&
+          other.createdAt == this.createdAt);
+}
+
+class WirdCycleHistoryTableCompanion
+    extends UpdateCompanion<WirdCycleHistoryEntry> {
+  final Value<int> id;
+  final Value<int> wirdId;
+  final Value<int> cycleNumber;
+  final Value<DateTime> startDate;
+  final Value<DateTime?> completedDate;
+  final Value<int> startPage;
+  final Value<int> endPage;
+  final Value<int> actualCompletedPages;
+  final Value<DateTime> createdAt;
+  const WirdCycleHistoryTableCompanion({
+    this.id = const Value.absent(),
+    this.wirdId = const Value.absent(),
+    this.cycleNumber = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.completedDate = const Value.absent(),
+    this.startPage = const Value.absent(),
+    this.endPage = const Value.absent(),
+    this.actualCompletedPages = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  WirdCycleHistoryTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int wirdId,
+    required int cycleNumber,
+    required DateTime startDate,
+    this.completedDate = const Value.absent(),
+    required int startPage,
+    required int endPage,
+    required int actualCompletedPages,
+    required DateTime createdAt,
+  }) : wirdId = Value(wirdId),
+       cycleNumber = Value(cycleNumber),
+       startDate = Value(startDate),
+       startPage = Value(startPage),
+       endPage = Value(endPage),
+       actualCompletedPages = Value(actualCompletedPages),
+       createdAt = Value(createdAt);
+  static Insertable<WirdCycleHistoryEntry> custom({
+    Expression<int>? id,
+    Expression<int>? wirdId,
+    Expression<int>? cycleNumber,
+    Expression<DateTime>? startDate,
+    Expression<DateTime>? completedDate,
+    Expression<int>? startPage,
+    Expression<int>? endPage,
+    Expression<int>? actualCompletedPages,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (wirdId != null) 'wird_id': wirdId,
+      if (cycleNumber != null) 'cycle_number': cycleNumber,
+      if (startDate != null) 'start_date': startDate,
+      if (completedDate != null) 'completed_date': completedDate,
+      if (startPage != null) 'start_page': startPage,
+      if (endPage != null) 'end_page': endPage,
+      if (actualCompletedPages != null)
+        'actual_completed_pages': actualCompletedPages,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  WirdCycleHistoryTableCompanion copyWith({
+    Value<int>? id,
+    Value<int>? wirdId,
+    Value<int>? cycleNumber,
+    Value<DateTime>? startDate,
+    Value<DateTime?>? completedDate,
+    Value<int>? startPage,
+    Value<int>? endPage,
+    Value<int>? actualCompletedPages,
+    Value<DateTime>? createdAt,
+  }) {
+    return WirdCycleHistoryTableCompanion(
+      id: id ?? this.id,
+      wirdId: wirdId ?? this.wirdId,
+      cycleNumber: cycleNumber ?? this.cycleNumber,
+      startDate: startDate ?? this.startDate,
+      completedDate: completedDate ?? this.completedDate,
+      startPage: startPage ?? this.startPage,
+      endPage: endPage ?? this.endPage,
+      actualCompletedPages: actualCompletedPages ?? this.actualCompletedPages,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (wirdId.present) {
+      map['wird_id'] = Variable<int>(wirdId.value);
+    }
+    if (cycleNumber.present) {
+      map['cycle_number'] = Variable<int>(cycleNumber.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (completedDate.present) {
+      map['completed_date'] = Variable<DateTime>(completedDate.value);
+    }
+    if (startPage.present) {
+      map['start_page'] = Variable<int>(startPage.value);
+    }
+    if (endPage.present) {
+      map['end_page'] = Variable<int>(endPage.value);
+    }
+    if (actualCompletedPages.present) {
+      map['actual_completed_pages'] = Variable<int>(actualCompletedPages.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WirdCycleHistoryTableCompanion(')
+          ..write('id: $id, ')
+          ..write('wirdId: $wirdId, ')
+          ..write('cycleNumber: $cycleNumber, ')
+          ..write('startDate: $startDate, ')
+          ..write('completedDate: $completedDate, ')
+          ..write('startPage: $startPage, ')
+          ..write('endPage: $endPage, ')
+          ..write('actualCompletedPages: $actualCompletedPages, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WirdAchievementsTableTable extends WirdAchievementsTable
+    with TableInfo<$WirdAchievementsTableTable, WirdAchievementEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WirdAchievementsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _thresholdMeta = const VerificationMeta(
+    'threshold',
+  );
+  @override
+  late final GeneratedColumn<int> threshold = GeneratedColumn<int>(
+    'threshold',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unlockedMeta = const VerificationMeta(
+    'unlocked',
+  );
+  @override
+  late final GeneratedColumn<bool> unlocked = GeneratedColumn<bool>(
+    'unlocked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("unlocked" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _unlockedAtMeta = const VerificationMeta(
+    'unlockedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> unlockedAt = GeneratedColumn<DateTime>(
+    'unlocked_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    type,
+    threshold,
+    unlocked,
+    unlockedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'wird_achievements_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WirdAchievementEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('threshold')) {
+      context.handle(
+        _thresholdMeta,
+        threshold.isAcceptableOrUnknown(data['threshold']!, _thresholdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_thresholdMeta);
+    }
+    if (data.containsKey('unlocked')) {
+      context.handle(
+        _unlockedMeta,
+        unlocked.isAcceptableOrUnknown(data['unlocked']!, _unlockedMeta),
+      );
+    }
+    if (data.containsKey('unlocked_at')) {
+      context.handle(
+        _unlockedAtMeta,
+        unlockedAt.isAcceptableOrUnknown(data['unlocked_at']!, _unlockedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WirdAchievementEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WirdAchievementEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      threshold: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}threshold'],
+      )!,
+      unlocked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}unlocked'],
+      )!,
+      unlockedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}unlocked_at'],
+      ),
+    );
+  }
+
+  @override
+  $WirdAchievementsTableTable createAlias(String alias) {
+    return $WirdAchievementsTableTable(attachedDatabase, alias);
+  }
+}
+
+class WirdAchievementEntry extends DataClass
+    implements Insertable<WirdAchievementEntry> {
+  final String id;
+  final String type;
+  final int threshold;
+  final bool unlocked;
+  final DateTime? unlockedAt;
+  const WirdAchievementEntry({
+    required this.id,
+    required this.type,
+    required this.threshold,
+    required this.unlocked,
+    this.unlockedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type'] = Variable<String>(type);
+    map['threshold'] = Variable<int>(threshold);
+    map['unlocked'] = Variable<bool>(unlocked);
+    if (!nullToAbsent || unlockedAt != null) {
+      map['unlocked_at'] = Variable<DateTime>(unlockedAt);
+    }
+    return map;
+  }
+
+  WirdAchievementsTableCompanion toCompanion(bool nullToAbsent) {
+    return WirdAchievementsTableCompanion(
+      id: Value(id),
+      type: Value(type),
+      threshold: Value(threshold),
+      unlocked: Value(unlocked),
+      unlockedAt: unlockedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unlockedAt),
+    );
+  }
+
+  factory WirdAchievementEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WirdAchievementEntry(
+      id: serializer.fromJson<String>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      threshold: serializer.fromJson<int>(json['threshold']),
+      unlocked: serializer.fromJson<bool>(json['unlocked']),
+      unlockedAt: serializer.fromJson<DateTime?>(json['unlockedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(type),
+      'threshold': serializer.toJson<int>(threshold),
+      'unlocked': serializer.toJson<bool>(unlocked),
+      'unlockedAt': serializer.toJson<DateTime?>(unlockedAt),
+    };
+  }
+
+  WirdAchievementEntry copyWith({
+    String? id,
+    String? type,
+    int? threshold,
+    bool? unlocked,
+    Value<DateTime?> unlockedAt = const Value.absent(),
+  }) => WirdAchievementEntry(
+    id: id ?? this.id,
+    type: type ?? this.type,
+    threshold: threshold ?? this.threshold,
+    unlocked: unlocked ?? this.unlocked,
+    unlockedAt: unlockedAt.present ? unlockedAt.value : this.unlockedAt,
+  );
+  WirdAchievementEntry copyWithCompanion(WirdAchievementsTableCompanion data) {
+    return WirdAchievementEntry(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      threshold: data.threshold.present ? data.threshold.value : this.threshold,
+      unlocked: data.unlocked.present ? data.unlocked.value : this.unlocked,
+      unlockedAt: data.unlockedAt.present
+          ? data.unlockedAt.value
+          : this.unlockedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WirdAchievementEntry(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('threshold: $threshold, ')
+          ..write('unlocked: $unlocked, ')
+          ..write('unlockedAt: $unlockedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, type, threshold, unlocked, unlockedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WirdAchievementEntry &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.threshold == this.threshold &&
+          other.unlocked == this.unlocked &&
+          other.unlockedAt == this.unlockedAt);
+}
+
+class WirdAchievementsTableCompanion
+    extends UpdateCompanion<WirdAchievementEntry> {
+  final Value<String> id;
+  final Value<String> type;
+  final Value<int> threshold;
+  final Value<bool> unlocked;
+  final Value<DateTime?> unlockedAt;
+  final Value<int> rowid;
+  const WirdAchievementsTableCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.threshold = const Value.absent(),
+    this.unlocked = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WirdAchievementsTableCompanion.insert({
+    required String id,
+    required String type,
+    required int threshold,
+    this.unlocked = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       type = Value(type),
+       threshold = Value(threshold);
+  static Insertable<WirdAchievementEntry> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<int>? threshold,
+    Expression<bool>? unlocked,
+    Expression<DateTime>? unlockedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (threshold != null) 'threshold': threshold,
+      if (unlocked != null) 'unlocked': unlocked,
+      if (unlockedAt != null) 'unlocked_at': unlockedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WirdAchievementsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? type,
+    Value<int>? threshold,
+    Value<bool>? unlocked,
+    Value<DateTime?>? unlockedAt,
+    Value<int>? rowid,
+  }) {
+    return WirdAchievementsTableCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      threshold: threshold ?? this.threshold,
+      unlocked: unlocked ?? this.unlocked,
+      unlockedAt: unlockedAt ?? this.unlockedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (threshold.present) {
+      map['threshold'] = Variable<int>(threshold.value);
+    }
+    if (unlocked.present) {
+      map['unlocked'] = Variable<bool>(unlocked.value);
+    }
+    if (unlockedAt.present) {
+      map['unlocked_at'] = Variable<DateTime>(unlockedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WirdAchievementsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('threshold: $threshold, ')
+          ..write('unlocked: $unlocked, ')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $DownloadedTafsirsTable extends DownloadedTafsirs
     with TableInfo<$DownloadedTafsirsTable, DownloadedTafsirEntry> {
   @override
@@ -6886,6 +9992,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $QuranReadingProgressCacheTable quranReadingProgressCache =
       $QuranReadingProgressCacheTable(this);
   late final $QuranBookmarksTable quranBookmarks = $QuranBookmarksTable(this);
+  late final $WirdsTableTable wirdsTable = $WirdsTableTable(this);
+  late final $WirdDailyProgressTableTable wirdDailyProgressTable =
+      $WirdDailyProgressTableTable(this);
+  late final $WirdCycleHistoryTableTable wirdCycleHistoryTable =
+      $WirdCycleHistoryTableTable(this);
+  late final $WirdAchievementsTableTable wirdAchievementsTable =
+      $WirdAchievementsTableTable(this);
   late final $DownloadedTafsirsTable downloadedTafsirs =
       $DownloadedTafsirsTable(this);
   late final $DownloadedTranslationsTable downloadedTranslations =
@@ -6970,6 +10083,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     categoryFavorites,
     quranReadingProgressCache,
     quranBookmarks,
+    wirdsTable,
+    wirdDailyProgressTable,
+    wirdCycleHistoryTable,
+    wirdAchievementsTable,
     downloadedTafsirs,
     downloadedTranslations,
     tafsirTextCache,
@@ -6991,6 +10108,27 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     translationTextCacheResourceChapterAyah,
     translationTextCacheUpdatedAt,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'wirds_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('wird_daily_progress_table', kind: UpdateKind.delete),
+      ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'wirds_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('wird_cycle_history_table', kind: UpdateKind.delete),
+      ],
+    ),
+  ]);
 }
 
 typedef $$QuranChapterCacheTableCreateCompanionBuilder =
@@ -9103,6 +12241,1968 @@ typedef $$QuranBookmarksTableProcessedTableManager =
       QuranBookmarkEntry,
       PrefetchHooks Function()
     >;
+typedef $$WirdsTableTableCreateCompanionBuilder =
+    WirdsTableCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> goalType,
+      Value<String> status,
+      Value<int> startPage,
+      Value<int> endPage,
+      Value<int?> pagesPerDay,
+      Value<DateTime> startDate,
+      Value<DateTime?> targetDate,
+      Value<String> scheduleType,
+      Value<String> activeWeekdays,
+      Value<bool> isFlexible,
+      Value<bool> allowCatchUp,
+      Value<bool> autoStartNextKhatma,
+      Value<int> currentCycle,
+      required DateTime createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> completedAt,
+      Value<String?> amountType,
+      Value<int?> amountMultiplier,
+      Value<int?> durationDays,
+      Value<String?> frequency,
+      Value<String?> reminderTime,
+      Value<DateTime?> lastReadDate,
+      Value<int?> completedDaysCount,
+    });
+typedef $$WirdsTableTableUpdateCompanionBuilder =
+    WirdsTableCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> goalType,
+      Value<String> status,
+      Value<int> startPage,
+      Value<int> endPage,
+      Value<int?> pagesPerDay,
+      Value<DateTime> startDate,
+      Value<DateTime?> targetDate,
+      Value<String> scheduleType,
+      Value<String> activeWeekdays,
+      Value<bool> isFlexible,
+      Value<bool> allowCatchUp,
+      Value<bool> autoStartNextKhatma,
+      Value<int> currentCycle,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> completedAt,
+      Value<String?> amountType,
+      Value<int?> amountMultiplier,
+      Value<int?> durationDays,
+      Value<String?> frequency,
+      Value<String?> reminderTime,
+      Value<DateTime?> lastReadDate,
+      Value<int?> completedDaysCount,
+    });
+
+final class $$WirdsTableTableReferences
+    extends BaseReferences<_$AppDatabase, $WirdsTableTable, WirdEntry> {
+  $$WirdsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<
+    $WirdDailyProgressTableTable,
+    List<WirdDailyProgressEntry>
+  >
+  _wirdDailyProgressTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.wirdDailyProgressTable,
+        aliasName: 'wirds_table__id__wird_daily_progress_table__wird_id',
+      );
+
+  $$WirdDailyProgressTableTableProcessedTableManager
+  get wirdDailyProgressTableRefs {
+    final manager = $$WirdDailyProgressTableTableTableManager(
+      $_db,
+      $_db.wirdDailyProgressTable,
+    ).filter((f) => f.wirdId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _wirdDailyProgressTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $WirdCycleHistoryTableTable,
+    List<WirdCycleHistoryEntry>
+  >
+  _wirdCycleHistoryTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.wirdCycleHistoryTable,
+        aliasName: 'wirds_table__id__wird_cycle_history_table__wird_id',
+      );
+
+  $$WirdCycleHistoryTableTableProcessedTableManager
+  get wirdCycleHistoryTableRefs {
+    final manager = $$WirdCycleHistoryTableTableTableManager(
+      $_db,
+      $_db.wirdCycleHistoryTable,
+    ).filter((f) => f.wirdId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _wirdCycleHistoryTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$WirdsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $WirdsTableTable> {
+  $$WirdsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get goalType => $composableBuilder(
+    column: $table.goalType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startPage => $composableBuilder(
+    column: $table.startPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endPage => $composableBuilder(
+    column: $table.endPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pagesPerDay => $composableBuilder(
+    column: $table.pagesPerDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get targetDate => $composableBuilder(
+    column: $table.targetDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scheduleType => $composableBuilder(
+    column: $table.scheduleType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get activeWeekdays => $composableBuilder(
+    column: $table.activeWeekdays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isFlexible => $composableBuilder(
+    column: $table.isFlexible,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get allowCatchUp => $composableBuilder(
+    column: $table.allowCatchUp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoStartNextKhatma => $composableBuilder(
+    column: $table.autoStartNextKhatma,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currentCycle => $composableBuilder(
+    column: $table.currentCycle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get amountType => $composableBuilder(
+    column: $table.amountType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountMultiplier => $composableBuilder(
+    column: $table.amountMultiplier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationDays => $composableBuilder(
+    column: $table.durationDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get frequency => $composableBuilder(
+    column: $table.frequency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reminderTime => $composableBuilder(
+    column: $table.reminderTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastReadDate => $composableBuilder(
+    column: $table.lastReadDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get completedDaysCount => $composableBuilder(
+    column: $table.completedDaysCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> wirdDailyProgressTableRefs(
+    Expression<bool> Function($$WirdDailyProgressTableTableFilterComposer f) f,
+  ) {
+    final $$WirdDailyProgressTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.wirdDailyProgressTable,
+          getReferencedColumn: (t) => t.wirdId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$WirdDailyProgressTableTableFilterComposer(
+                $db: $db,
+                $table: $db.wirdDailyProgressTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> wirdCycleHistoryTableRefs(
+    Expression<bool> Function($$WirdCycleHistoryTableTableFilterComposer f) f,
+  ) {
+    final $$WirdCycleHistoryTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.wirdCycleHistoryTable,
+          getReferencedColumn: (t) => t.wirdId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$WirdCycleHistoryTableTableFilterComposer(
+                $db: $db,
+                $table: $db.wirdCycleHistoryTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$WirdsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $WirdsTableTable> {
+  $$WirdsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get goalType => $composableBuilder(
+    column: $table.goalType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startPage => $composableBuilder(
+    column: $table.startPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endPage => $composableBuilder(
+    column: $table.endPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pagesPerDay => $composableBuilder(
+    column: $table.pagesPerDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get targetDate => $composableBuilder(
+    column: $table.targetDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scheduleType => $composableBuilder(
+    column: $table.scheduleType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get activeWeekdays => $composableBuilder(
+    column: $table.activeWeekdays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isFlexible => $composableBuilder(
+    column: $table.isFlexible,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get allowCatchUp => $composableBuilder(
+    column: $table.allowCatchUp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoStartNextKhatma => $composableBuilder(
+    column: $table.autoStartNextKhatma,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get currentCycle => $composableBuilder(
+    column: $table.currentCycle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get amountType => $composableBuilder(
+    column: $table.amountType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountMultiplier => $composableBuilder(
+    column: $table.amountMultiplier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationDays => $composableBuilder(
+    column: $table.durationDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get frequency => $composableBuilder(
+    column: $table.frequency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reminderTime => $composableBuilder(
+    column: $table.reminderTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastReadDate => $composableBuilder(
+    column: $table.lastReadDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get completedDaysCount => $composableBuilder(
+    column: $table.completedDaysCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WirdsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WirdsTableTable> {
+  $$WirdsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get goalType =>
+      $composableBuilder(column: $table.goalType, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get startPage =>
+      $composableBuilder(column: $table.startPage, builder: (column) => column);
+
+  GeneratedColumn<int> get endPage =>
+      $composableBuilder(column: $table.endPage, builder: (column) => column);
+
+  GeneratedColumn<int> get pagesPerDay => $composableBuilder(
+    column: $table.pagesPerDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get targetDate => $composableBuilder(
+    column: $table.targetDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get scheduleType => $composableBuilder(
+    column: $table.scheduleType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get activeWeekdays => $composableBuilder(
+    column: $table.activeWeekdays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isFlexible => $composableBuilder(
+    column: $table.isFlexible,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get allowCatchUp => $composableBuilder(
+    column: $table.allowCatchUp,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get autoStartNextKhatma => $composableBuilder(
+    column: $table.autoStartNextKhatma,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get currentCycle => $composableBuilder(
+    column: $table.currentCycle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get amountType => $composableBuilder(
+    column: $table.amountType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get amountMultiplier => $composableBuilder(
+    column: $table.amountMultiplier,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationDays => $composableBuilder(
+    column: $table.durationDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get frequency =>
+      $composableBuilder(column: $table.frequency, builder: (column) => column);
+
+  GeneratedColumn<String> get reminderTime => $composableBuilder(
+    column: $table.reminderTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastReadDate => $composableBuilder(
+    column: $table.lastReadDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get completedDaysCount => $composableBuilder(
+    column: $table.completedDaysCount,
+    builder: (column) => column,
+  );
+
+  Expression<T> wirdDailyProgressTableRefs<T extends Object>(
+    Expression<T> Function($$WirdDailyProgressTableTableAnnotationComposer a) f,
+  ) {
+    final $$WirdDailyProgressTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.wirdDailyProgressTable,
+          getReferencedColumn: (t) => t.wirdId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$WirdDailyProgressTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.wirdDailyProgressTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> wirdCycleHistoryTableRefs<T extends Object>(
+    Expression<T> Function($$WirdCycleHistoryTableTableAnnotationComposer a) f,
+  ) {
+    final $$WirdCycleHistoryTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.wirdCycleHistoryTable,
+          getReferencedColumn: (t) => t.wirdId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$WirdCycleHistoryTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.wirdCycleHistoryTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$WirdsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WirdsTableTable,
+          WirdEntry,
+          $$WirdsTableTableFilterComposer,
+          $$WirdsTableTableOrderingComposer,
+          $$WirdsTableTableAnnotationComposer,
+          $$WirdsTableTableCreateCompanionBuilder,
+          $$WirdsTableTableUpdateCompanionBuilder,
+          (WirdEntry, $$WirdsTableTableReferences),
+          WirdEntry,
+          PrefetchHooks Function({
+            bool wirdDailyProgressTableRefs,
+            bool wirdCycleHistoryTableRefs,
+          })
+        > {
+  $$WirdsTableTableTableManager(_$AppDatabase db, $WirdsTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WirdsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WirdsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WirdsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> goalType = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> startPage = const Value.absent(),
+                Value<int> endPage = const Value.absent(),
+                Value<int?> pagesPerDay = const Value.absent(),
+                Value<DateTime> startDate = const Value.absent(),
+                Value<DateTime?> targetDate = const Value.absent(),
+                Value<String> scheduleType = const Value.absent(),
+                Value<String> activeWeekdays = const Value.absent(),
+                Value<bool> isFlexible = const Value.absent(),
+                Value<bool> allowCatchUp = const Value.absent(),
+                Value<bool> autoStartNextKhatma = const Value.absent(),
+                Value<int> currentCycle = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<String?> amountType = const Value.absent(),
+                Value<int?> amountMultiplier = const Value.absent(),
+                Value<int?> durationDays = const Value.absent(),
+                Value<String?> frequency = const Value.absent(),
+                Value<String?> reminderTime = const Value.absent(),
+                Value<DateTime?> lastReadDate = const Value.absent(),
+                Value<int?> completedDaysCount = const Value.absent(),
+              }) => WirdsTableCompanion(
+                id: id,
+                name: name,
+                goalType: goalType,
+                status: status,
+                startPage: startPage,
+                endPage: endPage,
+                pagesPerDay: pagesPerDay,
+                startDate: startDate,
+                targetDate: targetDate,
+                scheduleType: scheduleType,
+                activeWeekdays: activeWeekdays,
+                isFlexible: isFlexible,
+                allowCatchUp: allowCatchUp,
+                autoStartNextKhatma: autoStartNextKhatma,
+                currentCycle: currentCycle,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                completedAt: completedAt,
+                amountType: amountType,
+                amountMultiplier: amountMultiplier,
+                durationDays: durationDays,
+                frequency: frequency,
+                reminderTime: reminderTime,
+                lastReadDate: lastReadDate,
+                completedDaysCount: completedDaysCount,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> goalType = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> startPage = const Value.absent(),
+                Value<int> endPage = const Value.absent(),
+                Value<int?> pagesPerDay = const Value.absent(),
+                Value<DateTime> startDate = const Value.absent(),
+                Value<DateTime?> targetDate = const Value.absent(),
+                Value<String> scheduleType = const Value.absent(),
+                Value<String> activeWeekdays = const Value.absent(),
+                Value<bool> isFlexible = const Value.absent(),
+                Value<bool> allowCatchUp = const Value.absent(),
+                Value<bool> autoStartNextKhatma = const Value.absent(),
+                Value<int> currentCycle = const Value.absent(),
+                required DateTime createdAt,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<String?> amountType = const Value.absent(),
+                Value<int?> amountMultiplier = const Value.absent(),
+                Value<int?> durationDays = const Value.absent(),
+                Value<String?> frequency = const Value.absent(),
+                Value<String?> reminderTime = const Value.absent(),
+                Value<DateTime?> lastReadDate = const Value.absent(),
+                Value<int?> completedDaysCount = const Value.absent(),
+              }) => WirdsTableCompanion.insert(
+                id: id,
+                name: name,
+                goalType: goalType,
+                status: status,
+                startPage: startPage,
+                endPage: endPage,
+                pagesPerDay: pagesPerDay,
+                startDate: startDate,
+                targetDate: targetDate,
+                scheduleType: scheduleType,
+                activeWeekdays: activeWeekdays,
+                isFlexible: isFlexible,
+                allowCatchUp: allowCatchUp,
+                autoStartNextKhatma: autoStartNextKhatma,
+                currentCycle: currentCycle,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                completedAt: completedAt,
+                amountType: amountType,
+                amountMultiplier: amountMultiplier,
+                durationDays: durationDays,
+                frequency: frequency,
+                reminderTime: reminderTime,
+                lastReadDate: lastReadDate,
+                completedDaysCount: completedDaysCount,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$WirdsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                wirdDailyProgressTableRefs = false,
+                wirdCycleHistoryTableRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (wirdDailyProgressTableRefs) db.wirdDailyProgressTable,
+                    if (wirdCycleHistoryTableRefs) db.wirdCycleHistoryTable,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (wirdDailyProgressTableRefs)
+                        await $_getPrefetchedData<
+                          WirdEntry,
+                          $WirdsTableTable,
+                          WirdDailyProgressEntry
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WirdsTableTableReferences
+                              ._wirdDailyProgressTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WirdsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).wirdDailyProgressTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.wirdId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (wirdCycleHistoryTableRefs)
+                        await $_getPrefetchedData<
+                          WirdEntry,
+                          $WirdsTableTable,
+                          WirdCycleHistoryEntry
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WirdsTableTableReferences
+                              ._wirdCycleHistoryTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WirdsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).wirdCycleHistoryTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.wirdId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$WirdsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WirdsTableTable,
+      WirdEntry,
+      $$WirdsTableTableFilterComposer,
+      $$WirdsTableTableOrderingComposer,
+      $$WirdsTableTableAnnotationComposer,
+      $$WirdsTableTableCreateCompanionBuilder,
+      $$WirdsTableTableUpdateCompanionBuilder,
+      (WirdEntry, $$WirdsTableTableReferences),
+      WirdEntry,
+      PrefetchHooks Function({
+        bool wirdDailyProgressTableRefs,
+        bool wirdCycleHistoryTableRefs,
+      })
+    >;
+typedef $$WirdDailyProgressTableTableCreateCompanionBuilder =
+    WirdDailyProgressTableCompanion Function({
+      Value<int> id,
+      required int wirdId,
+      required String dateKey,
+      required int plannedStartPage,
+      required int plannedEndPage,
+      required int actualStartPage,
+      required int actualEndPage,
+      required int targetPages,
+      required int completedPages,
+      required String status,
+      Value<DateTime?> completedAt,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+    });
+typedef $$WirdDailyProgressTableTableUpdateCompanionBuilder =
+    WirdDailyProgressTableCompanion Function({
+      Value<int> id,
+      Value<int> wirdId,
+      Value<String> dateKey,
+      Value<int> plannedStartPage,
+      Value<int> plannedEndPage,
+      Value<int> actualStartPage,
+      Value<int> actualEndPage,
+      Value<int> targetPages,
+      Value<int> completedPages,
+      Value<String> status,
+      Value<DateTime?> completedAt,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+
+final class $$WirdDailyProgressTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $WirdDailyProgressTableTable,
+          WirdDailyProgressEntry
+        > {
+  $$WirdDailyProgressTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $WirdsTableTable _wirdIdTable(_$AppDatabase db) => db.wirdsTable
+      .createAlias('wird_daily_progress_table__wird_id__wirds_table__id');
+
+  $$WirdsTableTableProcessedTableManager get wirdId {
+    final $_column = $_itemColumn<int>('wird_id')!;
+
+    final manager = $$WirdsTableTableTableManager(
+      $_db,
+      $_db.wirdsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_wirdIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$WirdDailyProgressTableTableFilterComposer
+    extends Composer<_$AppDatabase, $WirdDailyProgressTableTable> {
+  $$WirdDailyProgressTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get plannedStartPage => $composableBuilder(
+    column: $table.plannedStartPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get plannedEndPage => $composableBuilder(
+    column: $table.plannedEndPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get actualStartPage => $composableBuilder(
+    column: $table.actualStartPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get actualEndPage => $composableBuilder(
+    column: $table.actualEndPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetPages => $composableBuilder(
+    column: $table.targetPages,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get completedPages => $composableBuilder(
+    column: $table.completedPages,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WirdsTableTableFilterComposer get wirdId {
+    final $$WirdsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wirdId,
+      referencedTable: $db.wirdsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WirdsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.wirdsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WirdDailyProgressTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $WirdDailyProgressTableTable> {
+  $$WirdDailyProgressTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get plannedStartPage => $composableBuilder(
+    column: $table.plannedStartPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get plannedEndPage => $composableBuilder(
+    column: $table.plannedEndPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get actualStartPage => $composableBuilder(
+    column: $table.actualStartPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get actualEndPage => $composableBuilder(
+    column: $table.actualEndPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get targetPages => $composableBuilder(
+    column: $table.targetPages,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get completedPages => $composableBuilder(
+    column: $table.completedPages,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WirdsTableTableOrderingComposer get wirdId {
+    final $$WirdsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wirdId,
+      referencedTable: $db.wirdsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WirdsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.wirdsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WirdDailyProgressTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WirdDailyProgressTableTable> {
+  $$WirdDailyProgressTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dateKey =>
+      $composableBuilder(column: $table.dateKey, builder: (column) => column);
+
+  GeneratedColumn<int> get plannedStartPage => $composableBuilder(
+    column: $table.plannedStartPage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get plannedEndPage => $composableBuilder(
+    column: $table.plannedEndPage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get actualStartPage => $composableBuilder(
+    column: $table.actualStartPage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get actualEndPage => $composableBuilder(
+    column: $table.actualEndPage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get targetPages => $composableBuilder(
+    column: $table.targetPages,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get completedPages => $composableBuilder(
+    column: $table.completedPages,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$WirdsTableTableAnnotationComposer get wirdId {
+    final $$WirdsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wirdId,
+      referencedTable: $db.wirdsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WirdsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.wirdsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WirdDailyProgressTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WirdDailyProgressTableTable,
+          WirdDailyProgressEntry,
+          $$WirdDailyProgressTableTableFilterComposer,
+          $$WirdDailyProgressTableTableOrderingComposer,
+          $$WirdDailyProgressTableTableAnnotationComposer,
+          $$WirdDailyProgressTableTableCreateCompanionBuilder,
+          $$WirdDailyProgressTableTableUpdateCompanionBuilder,
+          (WirdDailyProgressEntry, $$WirdDailyProgressTableTableReferences),
+          WirdDailyProgressEntry,
+          PrefetchHooks Function({bool wirdId})
+        > {
+  $$WirdDailyProgressTableTableTableManager(
+    _$AppDatabase db,
+    $WirdDailyProgressTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WirdDailyProgressTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$WirdDailyProgressTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$WirdDailyProgressTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> wirdId = const Value.absent(),
+                Value<String> dateKey = const Value.absent(),
+                Value<int> plannedStartPage = const Value.absent(),
+                Value<int> plannedEndPage = const Value.absent(),
+                Value<int> actualStartPage = const Value.absent(),
+                Value<int> actualEndPage = const Value.absent(),
+                Value<int> targetPages = const Value.absent(),
+                Value<int> completedPages = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => WirdDailyProgressTableCompanion(
+                id: id,
+                wirdId: wirdId,
+                dateKey: dateKey,
+                plannedStartPage: plannedStartPage,
+                plannedEndPage: plannedEndPage,
+                actualStartPage: actualStartPage,
+                actualEndPage: actualEndPage,
+                targetPages: targetPages,
+                completedPages: completedPages,
+                status: status,
+                completedAt: completedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int wirdId,
+                required String dateKey,
+                required int plannedStartPage,
+                required int plannedEndPage,
+                required int actualStartPage,
+                required int actualEndPage,
+                required int targetPages,
+                required int completedPages,
+                required String status,
+                Value<DateTime?> completedAt = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+              }) => WirdDailyProgressTableCompanion.insert(
+                id: id,
+                wirdId: wirdId,
+                dateKey: dateKey,
+                plannedStartPage: plannedStartPage,
+                plannedEndPage: plannedEndPage,
+                actualStartPage: actualStartPage,
+                actualEndPage: actualEndPage,
+                targetPages: targetPages,
+                completedPages: completedPages,
+                status: status,
+                completedAt: completedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$WirdDailyProgressTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({wirdId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (wirdId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.wirdId,
+                                referencedTable:
+                                    $$WirdDailyProgressTableTableReferences
+                                        ._wirdIdTable(db),
+                                referencedColumn:
+                                    $$WirdDailyProgressTableTableReferences
+                                        ._wirdIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$WirdDailyProgressTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WirdDailyProgressTableTable,
+      WirdDailyProgressEntry,
+      $$WirdDailyProgressTableTableFilterComposer,
+      $$WirdDailyProgressTableTableOrderingComposer,
+      $$WirdDailyProgressTableTableAnnotationComposer,
+      $$WirdDailyProgressTableTableCreateCompanionBuilder,
+      $$WirdDailyProgressTableTableUpdateCompanionBuilder,
+      (WirdDailyProgressEntry, $$WirdDailyProgressTableTableReferences),
+      WirdDailyProgressEntry,
+      PrefetchHooks Function({bool wirdId})
+    >;
+typedef $$WirdCycleHistoryTableTableCreateCompanionBuilder =
+    WirdCycleHistoryTableCompanion Function({
+      Value<int> id,
+      required int wirdId,
+      required int cycleNumber,
+      required DateTime startDate,
+      Value<DateTime?> completedDate,
+      required int startPage,
+      required int endPage,
+      required int actualCompletedPages,
+      required DateTime createdAt,
+    });
+typedef $$WirdCycleHistoryTableTableUpdateCompanionBuilder =
+    WirdCycleHistoryTableCompanion Function({
+      Value<int> id,
+      Value<int> wirdId,
+      Value<int> cycleNumber,
+      Value<DateTime> startDate,
+      Value<DateTime?> completedDate,
+      Value<int> startPage,
+      Value<int> endPage,
+      Value<int> actualCompletedPages,
+      Value<DateTime> createdAt,
+    });
+
+final class $$WirdCycleHistoryTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $WirdCycleHistoryTableTable,
+          WirdCycleHistoryEntry
+        > {
+  $$WirdCycleHistoryTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $WirdsTableTable _wirdIdTable(_$AppDatabase db) => db.wirdsTable
+      .createAlias('wird_cycle_history_table__wird_id__wirds_table__id');
+
+  $$WirdsTableTableProcessedTableManager get wirdId {
+    final $_column = $_itemColumn<int>('wird_id')!;
+
+    final manager = $$WirdsTableTableTableManager(
+      $_db,
+      $_db.wirdsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_wirdIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$WirdCycleHistoryTableTableFilterComposer
+    extends Composer<_$AppDatabase, $WirdCycleHistoryTableTable> {
+  $$WirdCycleHistoryTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cycleNumber => $composableBuilder(
+    column: $table.cycleNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedDate => $composableBuilder(
+    column: $table.completedDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startPage => $composableBuilder(
+    column: $table.startPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endPage => $composableBuilder(
+    column: $table.endPage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get actualCompletedPages => $composableBuilder(
+    column: $table.actualCompletedPages,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$WirdsTableTableFilterComposer get wirdId {
+    final $$WirdsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wirdId,
+      referencedTable: $db.wirdsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WirdsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.wirdsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WirdCycleHistoryTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $WirdCycleHistoryTableTable> {
+  $$WirdCycleHistoryTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cycleNumber => $composableBuilder(
+    column: $table.cycleNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedDate => $composableBuilder(
+    column: $table.completedDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startPage => $composableBuilder(
+    column: $table.startPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endPage => $composableBuilder(
+    column: $table.endPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get actualCompletedPages => $composableBuilder(
+    column: $table.actualCompletedPages,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$WirdsTableTableOrderingComposer get wirdId {
+    final $$WirdsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wirdId,
+      referencedTable: $db.wirdsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WirdsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.wirdsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WirdCycleHistoryTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WirdCycleHistoryTableTable> {
+  $$WirdCycleHistoryTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get cycleNumber => $composableBuilder(
+    column: $table.cycleNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedDate => $composableBuilder(
+    column: $table.completedDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get startPage =>
+      $composableBuilder(column: $table.startPage, builder: (column) => column);
+
+  GeneratedColumn<int> get endPage =>
+      $composableBuilder(column: $table.endPage, builder: (column) => column);
+
+  GeneratedColumn<int> get actualCompletedPages => $composableBuilder(
+    column: $table.actualCompletedPages,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$WirdsTableTableAnnotationComposer get wirdId {
+    final $$WirdsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.wirdId,
+      referencedTable: $db.wirdsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WirdsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.wirdsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WirdCycleHistoryTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WirdCycleHistoryTableTable,
+          WirdCycleHistoryEntry,
+          $$WirdCycleHistoryTableTableFilterComposer,
+          $$WirdCycleHistoryTableTableOrderingComposer,
+          $$WirdCycleHistoryTableTableAnnotationComposer,
+          $$WirdCycleHistoryTableTableCreateCompanionBuilder,
+          $$WirdCycleHistoryTableTableUpdateCompanionBuilder,
+          (WirdCycleHistoryEntry, $$WirdCycleHistoryTableTableReferences),
+          WirdCycleHistoryEntry,
+          PrefetchHooks Function({bool wirdId})
+        > {
+  $$WirdCycleHistoryTableTableTableManager(
+    _$AppDatabase db,
+    $WirdCycleHistoryTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WirdCycleHistoryTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$WirdCycleHistoryTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$WirdCycleHistoryTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> wirdId = const Value.absent(),
+                Value<int> cycleNumber = const Value.absent(),
+                Value<DateTime> startDate = const Value.absent(),
+                Value<DateTime?> completedDate = const Value.absent(),
+                Value<int> startPage = const Value.absent(),
+                Value<int> endPage = const Value.absent(),
+                Value<int> actualCompletedPages = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => WirdCycleHistoryTableCompanion(
+                id: id,
+                wirdId: wirdId,
+                cycleNumber: cycleNumber,
+                startDate: startDate,
+                completedDate: completedDate,
+                startPage: startPage,
+                endPage: endPage,
+                actualCompletedPages: actualCompletedPages,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int wirdId,
+                required int cycleNumber,
+                required DateTime startDate,
+                Value<DateTime?> completedDate = const Value.absent(),
+                required int startPage,
+                required int endPage,
+                required int actualCompletedPages,
+                required DateTime createdAt,
+              }) => WirdCycleHistoryTableCompanion.insert(
+                id: id,
+                wirdId: wirdId,
+                cycleNumber: cycleNumber,
+                startDate: startDate,
+                completedDate: completedDate,
+                startPage: startPage,
+                endPage: endPage,
+                actualCompletedPages: actualCompletedPages,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$WirdCycleHistoryTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({wirdId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (wirdId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.wirdId,
+                                referencedTable:
+                                    $$WirdCycleHistoryTableTableReferences
+                                        ._wirdIdTable(db),
+                                referencedColumn:
+                                    $$WirdCycleHistoryTableTableReferences
+                                        ._wirdIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$WirdCycleHistoryTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WirdCycleHistoryTableTable,
+      WirdCycleHistoryEntry,
+      $$WirdCycleHistoryTableTableFilterComposer,
+      $$WirdCycleHistoryTableTableOrderingComposer,
+      $$WirdCycleHistoryTableTableAnnotationComposer,
+      $$WirdCycleHistoryTableTableCreateCompanionBuilder,
+      $$WirdCycleHistoryTableTableUpdateCompanionBuilder,
+      (WirdCycleHistoryEntry, $$WirdCycleHistoryTableTableReferences),
+      WirdCycleHistoryEntry,
+      PrefetchHooks Function({bool wirdId})
+    >;
+typedef $$WirdAchievementsTableTableCreateCompanionBuilder =
+    WirdAchievementsTableCompanion Function({
+      required String id,
+      required String type,
+      required int threshold,
+      Value<bool> unlocked,
+      Value<DateTime?> unlockedAt,
+      Value<int> rowid,
+    });
+typedef $$WirdAchievementsTableTableUpdateCompanionBuilder =
+    WirdAchievementsTableCompanion Function({
+      Value<String> id,
+      Value<String> type,
+      Value<int> threshold,
+      Value<bool> unlocked,
+      Value<DateTime?> unlockedAt,
+      Value<int> rowid,
+    });
+
+class $$WirdAchievementsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $WirdAchievementsTableTable> {
+  $$WirdAchievementsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get threshold => $composableBuilder(
+    column: $table.threshold,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get unlocked => $composableBuilder(
+    column: $table.unlocked,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WirdAchievementsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $WirdAchievementsTableTable> {
+  $$WirdAchievementsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get threshold => $composableBuilder(
+    column: $table.threshold,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get unlocked => $composableBuilder(
+    column: $table.unlocked,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WirdAchievementsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WirdAchievementsTableTable> {
+  $$WirdAchievementsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<int> get threshold =>
+      $composableBuilder(column: $table.threshold, builder: (column) => column);
+
+  GeneratedColumn<bool> get unlocked =>
+      $composableBuilder(column: $table.unlocked, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$WirdAchievementsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WirdAchievementsTableTable,
+          WirdAchievementEntry,
+          $$WirdAchievementsTableTableFilterComposer,
+          $$WirdAchievementsTableTableOrderingComposer,
+          $$WirdAchievementsTableTableAnnotationComposer,
+          $$WirdAchievementsTableTableCreateCompanionBuilder,
+          $$WirdAchievementsTableTableUpdateCompanionBuilder,
+          (
+            WirdAchievementEntry,
+            BaseReferences<
+              _$AppDatabase,
+              $WirdAchievementsTableTable,
+              WirdAchievementEntry
+            >,
+          ),
+          WirdAchievementEntry,
+          PrefetchHooks Function()
+        > {
+  $$WirdAchievementsTableTableTableManager(
+    _$AppDatabase db,
+    $WirdAchievementsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WirdAchievementsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$WirdAchievementsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$WirdAchievementsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<int> threshold = const Value.absent(),
+                Value<bool> unlocked = const Value.absent(),
+                Value<DateTime?> unlockedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WirdAchievementsTableCompanion(
+                id: id,
+                type: type,
+                threshold: threshold,
+                unlocked: unlocked,
+                unlockedAt: unlockedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String type,
+                required int threshold,
+                Value<bool> unlocked = const Value.absent(),
+                Value<DateTime?> unlockedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WirdAchievementsTableCompanion.insert(
+                id: id,
+                type: type,
+                threshold: threshold,
+                unlocked: unlocked,
+                unlockedAt: unlockedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WirdAchievementsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WirdAchievementsTableTable,
+      WirdAchievementEntry,
+      $$WirdAchievementsTableTableFilterComposer,
+      $$WirdAchievementsTableTableOrderingComposer,
+      $$WirdAchievementsTableTableAnnotationComposer,
+      $$WirdAchievementsTableTableCreateCompanionBuilder,
+      $$WirdAchievementsTableTableUpdateCompanionBuilder,
+      (
+        WirdAchievementEntry,
+        BaseReferences<
+          _$AppDatabase,
+          $WirdAchievementsTableTable,
+          WirdAchievementEntry
+        >,
+      ),
+      WirdAchievementEntry,
+      PrefetchHooks Function()
+    >;
 typedef $$DownloadedTafsirsTableCreateCompanionBuilder =
     DownloadedTafsirsCompanion Function({
       Value<int> resourceId,
@@ -10731,6 +15831,17 @@ class $AppDatabaseManager {
       );
   $$QuranBookmarksTableTableManager get quranBookmarks =>
       $$QuranBookmarksTableTableManager(_db, _db.quranBookmarks);
+  $$WirdsTableTableTableManager get wirdsTable =>
+      $$WirdsTableTableTableManager(_db, _db.wirdsTable);
+  $$WirdDailyProgressTableTableTableManager get wirdDailyProgressTable =>
+      $$WirdDailyProgressTableTableTableManager(
+        _db,
+        _db.wirdDailyProgressTable,
+      );
+  $$WirdCycleHistoryTableTableTableManager get wirdCycleHistoryTable =>
+      $$WirdCycleHistoryTableTableTableManager(_db, _db.wirdCycleHistoryTable);
+  $$WirdAchievementsTableTableTableManager get wirdAchievementsTable =>
+      $$WirdAchievementsTableTableTableManager(_db, _db.wirdAchievementsTable);
   $$DownloadedTafsirsTableTableManager get downloadedTafsirs =>
       $$DownloadedTafsirsTableTableManager(_db, _db.downloadedTafsirs);
   $$DownloadedTranslationsTableTableManager get downloadedTranslations =>

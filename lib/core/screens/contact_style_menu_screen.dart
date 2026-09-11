@@ -8,7 +8,7 @@ class ContactStyleMenuScreen extends StatelessWidget {
   const ContactStyleMenuScreen({
     required this.title,
     required this.subtitle,
-    required this.icon,
+    this.icon,
     required this.sections,
     this.selectedNavIndex,
     super.key,
@@ -16,7 +16,7 @@ class ContactStyleMenuScreen extends StatelessWidget {
 
   final String title;
   final String subtitle;
-  final IconData icon;
+  final IconData? icon;
   final List<ContactStyleMenuSection> sections;
   final int? selectedNavIndex;
 
@@ -39,7 +39,7 @@ class ContactStyleMenuScreen extends StatelessWidget {
     final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
     final accentColor = isDark
         ? AppColors.goldenAccentDark
-        : AppColors.maroon800;
+        : AppColors.goldenAccent;
     final navIndex = _effectiveNavIndex;
 
     return Directionality(
@@ -63,11 +63,13 @@ class ContactStyleMenuScreen extends StatelessWidget {
                 child: IslamicHeader(
                   title: title,
                   subtitle: subtitle,
-                  trailing: _HeaderAccentIcon(
-                    icon: icon,
-                    isDark: isDark,
-                    accentColor: accentColor,
-                  ),
+                  trailing: icon == null
+                      ? null
+                      : _HeaderAccentIcon(
+                          icon: icon!,
+                          isDark: isDark,
+                          accentColor: accentColor,
+                        ),
                 ),
               ),
 
@@ -139,15 +141,15 @@ class ContactStyleMenuScreen extends StatelessWidget {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: isDark ? 0.22 : 0.06,
+                                      color: AppColors.maroon900.withValues(
+                                        alpha: isDark ? 0.24 : 0.08,
                                       ),
                                       blurRadius: 24,
                                       offset: const Offset(0, 8),
                                     ),
                                     BoxShadow(
                                       color: accentColor.withValues(
-                                        alpha: isDark ? 0.04 : 0.03,
+                                        alpha: isDark ? 0.06 : 0.04,
                                       ),
                                       blurRadius: 40,
                                       offset: const Offset(0, 16),

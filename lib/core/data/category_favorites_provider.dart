@@ -29,24 +29,26 @@ class CategoryFavoritesController extends Notifier<Set<String>> {
 
   void init(String type, {CategoryFavoritesDataSource? dataSource}) {
     _type = type;
-    _dataSource = dataSource ??
+    _dataSource =
+        dataSource ??
         CategoryFavoritesDataSource(ref.read(appDatabaseProvider));
     _loadFavorites();
   }
 
   Future<void> _loadFavorites() async {
-    final ids = await _dataSource.getAllFavoriteIds();
+    final ids = await _dataSource.getAllFavoriteIds(_type);
     if (ids.isEmpty) {
       await _insertDefaults();
-      state = await _dataSource.getAllFavoriteIds();
+      state = await _dataSource.getAllFavoriteIds(_type);
     } else {
       state = ids;
     }
   }
 
   Future<void> _insertDefaults() async {
-    final defaults =
-        _type == 'adhkar' ? _defaultAdhkarFavorites : _defaultDuaFavorites;
+    final defaults = _type == 'adhkar'
+        ? _defaultAdhkarFavorites
+        : _defaultDuaFavorites;
 
     List<dynamic> categories;
     if (_type == 'adhkar') {
@@ -67,7 +69,7 @@ class CategoryFavoritesController extends Notifier<Set<String>> {
 
   Future<void> toggleFavorite(String categoryId) async {
     if (state.contains(categoryId)) {
-      await _dataSource.removeFavorite(categoryId);
+      await _dataSource.removeFavorite(categoryId, _type);
       state = {...state}..remove(categoryId);
     } else {
       await _dataSource.addFavorite(categoryId, _type);
@@ -80,5 +82,5 @@ class CategoryFavoritesController extends Notifier<Set<String>> {
 
 final categoryFavoritesProvider =
     NotifierProvider<CategoryFavoritesController, Set<String>>(
-  CategoryFavoritesController.new,
-);
+      CategoryFavoritesController.new,
+    );
