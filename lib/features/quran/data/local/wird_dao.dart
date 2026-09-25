@@ -31,6 +31,12 @@ class WirdDao {
     await _database.update(_database.wirdsTable).replace(entry);
   }
 
+  Future<void> deleteWird(int wirdId) async {
+    await (_database.delete(
+      _database.wirdsTable,
+    )..where((table) => table.id.equals(wirdId))).go();
+  }
+
   Future<void> markWirdCompletedToday({
     required int wirdId,
     required int plannedStartPage,

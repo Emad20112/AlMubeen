@@ -60,6 +60,14 @@ class WirdNotifier extends AsyncNotifier<WirdEntry?> {
     );
   }
 
+  Future<void> deleteWird() async {
+    final current = state.value;
+    if (current == null) return;
+
+    await _wirdDao.deleteWird(current.id);
+    state = const AsyncData(null);
+  }
+
   Future<void> saveWirdSettings({
     required WirdAmountType amountType,
     required int amountMultiplier,

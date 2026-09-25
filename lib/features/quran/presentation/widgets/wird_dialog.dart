@@ -6,6 +6,7 @@ import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:qcf_quran/qcf_quran.dart';
 
 Future<void> showWirdHotelDoorsDialog(
@@ -65,19 +66,10 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
   TimeOfDay? _selectedTime;
   String _frequency = 'daily';
   bool _initializedFromStore = false;
-  bool _completedManually = false;
+  bool _showSettings = false;
 
   AsyncValue<WirdEntry?> get _wirdState => ref.watch(wirdControllerProvider);
   WirdEntry? get _currentWird => _wirdState.value;
-
-  bool get _isCompletedToday {
-    final lastRead = _currentWird?.lastReadDate;
-    if (lastRead == null) return false;
-    final now = DateTime.now();
-    return lastRead.year == now.year &&
-        lastRead.month == now.month &&
-        lastRead.day == now.day;
-  }
 
   @override
   void initState() {
@@ -130,12 +122,12 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
     }
   }
 
-  void _saveSettings() {
+  Future<void> _saveSettings() async {
     final daysText = _durationController.text.trim();
     final parsedDays = int.tryParse(daysText);
     final durationDays = parsedDays != null && parsedDays > 0 ? parsedDays : 30;
 
-    ref
+    await ref
         .read(wirdControllerProvider.notifier)
         .saveWirdSettings(
           amountType: _selectedType,
@@ -146,33 +138,38 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
               ? null
               : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
         );
+    if (mounted) {
+      setState(() => _showSettings = false);
+    }
   }
 
-  void _markWirdComplete() {
-    final boundaries = _todayBoundaries;
-    final targetPages = (boundaries.endPage - boundaries.startPage + 1);
+  Future<void> _createNewWird() async {
+    await ref.read(wirdControllerProvider.notifier).deleteWird();
+    if (mounted) setState(() => _showSettings = true);
+  }
 
-    ref
-        .read(wirdControllerProvider.notifier)
-        .markTodayAsCompleted(
-          plannedStartPage: boundaries.startPage,
-          plannedEndPage: boundaries.endPage,
-        );
-
-    setState(() {
-      _completedManually = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'تم تسجيل إنجاز الوِرد اليومي (${convertToArabicDigits(targetPages)} صفحة).',
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
+  Future<void> _cancelWird() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إلغاء الورد؟'),
+        content: const Text('سيتم حذف خطة الورد وتقدمها من هذا الجهاز.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('تراجع'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('إلغاء الورد'),
+          ),
+        ],
       ),
     );
+    if (confirmed == true) {
+      await ref.read(wirdControllerProvider.notifier).deleteWird();
+      if (mounted) setState(() => _showSettings = true);
+    }
   }
 
   Future<void> _pickReminderTime() async {
@@ -218,6 +215,15 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (_wirdState.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_wirdState.hasError) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Text('تعذر تحميل إعدادات الورد. أغلق النافذة وحاول مرة أخرى.'),
+      );
+    }
     if (_wirdState is AsyncData<WirdEntry?> && !_initializedFromStore) {
       final entry = (_wirdState as AsyncData<WirdEntry?>).value;
       if (entry != null) {
@@ -246,7 +252,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
       }
     }
 
-    final dialogWidth = MediaQuery.of(context).size.width * 0.92;
+    final dialogWidth = MediaQuery.sizeOf(context).width * 0.92;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = isDark ? AppColors.goldenAccentDark : AppColors.maroon800;
     final boundaries = _todayBoundaries;
@@ -256,15 +262,6 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
     final endSurah = getSurahNameArabic(
       getSurahNumberFromPage(boundaries.endPage),
     );
-
-    final leftSlide = Tween<Offset>(
-      begin: const Offset(-1, 0),
-      end: Offset.zero,
-    ).animate(widget.animation);
-    final rightSlide = Tween<Offset>(
-      begin: const Offset(1, 0),
-      end: Offset.zero,
-    ).animate(widget.animation);
 
     return Material(
       color: Colors.transparent,
@@ -285,27 +282,46 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: Row(
-              children: [
-                Expanded(
-                  child: SlideTransition(
-                    position: leftSlide,
-                    child: _buildLeftPanel(context, accent, boundaries),
-                  ),
-                ),
-                Expanded(
-                  child: SlideTransition(
-                    position: rightSlide,
-                    child: _buildRightPanel(
-                      context,
-                      accent,
-                      startSurah,
-                      endSurah,
-                      boundaries,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.auto_stories_rounded, color: accent),
+                        const Gap(8),
+                        Expanded(
+                          child: Text(
+                            'إعداد الورد اليومي',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'إغلاق',
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
                     ),
-                  ),
+                    if (_showSettings || _currentWird == null)
+                      _buildSettingsPanel(context, accent)
+                    else
+                      _buildDetailsPanel(
+                        context,
+                        accent,
+                        startSurah,
+                        endSurah,
+                        boundaries,
+                      ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -313,6 +329,202 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
     );
   }
 
+  Widget _buildSettingsPanel(BuildContext context, Color accent) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<WirdAmountType>(
+          initialValue: _selectedType,
+          isDense: true,
+          decoration: InputDecoration(
+            labelText: 'مقدار الورد اليومي',
+            prefixIcon: const Icon(Icons.menu_book_rounded),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          items: WirdAmountType.values
+              .map(
+                (type) => DropdownMenuItem<WirdAmountType>(
+                  value: type,
+                  child: Text(_amountTypeLabel(type)),
+                ),
+              )
+              .toList(),
+          onChanged: (type) {
+            if (type != null) setState(() => _selectedType = type);
+          },
+        ),
+        const Gap(10),
+        TextField(
+          controller: _durationController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(
+            labelText: 'عدد أيام الخطة',
+            prefixIcon: const Icon(Icons.event_available_rounded),
+            isDense: true,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+          ),
+          onChanged: (value) {
+            final parsed = int.tryParse(value);
+            if (parsed != null && parsed > 0) {
+              setState(() => _durationDays = parsed);
+            }
+          },
+        ),
+        const Gap(8),
+        SwitchListTile.adaptive(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          title: const Text('تذكير يومي'),
+          value: _reminderEnabled,
+          onChanged: (value) => setState(() {
+            _reminderEnabled = value;
+            if (!value) _selectedTime = null;
+          }),
+        ),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            onPressed: _reminderEnabled ? _pickReminderTime : null,
+            icon: const Icon(Icons.schedule_rounded, size: 18),
+            label: Text(
+              _selectedTime == null
+                  ? 'اختيار وقت التذكير'
+                  : _formatTimeOfDay(_selectedTime),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: accent,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+        const Gap(8),
+        FilledButton(
+          onPressed: _saveSettings,
+          style: FilledButton.styleFrom(
+            backgroundColor: accent,
+            foregroundColor: Colors.white,
+            visualDensity: VisualDensity.compact,
+          ),
+          child: const Text('حفظ'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailsPanel(
+    BuildContext context,
+    Color accent,
+    String startSurah,
+    String endSurah,
+    WirdBoundaries boundaries,
+  ) {
+    final pageCount = boundaries.endPage - boundaries.startPage + 1;
+    final progress =
+        (_completedDaysCount / (_durationDays <= 0 ? 1 : _durationDays)).clamp(
+          0.0,
+          1.0,
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: accent.withValues(alpha: 0.18)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'ورد اليوم',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const Gap(8),
+                Text(
+                  'من $startSurah إلى $endSurah  •  ${convertToArabicDigits(pageCount)} صفحة',
+                ),
+                const Gap(8),
+                Text(
+                  '${_amountTypeLabel(_selectedType)} يومياً  •  خطة ${convertToArabicDigits(_durationDays)} يوماً',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (_reminderEnabled && _selectedTime != null) ...[
+                  const Gap(4),
+                  Text(
+                    'التذكير يومياً الساعة ${_formatTimeOfDay(_selectedTime)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                const Gap(10),
+                LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 7,
+                  color: accent,
+                ),
+                const Gap(6),
+                Text(
+                  '${convertToArabicDigits(_completedDaysCount)} من ${convertToArabicDigits(_durationDays)} يوم',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Gap(12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: widget.onNavigateToWirdEnd == null
+                    ? null
+                    : () => widget.onNavigateToWirdEnd!(boundaries.endPage),
+                icon: const Icon(Icons.flag_rounded, size: 18),
+                label: const Text('نهاية الورد'),
+              ),
+            ),
+            const Gap(8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _navigateToStartPage(boundaries.startPage),
+                icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                label: const Text('بدء الورد'),
+              ),
+            ),
+          ],
+        ),
+        const Gap(8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton.icon(
+              onPressed: _createNewWird,
+              icon: const Icon(Icons.add_rounded, size: 17),
+              label: const Text('ورد جديد'),
+              style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+            ),
+            const Gap(8),
+            TextButton.icon(
+              onPressed: _cancelWird,
+              icon: const Icon(Icons.delete_outline_rounded, size: 17),
+              label: const Text('إلغاء الورد'),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /*
   Widget _buildLeftPanel(
     BuildContext context,
     Color accent,
@@ -338,7 +550,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 14),
+          const Gap(14),
           Row(
             children: [
               Expanded(
@@ -358,7 +570,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const Gap(8),
           TextButton(
             onPressed: _reminderEnabled ? _pickReminderTime : null,
             style: TextButton.styleFrom(
@@ -372,7 +584,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
                   : 'وقت التذكير: ${_formatTimeOfDay(_selectedTime)}',
             ),
           ),
-          const SizedBox(height: 22),
+          const Gap(22),
           FilledButton(
             onPressed: _saveSettings,
             style: FilledButton.styleFrom(
@@ -381,7 +593,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             ),
             child: const Text('حفظ الإعدادات'),
           ),
-          const SizedBox(height: 10),
+          const Gap(10),
           FilledButton(
             onPressed:
                 _currentWird != null &&
@@ -399,28 +611,28 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
                   : 'أكملت الوِرد',
             ),
           ),
-          const SizedBox(height: 12),
+          const Gap(12),
           if (widget.onNavigateToWirdEnd != null)
             OutlinedButton.icon(
               onPressed: () => widget.onNavigateToWirdEnd!(boundaries.endPage),
               icon: const Icon(Icons.flag_rounded),
               label: const Text('إلى نهاية الوِرد'),
             ),
-          const SizedBox(height: 18),
+          const Gap(18),
           Text(
             'تقدم الخطة',
             style: Theme.of(
               context,
             ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
-          const SizedBox(height: 10),
+          const Gap(10),
           LinearProgressIndicator(
             value: progressValue,
             minHeight: 8,
             color: accent,
             backgroundColor: accent.withValues(alpha: 0.16),
           ),
-          const SizedBox(height: 12),
+          const Gap(12),
           Text(
             '${convertToArabicDigits(_completedDaysCount)} من ${convertToArabicDigits(_durationDays)} يوم',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -429,7 +641,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
               ).textTheme.bodySmall?.color?.withValues(alpha: 0.82),
             ),
           ),
-          const SizedBox(height: 6),
+          const Gap(6),
           Text(
             'اليوم ${convertToArabicDigits(_completedDaysCount + 1)} من الخطة',
             style: Theme.of(
@@ -441,6 +653,9 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
     );
   }
 
+  */
+
+  /*
   Widget _buildRightPanel(
     BuildContext context,
     Color accent,
@@ -462,32 +677,30 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: WirdAmountType.values.map((type) {
-              final selected = type == _selectedType;
-              return ChoiceChip(
-                label: Text(_amountTypeLabel(type)),
-                selected: selected,
-                onSelected: (_) {
-                  setState(() {
-                    _selectedType = type;
-                  });
-                },
-                selectedColor: accent.withValues(alpha: 0.14),
-                backgroundColor: Theme.of(context).colorScheme.surface,
-                labelStyle: TextStyle(
-                  color: selected
-                      ? accent
-                      : Theme.of(context).textTheme.bodyMedium?.color,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                ),
-              );
-            }).toList(),
+          const Gap(12),
+          DropdownButtonFormField<WirdAmountType>(
+            initialValue: _selectedType,
+            isDense: true,
+            decoration: InputDecoration(
+              labelText: 'مقدار الورد اليومي',
+              prefixIcon: const Icon(Icons.menu_book_rounded),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            items: WirdAmountType.values
+                .map(
+                  (type) => DropdownMenuItem<WirdAmountType>(
+                    value: type,
+                    child: Text(_amountTypeLabel(type)),
+                  ),
+                )
+                .toList(),
+            onChanged: (type) {
+              if (type != null) setState(() => _selectedType = type);
+            },
           ),
-          const SizedBox(height: 18),
+          const Gap(18),
           TextField(
             controller: _durationController,
             keyboardType: TextInputType.number,
@@ -505,14 +718,14 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
               }
             },
           ),
-          const SizedBox(height: 22),
+          const Gap(22),
           Text(
             'ورد اليوم',
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 10),
+          const Gap(10),
           Text.rich(
             TextSpan(
               children: [
@@ -536,7 +749,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
                 ),
                 WidgetSpan(
                   child: GestureDetector(
-                    onTap: () => _navigateToStartPage(boundaries.startPage),
+                    onTap: () => _navigateToStartPage(boundaries.endPage),
                     child: Text(
                       endSurah,
                       style: TextStyle(
@@ -550,7 +763,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const Gap(16),
           Text(
             'اضغط على اسم السورة للانتقال إلى بداية الورد.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -563,4 +776,5 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
       ),
     );
   }
+  */
 }
