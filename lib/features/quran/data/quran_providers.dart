@@ -86,7 +86,6 @@ final translationLocalDataSourceProvider = Provider<TranslationLocalDataSource>(
     return TranslationLocalDataSource(database: ref.watch(appDatabaseProvider));
   },
 );
-
 final quranResourceCatalogStorageProvider =
     Provider<QuranResourceCatalogStorage>((ref) {
       return QuranResourceCatalogStorage();

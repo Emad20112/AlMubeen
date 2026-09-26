@@ -1,0 +1,19 @@
+{
+    "CodeGPT.apiKey": "CodeGPT Plus Beta",
+    "dart.flutterSdkPath": "C:\\flutter",
+    "dart.sdkPath": "C:\\flutter\\bin\\cache\\dart-sdk",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+            "args": ["-NoLogo"]
+        }
+    },
+    "chat.tools.terminal.terminalProfile.windows": {
+        "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+        "args": ["-NoLogo"]
+    },
+    "terminal.integrated.env.windows": {
+        "Path": "C:\\flutter\\bin;C:\\flutter\\bin\\cache\\dart-sdk\\bin;C:\\Program Files\\Git\\cmd;${env:Path}"
+    }
+}
