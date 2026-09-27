@@ -10,6 +10,7 @@ import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_audio_player_bar.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_interaction_overlay.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_bookmarks_sheet.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/quran_page_view.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_bottom_panel.dart';
 
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_header.dart';
@@ -207,9 +208,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
   // --- Quran page header/footer helpers ---
 
-  static final QuranPageMetadataCache _pageMeta =
-      QuranPageMetadataCache.instance;
-
   // 🛡️ PERF: أنماط ثابتة (static final) تُبنى مرة واحدة فقط بدلاً من إنشاء
   // TextStyle + Shadow جديدة في كل `itemBuilder` لكل صفحة أثناء التمرير.
   static final TextStyle _headerJuzStyleLight = TextStyle(
@@ -269,9 +267,6 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     ],
   );
 
-  static const double _pageHeaderHeight = 44.0;
-  static const double _pageFooterHeight = 32.0;
-
   /// 🛡️ PERF: يُبنى الـ `PageView` مباشرة بدون `LayoutBuilder`، لأن
   /// `LayoutBuilder` كان يعيد حساب الـ constraints لكل الصفحات المرئية
   /// مع كل سحب/تمرير مما يُنتج jank. الأبعاد تُمرَّر من `build()` الأب
@@ -284,9 +279,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     required double availableHeight,
     required double screenWidth,
   }) {
-    final Map<(int, int), Color> highlightMap = highlights.isEmpty
-        ? const {}
-        : {for (final h in highlights) (h.surah, h.verseNumber): h.color};
+    final highlightMap = buildHighlightMap(highlights);
 
     Color? getVerseHighlight(int surah, int verse) =>
         highlightMap.isEmpty ? null : highlightMap[(surah, verse)];
@@ -324,70 +317,22 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
       onPageChanged: _handlePageChanged,
       itemBuilder: (context, index) {
         final pageNumber = index + 1;
-        final meta = _pageMeta.forPage(pageNumber);
+        final meta = QuranPageMetaCache.instance.forPage(pageNumber);
 
-        // 🛡️ PERF: كل طبقة داخل `RepaintBoundary` مستقلة حتى لا يُعاد رسم
-        // صفحة QCF (الأغلى في التطبيق) عند تغيّر نص الـ Header/Footer فقط.
-        return Stack(
+        // 🛡️ PERF: [QuranPageView] يعزل كل طبقة (QCF / header / footer) في
+        // `RepaintBoundary` مستقلة، فلا يُعاد رسم صفحة QCF عند تغيّر التظليل فقط.
+        return QuranPageView(
           key: ValueKey<int>(pageNumber),
-          children: [
-            RepaintBoundary(
-              child: QcfPage(
-                pageNumber: pageNumber,
-                verseBackgroundColor: getVerseHighlight,
-                onLongPressDown: (surah, verse, details) =>
-                    _handleLongPress(surah, verse, details),
-                theme: theme,
-                sp: safeFontScale,
-              ),
-            ),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: _pageHeaderHeight,
-              child: RepaintBoundary(
-                child: Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(meta.juzHizbText, style: headerJuzStyle),
-                        const Spacer(),
-                        Text(meta.surahNameArabic, style: headerSurahStyle),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: _pageFooterHeight,
-              child: RepaintBoundary(
-                child: Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          convertToArabicDigits(pageNumber),
-                          style: footerPageStyle,
-                        ),
-                        const Spacer(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          pageNumber: pageNumber,
+          juzHizbText: meta.juzHizbText,
+          surahNameArabic: meta.surahNameArabic,
+          theme: theme,
+          fontScale: safeFontScale,
+          headerJuzStyle: headerJuzStyle,
+          headerSurahStyle: headerSurahStyle,
+          footerPageStyle: footerPageStyle,
+          getVerseHighlight: getVerseHighlight,
+          onLongPressDown: _handleLongPress,
         );
       },
     );

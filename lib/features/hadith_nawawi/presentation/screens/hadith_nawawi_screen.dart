@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
+import 'package:al_mubeen/core/widgets/shimmer_group.dart';
 import 'package:al_mubeen/features/hadith_nawawi/data/hadith_nawawi_providers.dart';
 import 'package:al_mubeen/features/hadith_nawawi/domain/models/hadith_nawawi_entry.dart';
 import 'package:al_mubeen/features/hadith_nawawi/presentation/screens/hadith_detail_screen.dart';
@@ -128,10 +129,20 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
                     sidePadding,
                     32,
                   ),
-                  sliver: SliverList.separated(
-                    itemCount: 6,
-                    separatorBuilder: (_, _) => const SizedBox(height: 14),
-                    itemBuilder: (_, _) => _SkeletonCard(isDark: isDark),
+                  // 🛡️ PERF: ticker واحد لكل الـ skeletons بدلاً من واحد لكل عنصر.
+                  sliver: SliverToBoxAdapter(
+                    child: ShimmerGroup(
+                      itemCount: 1,
+                      builder: (context, _) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var index = 0; index < 6; index++) ...[
+                            if (index > 0) const SizedBox(height: 14),
+                            _SkeletonCard(isDark: isDark),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -560,131 +571,95 @@ class _OctagonBadge extends StatelessWidget {
 
 // ─── Skeleton Card ────────────────────────────────────────────
 
-class _SkeletonCard extends StatefulWidget {
+class _SkeletonCard extends StatelessWidget {
   const _SkeletonCard({required this.isDark});
 
   final bool isDark;
 
   @override
-  State<_SkeletonCard> createState() => _SkeletonCardState();
-}
-
-class _SkeletonCardState extends State<_SkeletonCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
-    _animation = Tween<double>(
-      begin: 0.3,
-      end: 0.75,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final baseColor = widget.isDark ? Colors.white12 : Colors.black12;
-    final cardBg = widget.isDark ? AppColors.darkSurfaceHigh : Colors.white;
+    final baseColor = isDark ? Colors.white12 : Colors.black12;
+    final cardBg = isDark ? AppColors.darkSurfaceHigh : Colors.white;
 
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, _) {
-        return Opacity(
-          opacity: _animation.value,
-          child: Container(
-            padding: const EdgeInsets.all(18),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : AppColors.maroon700.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Bookmark placeholder
+          Container(
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: widget.isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : AppColors.maroon700.withValues(alpha: 0.06),
-              ),
+              shape: BoxShape.circle,
+              color: baseColor,
             ),
-            child: Row(
+          ),
+          const SizedBox(width: 14),
+          // Content
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Bookmark placeholder
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: double.infinity,
+                  height: 16,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
                     color: baseColor,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                const SizedBox(width: 14),
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: baseColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        width: double.infinity,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: baseColor,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        width: 140,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: baseColor,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        width: 80,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: baseColor,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: baseColor,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                const SizedBox(width: 10),
-                // Badge placeholder
+                const SizedBox(height: 6),
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 140,
+                  height: 12,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
                     color: baseColor,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: 80,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: baseColor,
+                    borderRadius: BorderRadius.circular(999),
                   ),
                 ),
               ],
             ),
           ),
-        );
-      },
+          const SizedBox(width: 10),
+          // Badge placeholder
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: baseColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

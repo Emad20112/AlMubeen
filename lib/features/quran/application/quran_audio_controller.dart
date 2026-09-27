@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:al_mubeen/core/audio/audio_providers.dart';
+import 'package:al_mubeen/core/cache/lru_cache.dart';
 import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/network/connectivity_providers.dart';
 import 'package:al_mubeen/core/network/no_internet_exception.dart';
@@ -75,6 +76,11 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   static const int _prefetchWindowSize = 6;
   static const int _prefetchTriggerIndex = 3;
 
+  /// 🛡️ PERF: حد أعلى لعدد روابط الآيات المُخزَّنة مؤقتاً. نافذة الـ prefetch
+  /// لا تزيد عن 6 آيات، فنافذة بحجم 24 تعطي هامشاً آمناً للتنقل بين السور
+  /// دون السماح للكاش بالنمو بلا سقف خلال جلسات القراءة الطويلة.
+  static const int _prefetchCacheCapacity = 24;
+
   late final AudioPlayer _audioPlayer;
 
   StreamSubscription<PlayerState>? _playerStateSubscription;
@@ -86,7 +92,12 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
 
   String? _loadedKey;
   final Set<String> _prefetchingKeys = <String>{};
-  final Map<String, Uri> _prefetchCache = <String, Uri>{};
+
+  /// كاش LRU محدود السعة لمنع تراكم لا نهائي في الذاكرة.
+  final LruCache<String, Uri> _prefetchCache = LruCache<String, Uri>(
+    maximumSize: _prefetchCacheCapacity,
+  );
+
   final List<AyahRef> _playlistAyahs = <AyahRef>[];
 
   int _requestId = 0;
@@ -384,8 +395,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       }
 
       networkUrl = _prefetchCache[key];
-      if (networkUrl == null) {
-        throw NoInternetException(
+      if (networkUrl == null) {        throw NoInternetException(
           'تعذر تحميل بيانات الصوت للآية ${ayahRef.ayah}.',
         );
       }
