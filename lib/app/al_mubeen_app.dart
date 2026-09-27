@@ -9,10 +9,24 @@ class AlMubeenApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final preferences = ref.watch(appUserPreferencesProvider);
-    final themeMode = preferences.maybeWhen(
-      data: (preferences) => preferences.resolvedThemeMode,
-      orElse: () => ThemeMode.system,
+    // 🛡️ PERF: نراقب فقط الحقول التي يحتاجها MaterialApp (themeMode + fontScale).
+    // سابقاً كان `ref.watch(appUserPreferencesProvider)` يعيد بناء الشجرة
+    // بالكامل عند أي تغيير في أي تفضيل (مثل حفظ آخر صفحة قرآن كل 900ms).
+    final themeMode = ref.watch(
+      appUserPreferencesProvider.select(
+        (preferences) => preferences.maybeWhen(
+          data: (value) => value.resolvedThemeMode,
+          orElse: () => ThemeMode.system,
+        ),
+      ),
+    );
+    final fontScale = ref.watch(
+      appUserPreferencesProvider.select(
+        (preferences) => preferences.maybeWhen(
+          data: (value) => value.fontScale,
+          orElse: () => const AppUserPreferences.initial().fontScale,
+        ),
+      ),
     );
 
     return MaterialApp.router(
@@ -24,15 +38,12 @@ class AlMubeenApp extends ConsumerWidget {
       routerConfig: appRouter,
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
-        final fontScale = preferences
-            .maybeWhen(
-              data: (settings) => settings.fontScale,
-              orElse: () => 1.0,
-            )
-            .clamp(0.55, 1.25)
-            .toDouble();
+        final safeFontScale = fontScale.clamp(0.55, 1.25).toDouble();
         final systemTextScale = mediaQuery.textScaler.scale(1.0).clamp(0.8, 1.3);
-        final combinedTextScale = (systemTextScale * fontScale).clamp(0.8, 1.45);
+        final combinedTextScale = (systemTextScale * safeFontScale).clamp(
+          0.8,
+          1.45,
+        );
 
         return Directionality(
           textDirection: TextDirection.rtl,

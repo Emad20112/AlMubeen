@@ -24,6 +24,7 @@ import 'package:al_mubeen/features/quran/presentation/pages/quran_more_screen.da
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qcf_quran/qcf_quran.dart';
 
@@ -209,12 +210,80 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
   static final QuranPageMetadataCache _pageMeta =
       QuranPageMetadataCache.instance;
 
+  // 🛡️ PERF: أنماط ثابتة (static final) تُبنى مرة واحدة فقط بدلاً من إنشاء
+  // TextStyle + Shadow جديدة في كل `itemBuilder` لكل صفحة أثناء التمرير.
+  static final TextStyle _headerJuzStyleLight = TextStyle(
+    fontSize: 15,
+    color: const Color(0xFF2A070D),
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    shadows: [
+      Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 3),
+    ],
+  );
+  static final TextStyle _headerJuzStyleDark = TextStyle(
+    fontSize: 15,
+    color: const Color(0xFFE8C860),
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    shadows: [
+      Shadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 3),
+    ],
+  );
+  static final TextStyle _headerSurahStyleLight = TextStyle(
+    fontSize: 16,
+    color: const Color(0xFF2A070D),
+    fontWeight: FontWeight.w800,
+    height: 1.2,
+    shadows: [
+      Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 3),
+    ],
+  );
+  static final TextStyle _headerSurahStyleDark = TextStyle(
+    fontSize: 16,
+    color: const Color(0xFFE8C860),
+    fontWeight: FontWeight.w800,
+    height: 1.2,
+    shadows: [
+      Shadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 3),
+    ],
+  );
+  static final TextStyle _footerPageStyleLight = TextStyle(
+    fontSize: 15,
+    color: const Color(0xFF3F1D20),
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: 0.5,
+    shadows: [
+      Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 3),
+    ],
+  );
+  static final TextStyle _footerPageStyleDark = TextStyle(
+    fontSize: 15,
+    color: const Color(0xFFD8B457).withValues(alpha: 0.95),
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: 0.5,
+    shadows: [
+      Shadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 3),
+    ],
+  );
+
+  static const double _pageHeaderHeight = 44.0;
+  static const double _pageFooterHeight = 32.0;
+
+  /// 🛡️ PERF: يُبنى الـ `PageView` مباشرة بدون `LayoutBuilder`، لأن
+  /// `LayoutBuilder` كان يعيد حساب الـ constraints لكل الصفحات المرئية
+  /// مع كل سحب/تمرير مما يُنتج jank. الأبعاد تُمرَّر من `build()` الأب
+  /// الذي يقرأ `MediaQuery` مرة واحدة فقط.
   Widget _buildPageView(
-    BuildContext context,
-    List<HighlightVerse> highlights,
-    bool isDark,
-    double fontScale,
-  ) {
+    BuildContext context, {
+    required List<HighlightVerse> highlights,
+    required bool isDark,
+    required double fontScale,
+    required double availableHeight,
+    required double screenWidth,
+  }) {
     final Map<(int, int), Color> highlightMap = highlights.isEmpty
         ? const {}
         : {for (final h in highlights) (h.surah, h.verseNumber): h.color};
@@ -222,156 +291,103 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     Color? getVerseHighlight(int surah, int verse) =>
         highlightMap.isEmpty ? null : highlightMap[(surah, verse)];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availableHeight = constraints.maxHeight;
-        const int linesPerPage = 15;
-        const double internalPadding = 62.0;
-        final fontSize = getFontSize(1, context);
+    const int linesPerPage = 15;
+    const double internalPadding = 62.0;
+    final fontSize = getFontSize(1, context);
 
-        final screenWidth = MediaQuery.sizeOf(context).width;
-        final screenAdaptiveFactor = (screenWidth / 390).clamp(0.82, 1.18);
+    final screenAdaptiveFactor = (screenWidth / 390).clamp(0.82, 1.18);
+    final safeFontScale = (fontScale * screenAdaptiveFactor).clamp(0.55, 1.15);
+    final effectiveFontSize = fontSize * safeFontScale;
 
-        final safeFontScale = (fontScale * screenAdaptiveFactor).clamp(
-          0.55,
-          1.15,
-        );
-        final effectiveFontSize = fontSize * safeFontScale;
+    final computedVerseHeight =
+        (availableHeight - internalPadding) /
+        (linesPerPage * effectiveFontSize);
 
-        final computedVerseHeight =
-            (availableHeight - internalPadding) /
-            (linesPerPage * effectiveFontSize);
+    final baseTheme = isDark ? QcfThemeData.dark() : const QcfThemeData();
+    final theme = baseTheme.copyWith(
+      verseHeight: computedVerseHeight,
+      headerTextColor: isDark ? const Color(0xFF2A070D) : null,
+    );
 
-        final baseTheme = isDark ? QcfThemeData.dark() : const QcfThemeData();
-        final theme = baseTheme.copyWith(
-          verseHeight: computedVerseHeight,
-          headerTextColor: isDark ? const Color(0xFF2A070D) : null,
-        );
+    final headerJuzStyle = isDark ? _headerJuzStyleDark : _headerJuzStyleLight;
+    final headerSurahStyle = isDark
+        ? _headerSurahStyleDark
+        : _headerSurahStyleLight;
+    final footerPageStyle = isDark
+        ? _footerPageStyleDark
+        : _footerPageStyleLight;
 
-        // Vivid, high-contrast colors for header/footer text
-        final headerTextColor = isDark
-            ? const Color(0xFFE8C860) // golden warm — highly readable on dark
-            : const Color(0xFF2A070D); // maroon900 — deep & crisp on parchment
+    return PageView.builder(
+      controller: _pageController,
+      scrollDirection: Axis.horizontal,
+      itemCount: totalPagesCount,
+      onPageChanged: _handlePageChanged,
+      itemBuilder: (context, index) {
+        final pageNumber = index + 1;
+        final meta = _pageMeta.forPage(pageNumber);
 
-        final footerTextColor = isDark
-            ? const Color(0xFFD8B457).withValues(alpha: 0.95)
-            : const Color(0xFF3F1D20); // maroon800
-
-        const headerHeight = 44.0;
-        const footerHeight = 32.0;
-
-        return PageView.builder(
-          controller: _pageController,
-          scrollDirection: Axis.horizontal,
-          itemCount: totalPagesCount,
-          onPageChanged: _handlePageChanged,
-          itemBuilder: (context, index) {
-            final pageNumber = index + 1;
-            final meta = _pageMeta.forPage(pageNumber);
-
-            return Stack(
-              children: [
-                RepaintBoundary(
-                  child: QcfPage(
-                    pageNumber: pageNumber,
-                    verseBackgroundColor: getVerseHighlight,
-                    onLongPressDown: (surah, verse, details) =>
-                        _handleLongPress(surah, verse, details),
-                    theme: theme,
-                    sp: safeFontScale,
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: headerHeight,
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            meta.juzHizbText,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: headerTextColor,
-                              fontWeight: FontWeight.w700,
-                              height: 1.2,
-                              shadows: [
-                                Shadow(
-                                  color: isDark
-                                      ? Colors.black.withValues(alpha: 0.5)
-                                      : Colors.white.withValues(alpha: 0.6),
-                                  blurRadius: 3,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            meta.surahNameArabic,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: headerTextColor,
-                              fontWeight: FontWeight.w800,
-                              height: 1.2,
-                              shadows: [
-                                Shadow(
-                                  color: isDark
-                                      ? Colors.black.withValues(alpha: 0.5)
-                                      : Colors.white.withValues(alpha: 0.6),
-                                  blurRadius: 3,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+        // 🛡️ PERF: كل طبقة داخل `RepaintBoundary` مستقلة حتى لا يُعاد رسم
+        // صفحة QCF (الأغلى في التطبيق) عند تغيّر نص الـ Header/Footer فقط.
+        return Stack(
+          key: ValueKey<int>(pageNumber),
+          children: [
+            RepaintBoundary(
+              child: QcfPage(
+                pageNumber: pageNumber,
+                verseBackgroundColor: getVerseHighlight,
+                onLongPressDown: (surah, verse, details) =>
+                    _handleLongPress(surah, verse, details),
+                theme: theme,
+                sp: safeFontScale,
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: _pageHeaderHeight,
+              child: RepaintBoundary(
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(meta.juzHizbText, style: headerJuzStyle),
+                        const Spacer(),
+                        Text(meta.surahNameArabic, style: headerSurahStyle),
+                      ],
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: footerHeight,
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            convertToArabicDigits(pageNumber),
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: footerTextColor,
-                              fontWeight: FontWeight.w700,
-                              height: 1.2,
-                              letterSpacing: 0.5,
-                              shadows: [
-                                Shadow(
-                                  color: isDark
-                                      ? Colors.black.withValues(alpha: 0.4)
-                                      : Colors.white.withValues(alpha: 0.6),
-                                  blurRadius: 3,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                        ],
-                      ),
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: _pageFooterHeight,
+              child: RepaintBoundary(
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          convertToArabicDigits(pageNumber),
+                          style: footerPageStyle,
+                        ),
+                        const Spacer(),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            );
-          },
+              ),
+            ),
+          ],
         );
       },
     );
@@ -544,7 +560,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
               content: Row(
                 children: [
                   const Icon(Icons.wifi_off_rounded, color: Colors.white),
-                  const SizedBox(width: 12),
+                  const Gap(12),
                   Expanded(
                     child: Text(
                       next.errorMessage!,
@@ -570,8 +586,17 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     );
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mediaQuery = MediaQuery.of(context);
+    final screenSize = mediaQuery.size;
     final iconNavBarOffset =
-        kQuranReaderIconNavBarHeight + MediaQuery.of(context).padding.bottom;
+        kQuranReaderIconNavBarHeight + mediaQuery.padding.bottom;
+
+    // 🛡️ PERF: تُحسب أبعاد الصفحة مرة واحدة هنا (خارج `LayoutBuilder`)،
+    // وارتفاع المساحة المتاحة للـ PageView = ارتفاع الشاشة ناقص شريط التنقل السفلي.
+    final availablePageHeight = (screenSize.height - iconNavBarOffset).clamp(
+      0.0,
+      screenSize.height,
+    );
 
     final fontScale = ref.watch(
       appUserPreferencesProvider.select(
@@ -594,17 +619,17 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
               child: SafeArea(
                 top: false,
                 child: MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(textScaler: TextScaler.linear(1)),
+                  data: mediaQuery.copyWith(textScaler: TextScaler.linear(1)),
                   child: ValueListenableBuilder<List<HighlightVerse>>(
                     valueListenable: _highlightController,
                     builder: (context, highlights, _) {
                       return _buildPageView(
                         context,
-                        highlights,
-                        isDark,
-                        fontScale,
+                        highlights: highlights,
+                        isDark: isDark,
+                        fontScale: fontScale,
+                        availableHeight: availablePageHeight,
+                        screenWidth: screenSize.width,
                       );
                     },
                   ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
@@ -8,6 +9,7 @@ import 'package:al_mubeen/core/widgets/adhkar_grid_card.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_icon_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 class CategoryGridScreenTab {
@@ -53,7 +55,10 @@ class CategoryGridScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoryGridScreenState extends ConsumerState<CategoryGridScreen> {
+  static const Duration _searchDebounceDuration = Duration(milliseconds: 300);
+
   String _query = '';
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -75,13 +80,24 @@ class _CategoryGridScreenState extends ConsumerState<CategoryGridScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
+
   void _initFavorites(String type) {
     ref.read(categoryFavoritesProvider.notifier).init(type);
   }
 
+  /// 🛡️ PERF: تأخير تحديث البحث 300ms لمنع إعادة بناء الشبكة مع كل حرف يُكتب.
   void _updateQuery(String value) {
-    setState(() {
-      _query = value;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(_searchDebounceDuration, () {
+      if (!mounted || _query == value) return;
+      setState(() {
+        _query = value;
+      });
     });
   }
 
@@ -176,27 +192,57 @@ class _CategoryGrid extends ConsumerWidget {
   final double screenWidth;
   final String query;
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final favoriteIds = ref.watch(categoryFavoritesProvider);
+  /// 🛡️ PERF: ذاكرة مؤقتة لنتيجة الفلترة/الترتيب — نمنع نسخ القائمة
+  /// وترتيبها (O(n log n)) في كل build عند عدم تغيّر المدخلات.
+  static List<dynamic>? _cachedSource;
+  static Set<String>? _cachedFavoriteIds;
+  static String? _cachedQuery;
+  static List<dynamic> _cachedResult = const [];
+
+  List<dynamic> _resolveSortedCategories(Set<String> favoriteIds) {
     final trimmedQuery = query.trim().toLowerCase();
 
+    if (identical(_cachedSource, categories) &&
+        _cachedQuery == trimmedQuery &&
+        _setEquals(_cachedFavoriteIds, favoriteIds)) {
+      return _cachedResult;
+    }
+
     final filtered = trimmedQuery.isEmpty
-        ? categories
+        ? List<dynamic>.of(categories)
         : categories.where((category) {
             final searchableText = '${category.title} ${category.subtitle}'
                 .toLowerCase();
             return searchableText.contains(trimmedQuery);
           }).toList();
 
-    final sorted = List<dynamic>.from(filtered)
-      ..sort((a, b) {
-        final aFav = favoriteIds.contains(a.id) ? 0 : 1;
-        final bFav = favoriteIds.contains(b.id) ? 0 : 1;
-        if (aFav != bFav) return aFav - bFav;
-        return a.priority.compareTo(b.priority);
-      });
+    filtered.sort((a, b) {
+      final aFav = favoriteIds.contains(a.id) ? 0 : 1;
+      final bFav = favoriteIds.contains(b.id) ? 0 : 1;
+      if (aFav != bFav) return aFav - bFav;
+      return a.priority.compareTo(b.priority);
+    });
+
+    _cachedSource = categories;
+    _cachedFavoriteIds = Set<String>.of(favoriteIds);
+    _cachedQuery = trimmedQuery;
+    _cachedResult = filtered;
+    return filtered;
+  }
+
+  static bool _setEquals(Set<String>? a, Set<String> b) {
+    if (a == null || a.length != b.length) return false;
+    for (final value in b) {
+      if (!a.contains(value)) return false;
+    }
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final favoriteIds = ref.watch(categoryFavoritesProvider);
+    final sorted = _resolveSortedCategories(favoriteIds);
 
     final windowClass = AdaptiveBreakpoints.fromWidth(screenWidth);
     final contentMaxWidth = switch (windowClass) {
@@ -412,7 +458,7 @@ class _CategorySkeletonState extends State<_CategorySkeleton>
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const Gap(14),
                   Container(
                     width: 80,
                     height: 12,
@@ -421,7 +467,7 @@ class _CategorySkeletonState extends State<_CategorySkeleton>
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const Gap(8),
                   Container(
                     width: 40,
                     height: 10,

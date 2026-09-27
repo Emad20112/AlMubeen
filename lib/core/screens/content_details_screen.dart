@@ -12,6 +12,7 @@ import 'package:al_mubeen/features/adhkar/presentation/widgets/adhkar_text_setti
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 
 class ContentDetailsScreen extends ConsumerStatefulWidget {
   const ContentDetailsScreen({
@@ -40,7 +41,24 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
 
   final PageController _pageController = PageController();
 
+  /// 🛡️ PERF: ذاكرة مؤقتة لتحويل العناصر — نتجنب تحويل القائمة كاملة من
+  /// `dynamic` إلى `UnifiedContentItem` في كل `build()`.
+  List<dynamic>? _cachedRawItems;
+  List<UnifiedContentItem> _items = const [];
+
   bool get _isProgressMode => widget.enableProgress;
+
+  List<UnifiedContentItem> _resolveItems(List<dynamic> rawItems) {
+    if (identical(_cachedRawItems, rawItems)) {
+      return _items;
+    }
+
+    _cachedRawItems = rawItems;
+    _items = rawItems
+        .map(UnifiedContentItem.fromDynamic)
+        .toList(growable: false);
+    return _items;
+  }
 
   @override
   void initState() {
@@ -215,9 +233,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
               );
             }
 
-            final items = rawItems
-                .map((e) => UnifiedContentItem.fromDynamic(e))
-                .toList();
+            final items = _resolveItems(rawItems);
 
             return Scaffold(
               backgroundColor: isDark
@@ -314,7 +330,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        const SizedBox(width: 8),
+        const Gap(8),
         Expanded(
           child: Text(
             categoryTitle,
@@ -383,7 +399,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.arrow_back_ios, size: 14, color: fgColor),
-                    const SizedBox(width: 4),
+                    const Gap(4),
                     Text(
                       'السابق',
                       style: TextStyle(
@@ -441,7 +457,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
                         color: fgColor,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const Gap(4),
                     Icon(Icons.arrow_forward_ios, size: 14, color: fgColor),
                   ],
                 ),
@@ -469,7 +485,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
               ? _buildProgressStatus(item, completedCount, isCompleted, fgColor)
               : _buildShareStatus(item, context),
         ),
-        const SizedBox(height: 32),
+        const Gap(32),
         Expanded(
           child: Center(
             child: SingleChildScrollView(
@@ -487,7 +503,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const Gap(24),
         if (item.fadl != null && item.fadl!.isNotEmpty) ...[
           Container(
             padding: const EdgeInsets.all(16),
@@ -506,7 +522,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
               textDirection: TextDirection.rtl,
             ),
           ),
-          const SizedBox(height: 16),
+          const Gap(16),
         ],
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,7 +539,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
               textDirection: TextDirection.rtl,
             ),
             if (item.reference != null && item.reference!.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const Gap(8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -565,7 +581,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.check_circle, color: Color(0xFF10B981), size: 18),
-                SizedBox(width: 6),
+                Gap(6),
                 Text(
                   'مكتمل',
                   style: TextStyle(
