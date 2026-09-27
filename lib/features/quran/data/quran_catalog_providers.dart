@@ -1,0 +1,864 @@
+import 'package:al_mubeen/core/data/data_fetch_policy.dart';
+import 'package:al_mubeen/features/quran/data/cache/chapter_lru_cache.dart';
+import 'package:al_mubeen/features/quran/data/cache/quran_memory_cache_providers.dart';
+import 'package:al_mubeen/features/quran/data/local/quran_resource_catalog_storage.dart';
+import 'package:al_mubeen/features/quran/data/local/tafsir_local_data_source.dart';
+import 'package:al_mubeen/features/quran/data/quran_data_providers.dart';
+import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
+import 'package:al_mubeen/features/quran/domain/tafsir_defaults.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
+
+/// ─────────────────────────────────────────────────────────────────────────────
+/// كتالوج المصادر (Tafsir / Translation): الجلب، الدمج، أسماء الموارد،
+/// ونصوص التفسير/الترجمة على مستوى السورة والآية.
+///
+/// تم فصل هذا الملف من `quran_providers.dart` (الذي كان يتجاوز 1000 سطر)
+/// لتسريع الـ incremental compilation وتسهيل الصيانة والاختبار.
+/// استخدم `quran_providers.dart` كـ barrel للاستيراد الموحّد.
+/// ─────────────────────────────────────────────────────────────────────────────
+
+/// Provider for fetching the list of available tafsirs
+final tafsirsProvider = FutureProvider<List<Tafsir>>((ref) async {
+  final storage = ref.watch(quranResourceCatalogStorageProvider);
+  final localArabicTafsirs = await storage.getTafsirs(language: 'ar');
+  final localEnglishTafsirs = await storage.getTafsirs(language: 'en');
+
+  if (localArabicTafsirs.isNotEmpty && localEnglishTafsirs.isNotEmpty) {
+    return _mergeTafsirs(localArabicTafsirs, localEnglishTafsirs);
+  }
+
+  final remoteTafsirs = await _fetchTafsirsCatalog(
+    ref: ref,
+    storage: storage,
+    fallbackArabicTafsirs: localArabicTafsirs,
+    fallbackEnglishTafsirs: localEnglishTafsirs,
+  );
+  if (remoteTafsirs.isNotEmpty) {
+    return remoteTafsirs;
+  }
+
+  final localMergedTafsirs = _mergeTafsirs(
+    localArabicTafsirs,
+    localEnglishTafsirs,
+  );
+  if (localMergedTafsirs.isNotEmpty) {
+    return localMergedTafsirs;
+  }
+
+  final localDownloadedTafsirs = await ref.watch(
+    downloadedTafsirsProvider.future,
+  );
+  return localDownloadedTafsirs;
+});
+
+/// Provider for fetching the list of available translations
+final translationsProvider = FutureProvider<List<Translation>>((ref) async {
+  final storage = ref.watch(quranResourceCatalogStorageProvider);
+  final localArabicTranslations = await storage.getTranslations(language: 'ar');
+  final localEnglishTranslations = await storage.getTranslations(
+    language: 'en',
+  );
+
+  if (localArabicTranslations.isNotEmpty &&
+      localEnglishTranslations.isNotEmpty) {
+    return _mergeTranslations(
+      localArabicTranslations,
+      localEnglishTranslations,
+    );
+  }
+
+  final remoteTranslations = await _fetchTranslationsCatalog(
+    ref: ref,
+    storage: storage,
+    fallbackArabicTranslations: localArabicTranslations,
+    fallbackEnglishTranslations: localEnglishTranslations,
+  );
+  if (remoteTranslations.isNotEmpty) {
+    return remoteTranslations;
+  }
+
+  final localMergedTranslations = _mergeTranslations(
+    localArabicTranslations,
+    localEnglishTranslations,
+  );
+  if (localMergedTranslations.isNotEmpty) {
+    return localMergedTranslations;
+  }
+
+  final localDownloadedTranslations = await ref.watch(
+    downloadedTranslationsProvider.future,
+  );
+  return localDownloadedTranslations;
+});
+
+/// Provider for fetching tafsir text for a specific chapter
+final tafsirChapterProvider =
+    FutureProvider.family<TafsirText, ({int resourceId, int chapterNumber})>((
+      ref,
+      params,
+    ) async {
+      final cacheKey = ResourceChapterKey(
+        resourceId: params.resourceId,
+        chapterNumber: params.chapterNumber,
+      );
+      final tafsirChapterCache = ref.watch(tafsirChapterCacheProvider);
+      final localDataSource = ref.watch(tafsirLocalDataSourceProvider);
+      final displayResourceName = await _resolveTafsirDisplayName(
+        ref,
+        params.resourceId,
+      );
+
+      final memoryTexts = tafsirChapterCache.get(cacheKey);
+      if (memoryTexts != null && memoryTexts.isNotEmpty) {
+        return _combineTafsirChapterTexts(
+          memoryTexts,
+          chapterNumber: params.chapterNumber,
+          resourceName: displayResourceName ?? memoryTexts.first.resourceName,
+        );
+      }
+
+      final cachedTexts = await localDataSource.getTafsirTextForChapter(
+        resourceId: params.resourceId,
+        chapterId: params.chapterNumber,
+      );
+      if (cachedTexts.isNotEmpty) {
+        tafsirChapterCache.put(cacheKey, cachedTexts);
+        return _combineTafsirChapterTexts(
+          cachedTexts,
+          chapterNumber: params.chapterNumber,
+          resourceName: displayResourceName ?? cachedTexts.first.resourceName,
+        );
+      }
+
+      if (params.resourceId == defaultTafsirResourceId) {
+        final builtInTexts = await _loadBuiltInTafsirChapterTexts(
+          ref: ref,
+          chapterNumber: params.chapterNumber,
+        );
+        if (builtInTexts.isNotEmpty) {
+          tafsirChapterCache.put(cacheKey, builtInTexts);
+          return _combineTafsirChapterTexts(
+            builtInTexts,
+            chapterNumber: params.chapterNumber,
+            resourceName:
+                displayResourceName ?? builtInTexts.first.resourceName,
+          );
+        }
+      }
+
+      final result = await ref
+          .watch(quranRepositoryProvider)
+          .getTafsirChapterTexts(
+            resourceId: params.resourceId,
+            chapterNumber: params.chapterNumber,
+            fetchPolicy: DataFetchPolicy.networkOnly,
+          );
+
+      return result.when(
+        success: (tafsirTexts) async {
+          await localDataSource.saveTafsirTexts(
+            resourceId: params.resourceId,
+            chapterId: params.chapterNumber,
+            tafsirTexts: tafsirTexts,
+          );
+          tafsirChapterCache.put(cacheKey, tafsirTexts);
+          return _combineTafsirChapterTexts(
+            tafsirTexts,
+            chapterNumber: params.chapterNumber,
+            resourceName:
+                displayResourceName ??
+                (tafsirTexts.isNotEmpty
+                    ? tafsirTexts.first.resourceName
+                    : null),
+          );
+        },
+        error: (failure) => throw failure,
+      );
+    });
+
+/// Provider for fetching tafsir text for a specific ayah
+final tafsirAyahProvider =
+    FutureProvider.family<
+      TafsirText,
+      ({int resourceId, int chapterNumber, int ayahNumber})
+    >((ref, params) async {
+      final cacheKey = ResourceChapterKey(
+        resourceId: params.resourceId,
+        chapterNumber: params.chapterNumber,
+      );
+      final tafsirChapterCache = ref.watch(tafsirChapterCacheProvider);
+      final localDataSource = ref.watch(tafsirLocalDataSourceProvider);
+      final displayResourceName = await _resolveTafsirDisplayName(
+        ref,
+        params.resourceId,
+      );
+
+      final memoryTexts = tafsirChapterCache.get(cacheKey);
+      if (memoryTexts != null && memoryTexts.isNotEmpty) {
+        return _withResourceName(
+          _findTafsirAyahText(
+            memoryTexts,
+            chapterNumber: params.chapterNumber,
+            ayahNumber: params.ayahNumber,
+          ),
+          displayResourceName ?? memoryTexts.first.resourceName,
+        );
+      }
+
+      // Try to get from local cache first
+      final cachedTafsir = await localDataSource.getTafsirText(
+        resourceId: params.resourceId,
+        chapterId: params.chapterNumber,
+        ayahNumber: params.ayahNumber,
+      );
+      if (cachedTafsir != null) {
+        return _withResourceName(
+          cachedTafsir,
+          displayResourceName ?? cachedTafsir.resourceName,
+        );
+      }
+
+      if (params.resourceId == defaultTafsirResourceId) {
+        final builtInTexts = await _loadBuiltInTafsirChapterTexts(
+          ref: ref,
+          chapterNumber: params.chapterNumber,
+        );
+        if (builtInTexts.isNotEmpty) {
+          tafsirChapterCache.put(cacheKey, builtInTexts);
+          return _withResourceName(
+            _findTafsirAyahText(
+              builtInTexts,
+              chapterNumber: params.chapterNumber,
+              ayahNumber: params.ayahNumber,
+            ),
+            displayResourceName ?? builtInTexts.first.resourceName,
+          );
+        }
+      }
+
+      // If not in cache, fetch from network
+      final result = await ref
+          .watch(quranRepositoryProvider)
+          .getTafsirChapterTexts(
+            resourceId: params.resourceId,
+            chapterNumber: params.chapterNumber,
+            fetchPolicy: DataFetchPolicy.networkOnly,
+          );
+
+      return result.when(
+        success: (tafsirTexts) async {
+          // Cache the result
+          await localDataSource.saveTafsirTexts(
+            resourceId: params.resourceId,
+            chapterId: params.chapterNumber,
+            tafsirTexts: tafsirTexts,
+          );
+          tafsirChapterCache.put(cacheKey, tafsirTexts);
+          return _withResourceName(
+            _findTafsirAyahText(
+              tafsirTexts,
+              chapterNumber: params.chapterNumber,
+              ayahNumber: params.ayahNumber,
+            ),
+            displayResourceName ??
+                (tafsirTexts.isNotEmpty
+                    ? tafsirTexts.first.resourceName
+                    : null),
+          );
+        },
+        error: (failure) => throw failure,
+      );
+    });
+
+final selectedTranslationProvider = StateProvider<int?>((ref) => null);
+
+final translationChapterProvider =
+    FutureProvider.family<
+      TranslationText,
+      ({int resourceId, int chapterNumber})
+    >((ref, params) async {
+      final cacheKey = ResourceChapterKey(
+        resourceId: params.resourceId,
+        chapterNumber: params.chapterNumber,
+      );
+      final translationChapterCache = ref.watch(
+        translationChapterCacheProvider,
+      );
+      final localDataSource = ref.watch(translationLocalDataSourceProvider);
+      final displayResourceName = await _resolveTranslationDisplayName(
+        ref,
+        params.resourceId,
+      );
+
+      final memoryTexts = translationChapterCache.get(cacheKey);
+      if (memoryTexts != null && memoryTexts.isNotEmpty) {
+        return _combineTranslationChapterTexts(
+          memoryTexts,
+          chapterNumber: params.chapterNumber,
+          resourceName: displayResourceName ?? memoryTexts.first.resourceName,
+        );
+      }
+
+      final cachedTexts = await localDataSource.getTranslationTextForChapter(
+        resourceId: params.resourceId,
+        chapterId: params.chapterNumber,
+      );
+      if (cachedTexts.isNotEmpty) {
+        translationChapterCache.put(cacheKey, cachedTexts);
+        return _combineTranslationChapterTexts(
+          cachedTexts,
+          chapterNumber: params.chapterNumber,
+          resourceName: displayResourceName ?? cachedTexts.first.resourceName,
+        );
+      }
+
+      final result = await ref
+          .watch(quranRepositoryProvider)
+          .getTranslationChapterTexts(
+            resourceId: params.resourceId,
+            chapterNumber: params.chapterNumber,
+            fetchPolicy: DataFetchPolicy.networkOnly,
+          );
+
+      return result.when(
+        success: (translationTexts) async {
+          await localDataSource.saveTranslationTexts(
+            resourceId: params.resourceId,
+            chapterId: params.chapterNumber,
+            translationTexts: translationTexts,
+          );
+          translationChapterCache.put(cacheKey, translationTexts);
+          return _combineTranslationChapterTexts(
+            translationTexts,
+            chapterNumber: params.chapterNumber,
+            resourceName:
+                displayResourceName ??
+                (translationTexts.isNotEmpty
+                    ? translationTexts.first.resourceName
+                    : null),
+          );
+        },
+        error: (failure) => throw failure,
+      );
+    });
+
+final translationAyahProvider =
+    FutureProvider.family<
+      TranslationText,
+      ({int resourceId, int chapterNumber, int ayahNumber})
+    >((ref, params) async {
+      final cacheKey = ResourceChapterKey(
+        resourceId: params.resourceId,
+        chapterNumber: params.chapterNumber,
+      );
+      final translationChapterCache = ref.watch(
+        translationChapterCacheProvider,
+      );
+      final localDataSource = ref.watch(translationLocalDataSourceProvider);
+      final displayResourceName = await _resolveTranslationDisplayName(
+        ref,
+        params.resourceId,
+      );
+
+      final memoryTexts = translationChapterCache.get(cacheKey);
+      if (memoryTexts != null && memoryTexts.isNotEmpty) {
+        return _withTranslationResourceName(
+          _findTranslationAyahText(
+            memoryTexts,
+            chapterNumber: params.chapterNumber,
+            ayahNumber: params.ayahNumber,
+          ),
+          displayResourceName ?? memoryTexts.first.resourceName,
+        );
+      }
+
+      final cachedTranslation = await localDataSource.getTranslationText(
+        resourceId: params.resourceId,
+        chapterId: params.chapterNumber,
+        ayahNumber: params.ayahNumber,
+      );
+      if (cachedTranslation != null) {
+        return _withTranslationResourceName(
+          cachedTranslation,
+          displayResourceName ?? cachedTranslation.resourceName,
+        );
+      }
+
+      final result = await ref
+          .watch(quranRepositoryProvider)
+          .getTranslationChapterTexts(
+            resourceId: params.resourceId,
+            chapterNumber: params.chapterNumber,
+            fetchPolicy: DataFetchPolicy.networkOnly,
+          );
+
+      return result.when(
+        success: (translationTexts) async {
+          await localDataSource.saveTranslationTexts(
+            resourceId: params.resourceId,
+            chapterId: params.chapterNumber,
+            translationTexts: translationTexts,
+          );
+          translationChapterCache.put(cacheKey, translationTexts);
+          return _withTranslationResourceName(
+            _findTranslationAyahText(
+              translationTexts,
+              chapterNumber: params.chapterNumber,
+              ayahNumber: params.ayahNumber,
+            ),
+            displayResourceName ??
+                (translationTexts.isNotEmpty
+                    ? translationTexts.first.resourceName
+                    : null),
+          );
+        },
+        error: (failure) => throw failure,
+      );
+    });
+
+/// Provider for the currently selected tafsir (defaults to Tafsir Muyassar - ID 16)
+final selectedTafsirProvider = StateProvider<int>(
+  (ref) => defaultTafsirResourceId,
+);
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/// 🛡️ إضافة التفسير المدمج (الميسر) إلى مقدمة القائمة.
+/// عامّة (public) لأن `quran_data_providers.dart` يعتمد عليها.
+List<Tafsir> prependBuiltInDefaultTafsir(List<Tafsir> tafsirs) {
+  return <Tafsir>[
+    defaultBuiltInTafsir,
+    ...tafsirs.where((tafsir) => tafsir.id != defaultTafsirResourceId),
+  ];
+}
+
+Future<List<TafsirText>> _loadBuiltInTafsirChapterTexts({
+  required Ref ref,
+  required int chapterNumber,
+}) async {
+  final localDataSource = ref.watch(tafsirLocalDataSourceProvider);
+  final assetDataSource = ref.watch(tafsirMuyassarAssetDataSourceProvider);
+  final chapterTexts = await assetDataSource.getChapterTexts(chapterNumber);
+  if (chapterTexts.isEmpty) {
+    return const <TafsirText>[];
+  }
+
+  await localDataSource.saveTafsirTexts(
+    resourceId: defaultTafsirResourceId,
+    chapterId: chapterNumber,
+    tafsirTexts: chapterTexts,
+  );
+  await _syncBuiltInTafsirMetadata(ref, localDataSource);
+  return chapterTexts;
+}
+
+Future<void> _syncBuiltInTafsirMetadata(
+  Ref ref,
+  TafsirLocalDataSource localDataSource,
+) async {
+  if (await localDataSource.isTafsirDownloaded(defaultTafsirResourceId)) {
+    await localDataSource.saveDownloadedTafsir(defaultBuiltInTafsir);
+    ref.invalidate(downloadedTafsirsProvider);
+  }
+}
+
+Future<List<Tafsir>> _fetchTafsirsCatalog({
+  required Ref ref,
+  required QuranResourceCatalogStorage storage,
+  required List<Tafsir> fallbackArabicTafsirs,
+  required List<Tafsir> fallbackEnglishTafsirs,
+}) async {
+  final repository = ref.watch(quranRepositoryProvider);
+  final results = await Future.wait([
+    repository.getTafsirs(
+      language: 'ar',
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    ),
+    repository.getTafsirs(
+      language: 'en',
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    ),
+  ]);
+
+  final fetchedArabicTafsirs = results[0].when(
+    success: (tafsirs) => tafsirs,
+    error: (_) => <Tafsir>[],
+  );
+  final fetchedEnglishTafsirs = results[1].when(
+    success: (tafsirs) => tafsirs,
+    error: (_) => <Tafsir>[],
+  );
+
+  if (fetchedArabicTafsirs.isNotEmpty) {
+    await storage.saveTafsirs(fetchedArabicTafsirs, language: 'ar');
+  }
+  if (fetchedEnglishTafsirs.isNotEmpty) {
+    await storage.saveTafsirs(fetchedEnglishTafsirs, language: 'en');
+  }
+
+  return _mergeTafsirs(
+    fetchedArabicTafsirs.isNotEmpty
+        ? fetchedArabicTafsirs
+        : fallbackArabicTafsirs,
+    fetchedEnglishTafsirs.isNotEmpty
+        ? fetchedEnglishTafsirs
+        : fallbackEnglishTafsirs,
+  );
+}
+
+Future<List<Translation>> _fetchTranslationsCatalog({
+  required Ref ref,
+  required QuranResourceCatalogStorage storage,
+  required List<Translation> fallbackArabicTranslations,
+  required List<Translation> fallbackEnglishTranslations,
+}) async {
+  final repository = ref.watch(quranRepositoryProvider);
+  final results = await Future.wait([
+    repository.getTranslations(
+      language: 'ar',
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    ),
+    repository.getTranslations(
+      language: 'en',
+      fetchPolicy: DataFetchPolicy.networkOnly,
+    ),
+  ]);
+
+  final fetchedArabicTranslations = results[0].when(
+    success: (translations) => translations,
+    error: (_) => <Translation>[],
+  );
+  final fetchedEnglishTranslations = results[1].when(
+    success: (translations) => translations,
+    error: (_) => <Translation>[],
+  );
+
+  if (fetchedArabicTranslations.isNotEmpty) {
+    await storage.saveTranslations(fetchedArabicTranslations, language: 'ar');
+  }
+  if (fetchedEnglishTranslations.isNotEmpty) {
+    await storage.saveTranslations(fetchedEnglishTranslations, language: 'en');
+  }
+
+  return _mergeTranslations(
+    fetchedArabicTranslations.isNotEmpty
+        ? fetchedArabicTranslations
+        : fallbackArabicTranslations,
+    fetchedEnglishTranslations.isNotEmpty
+        ? fetchedEnglishTranslations
+        : fallbackEnglishTranslations,
+  );
+}
+
+List<Tafsir> _mergeTafsirs(
+  List<Tafsir> arabicTafsirs,
+  List<Tafsir> englishTafsirs,
+) {
+  final englishById = {for (final tafsir in englishTafsirs) tafsir.id: tafsir};
+  final merged = <Tafsir>[];
+  final seenIds = <int>{};
+
+  for (final arabicTafsir in arabicTafsirs) {
+    merged.add(_mergeTafsir(arabicTafsir, englishById[arabicTafsir.id]));
+    seenIds.add(arabicTafsir.id);
+  }
+
+  for (final englishTafsir in englishTafsirs) {
+    if (seenIds.contains(englishTafsir.id)) {
+      continue;
+    }
+    merged.add(_mergeTafsir(null, englishTafsir));
+  }
+
+  return merged;
+}
+
+Tafsir _mergeTafsir(Tafsir? arabicTafsir, Tafsir? englishTafsir) {
+  final primary = arabicTafsir ?? englishTafsir;
+  if (primary == null) {
+    throw StateError('Unable to merge empty tafsir entries.');
+  }
+
+  final arabicName =
+      arabicTafsir?.resourceName ??
+      arabicTafsir?.name ??
+      englishTafsir?.resourceName ??
+      englishTafsir?.name ??
+      primary.name;
+  final englishName =
+      englishTafsir?.resourceName ??
+      englishTafsir?.name ??
+      arabicTafsir?.resourceName ??
+      arabicTafsir?.name;
+  final arabicAuthor = arabicTafsir?.authorName ?? englishTafsir?.authorName;
+  final englishAuthor = englishTafsir?.authorName;
+
+  return Tafsir(
+    id: primary.id,
+    name: arabicName,
+    authorName: arabicAuthor,
+    translatedAuthorName: englishAuthor != null && englishAuthor != arabicAuthor
+        ? englishAuthor
+        : null,
+    slug: arabicTafsir?.slug ?? englishTafsir?.slug,
+    languageName: arabicTafsir?.languageName ?? englishTafsir?.languageName,
+    resourceName: englishName != arabicName ? englishName : null,
+  );
+}
+
+Future<String?> _resolveTafsirDisplayName(Ref ref, int resourceId) async {
+  if (resourceId == defaultTafsirResourceId) {
+    return defaultBuiltInTafsir.name;
+  }
+
+  try {
+    final tafsirs = await ref.watch(tafsirsProvider.future);
+    for (final tafsir in tafsirs) {
+      if (tafsir.id == resourceId) {
+        return tafsir.name;
+      }
+    }
+  } catch (_) {
+    // If the bilingual resource list fails, keep the tafsir text flow working.
+  }
+
+  return null;
+}
+
+List<Translation> _mergeTranslations(
+  List<Translation> arabicTranslations,
+  List<Translation> englishTranslations,
+) {
+  final englishById = {
+    for (final translation in englishTranslations) translation.id: translation,
+  };
+  final merged = <Translation>[];
+  final seenIds = <int>{};
+
+  for (final arabicTranslation in arabicTranslations) {
+    merged.add(
+      _mergeTranslation(arabicTranslation, englishById[arabicTranslation.id]),
+    );
+    seenIds.add(arabicTranslation.id);
+  }
+
+  for (final englishTranslation in englishTranslations) {
+    if (seenIds.contains(englishTranslation.id)) {
+      continue;
+    }
+    merged.add(_mergeTranslation(null, englishTranslation));
+  }
+
+  return merged;
+}
+
+Translation _mergeTranslation(
+  Translation? arabicTranslation,
+  Translation? englishTranslation,
+) {
+  final primary = arabicTranslation ?? englishTranslation;
+  if (primary == null) {
+    throw StateError('Unable to merge empty translation entries.');
+  }
+
+  final arabicName =
+      arabicTranslation?.resourceName ??
+      arabicTranslation?.name ??
+      englishTranslation?.resourceName ??
+      englishTranslation?.name ??
+      primary.name;
+  final englishName =
+      englishTranslation?.resourceName ??
+      englishTranslation?.name ??
+      arabicTranslation?.resourceName ??
+      arabicTranslation?.name;
+  final arabicAuthor =
+      arabicTranslation?.authorName ?? englishTranslation?.authorName;
+  final englishAuthor = englishTranslation?.authorName;
+
+  return Translation(
+    id: primary.id,
+    name: arabicName,
+    authorName: arabicAuthor,
+    translatedAuthorName: englishAuthor != null && englishAuthor != arabicAuthor
+        ? englishAuthor
+        : null,
+    slug: arabicTranslation?.slug ?? englishTranslation?.slug,
+    languageName:
+        arabicTranslation?.languageName ?? englishTranslation?.languageName,
+    resourceName: englishName != arabicName ? englishName : null,
+  );
+}
+
+Future<String?> _resolveTranslationDisplayName(Ref ref, int resourceId) async {
+  try {
+    final translations = await ref.watch(translationsProvider.future);
+    for (final translation in translations) {
+      if (translation.id == resourceId) {
+        return translation.name;
+      }
+    }
+  } catch (_) {
+    // If the bilingual resource list fails, keep the translation text flow working.
+  }
+
+  return null;
+}
+
+TafsirText _withResourceName(TafsirText tafsirText, String? resourceName) {
+  if (resourceName == null ||
+      resourceName.trim().isEmpty ||
+      tafsirText.resourceName == resourceName) {
+    return tafsirText;
+  }
+
+  return TafsirText(
+    resourceId: tafsirText.resourceId,
+    resourceName: resourceName,
+    text: tafsirText.text,
+    verseKey: tafsirText.verseKey,
+    verseNumber: tafsirText.verseNumber,
+    chapterId: tafsirText.chapterId,
+  );
+}
+
+TafsirText _combineTafsirChapterTexts(
+  List<TafsirText> tafsirTexts, {
+  required int chapterNumber,
+  String? resourceName,
+}) {
+  if (tafsirTexts.isEmpty) {
+    throw FormatException(
+      'Expected tafsir chapter to contain at least one verse.',
+      {'chapterNumber': chapterNumber},
+    );
+  }
+
+  final orderedTexts = [...tafsirTexts]
+    ..sort((left, right) {
+      final leftVerse = left.verseNumber ?? 0;
+      final rightVerse = right.verseNumber ?? 0;
+      final verseComparison = leftVerse.compareTo(rightVerse);
+      if (verseComparison != 0) {
+        return verseComparison;
+      }
+
+      return left.text.compareTo(right.text);
+    });
+
+  return TafsirText(
+    resourceId: orderedTexts.first.resourceId,
+    resourceName: resourceName ?? orderedTexts.first.resourceName,
+    text: orderedTexts
+        .map((tafsirText) => tafsirText.text.trim())
+        .where((text) => text.isNotEmpty)
+        .join('\n\n'),
+    chapterId: chapterNumber,
+  );
+}
+
+TafsirText _findTafsirAyahText(
+  List<TafsirText> tafsirTexts, {
+  required int chapterNumber,
+  required int ayahNumber,
+}) {
+  if (tafsirTexts.isEmpty) {
+    throw FormatException(
+      'Expected tafsir chapter to contain at least one verse.',
+      {'chapterNumber': chapterNumber},
+    );
+  }
+
+  for (final tafsirText in tafsirTexts) {
+    if (tafsirText.verseNumber == ayahNumber ||
+        tafsirText.verseKey == '$chapterNumber:$ayahNumber') {
+      return tafsirText;
+    }
+  }
+
+  throw FormatException(
+    'Unable to locate tafsir text for ayah $chapterNumber:$ayahNumber.',
+    {'chapterNumber': chapterNumber, 'ayahNumber': ayahNumber},
+  );
+}
+
+TranslationText _withTranslationResourceName(
+  TranslationText translationText,
+  String? resourceName,
+) {
+  if (resourceName == null ||
+      resourceName.trim().isEmpty ||
+      translationText.resourceName == resourceName) {
+    return translationText;
+  }
+
+  return TranslationText(
+    resourceId: translationText.resourceId,
+    resourceName: resourceName,
+    text: translationText.text,
+    verseKey: translationText.verseKey,
+    verseNumber: translationText.verseNumber,
+    chapterId: translationText.chapterId,
+  );
+}
+
+TranslationText _combineTranslationChapterTexts(
+  List<TranslationText> translationTexts, {
+  required int chapterNumber,
+  String? resourceName,
+}) {
+  if (translationTexts.isEmpty) {
+    throw FormatException(
+      'Expected translation chapter to contain at least one verse.',
+      {'chapterNumber': chapterNumber},
+    );
+  }
+
+  final orderedTexts = [...translationTexts]
+    ..sort((left, right) {
+      final leftVerse = left.verseNumber ?? 0;
+      final rightVerse = right.verseNumber ?? 0;
+      final verseComparison = leftVerse.compareTo(rightVerse);
+      if (verseComparison != 0) {
+        return verseComparison;
+      }
+
+      return left.text.compareTo(right.text);
+    });
+
+  return TranslationText(
+    resourceId: orderedTexts.first.resourceId,
+    resourceName: resourceName ?? orderedTexts.first.resourceName,
+    text: orderedTexts
+        .map((translationText) => translationText.text.trim())
+        .where((text) => text.isNotEmpty)
+        .join('\n\n'),
+    chapterId: chapterNumber,
+  );
+}
+
+TranslationText _findTranslationAyahText(
+  List<TranslationText> translationTexts, {
+  required int chapterNumber,
+  required int ayahNumber,
+}) {
+  if (translationTexts.isEmpty) {
+    throw FormatException(
+      'Expected translation chapter to contain at least one verse.',
+      {'chapterNumber': chapterNumber},
+    );
+  }
+
+  for (final translationText in translationTexts) {
+    if (translationText.verseNumber == ayahNumber ||
+        translationText.verseKey == '$chapterNumber:$ayahNumber') {
+      return translationText;
+    }
+  }
+
+  throw FormatException(
+    'Unable to locate translation text for ayah $chapterNumber:$ayahNumber.',
+    {'chapterNumber': chapterNumber, 'ayahNumber': ayahNumber},
+  );
+}
