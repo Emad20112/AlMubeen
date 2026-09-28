@@ -641,3 +641,62 @@ clearest single bugs found.
 | 14 | Dead components: `HomeBottomNavigation`, `CustomBottomNav`, `AdhkarNavigationBar`, `QuranReaderBackButton` | 🟡 | Wire up or delete |
 | 15 | `AGENTS.md` documents a non-existent `DiwaniBent` font | 🟡 | Fix docs |
 | 16 | `layout/adaptive_breakpoints.dart` used by 8 of 171 files | 🟡 | Adopt in feature migration |
+
+---
+
+## 15. Task 1 deliverables - what now exists
+
+This section records the foundation built **in the same task** as the audit.
+Nothing here is wired into `lib/features/` yet - call-site migration is
+Task 2+ by design, so this task carries zero behavioural risk.
+
+### 15.1 Design tokens - `lib/app/theme/`
+
+| File | Provides | Replaces |
+|---|---|---|
+| `app_colors.dart` | Raw palette (renamed) + `AppColorScheme` (29 semantic roles, Light + Dark) | 65 hardcoded colours |
+| `app_spacing.dart` | 4/8/12/16/24/32/48 scale + semantic spacing + `EdgeInsets` helpers | 33 distinct `SizedBox` gaps, 15 paddings |
+| `app_radii.dart` | `xs/sm/md/lg/xl/pill` + `AppRadiusTokens` | 24 distinct radii |
+| `app_motion.dart` | 7 durations + 4 curves + `tween()` + `stagger()` | 26 durations, 7 curves |
+| `app_shadows.dart` | 3 elevation levels, per-brightness + glass helpers | 13 blur values, black-only shadows |
+| `app_typography.dart` | 4 weights, `TextTheme` builders, 11 semantic roles, `quranText()` | 199 raw `TextStyle` |
+| `app_icon.dart` | 6-step size scale + 18 shared `IconData` | inline `size:` + repeated `Icons.*` |
+| `app_shapes.dart` | Button/segment/input shapes + `CardThemeData` | 28 inline `OutlineInputBorder` |
+| `app_design_tokens.dart` | `AppDesignTokens` `ThemeExtension` + `context.tokens` | no single source for spacing/radii/motion/shadows |
+| `app_theme.dart` | 20 component themes registered in one place | 151 ad-hoc `styleFrom` calls |
+
+### 15.2 Core components - `lib/core/design/`
+
+| Component | Solves |
+|---|---|
+| `AppSurface` | 181 inline `BoxDecoration` colours via `AppSurfaceRole` |
+| `AppStateView` | 6 copies of `AppErrorView`, 4 states with no retry action |
+| `AppAsyncView` / `AppAsyncContentView` | per-screen `AsyncValue.when` trees; empty vs error conflation |
+| `AppErrorBoundary` | 0 `ErrorWidget.builder` -> red screen in debug, **black screen in release** |
+| `AppPageHeader` | 4 competing header designs across 12 routed screens |
+| `AppSkeleton` | non-terminating `repeat()` in `ShimmerGroup` / `AppLoadingOverlay` |
+
+### 15.3 Three real defects found by the new tests
+
+These were **not** visible from the audit counts; the contrast and hierarchy
+tests surfaced them:
+
+1. **Inverted surface hierarchy.** `surfaceElevated` (card) was *darker* than
+   `surface` (background) in light mode, so cards read as recessed. Fixed by
+   introducing `AppColorScheme.canvas` for the page background and keeping
+   `surfaceElevated` strictly above `canvas` in luminance in both modes.
+2. **Success green failed WCAG AA.** `#10B981` measured **2.48:1** on the
+   parchment background (limit 3.0:1 for non-text UI). Split into
+   `successLight` `#047857` (5.4:1) and `successDark` `#34D399` (7.4:1).
+3. **`LayoutBuilder` inside `SingleChildScrollView`.** The first
+   `AppStateView` draft read `constraints.maxHeight` from inside the scroll
+   view, where height is `infinity` - it threw at layout. Reordered to match
+   the working `AppErrorView` pattern, plus a `hasBoundedHeight` guard.
+
+### 15.4 Visual-preservation guards
+
+`test/theme/design_system_test.dart` (25 tests) locks the exact original
+surface/appBar/primary values so a future token edit cannot silently change
+the look. It also asserts the UI font family is still whatever
+`Typography.blackMountainView` produced before (`Roboto` on Android) and
+that no `QCF_*` Quran family leaks into the UI `TextTheme`.
