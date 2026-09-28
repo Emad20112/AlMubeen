@@ -2,7 +2,16 @@ import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 abstract final class AppTheme {
-  static ThemeData light() {
+  /// 🛡️ PERF: يتم بناء الثيم مرة واحدة فقط (lazy) وإعادة استخدامه.
+  /// سابقاً كان `ColorScheme.fromSeed()` يُنفَّذ في كل نداء لـ `light()`/`dark()`.
+  static final ThemeData _lightTheme = _buildLight();
+  static final ThemeData _darkTheme = _buildDark();
+
+  static ThemeData light() => _lightTheme;
+
+  static ThemeData dark() => _darkTheme;
+
+  static ThemeData _buildLight() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.goldenAccent,
       brightness: Brightness.light,
@@ -33,7 +42,7 @@ abstract final class AppTheme {
     );
   }
 
-  static ThemeData dark() {
+  static ThemeData _buildDark() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.goldenAccentDark,
       brightness: Brightness.dark,

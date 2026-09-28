@@ -12,6 +12,7 @@ import 'package:al_mubeen/features/quran/presentation/pages/quran_page_reader.da
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:qcf_quran/qcf_quran.dart';
 
 class AppBootstrap extends ConsumerStatefulWidget {
@@ -185,7 +186,7 @@ class _InitialLoading extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.menu_book_rounded, color: AppColors.maroon800, size: 52),
-            const SizedBox(height: 24),
+            const Gap(24),
             const CircularProgressIndicator(color: AppColors.maroon800),
           ],
         ),

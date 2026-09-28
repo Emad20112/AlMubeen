@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
+import 'package:al_mubeen/core/widgets/shimmer_group.dart';
 import 'package:al_mubeen/features/names_of_allah/data/names_of_allah_providers.dart';
 import 'package:al_mubeen/features/names_of_allah/domain/models/allah_name_entry.dart';
 import 'package:al_mubeen/features/names_of_allah/presentation/widgets/allah_name_detail_sheet.dart';
@@ -173,17 +174,25 @@ class _NamesOfAllahScreenState extends ConsumerState<NamesOfAllahScreen> {
         loading: () => [
           SliverPadding(
             padding: EdgeInsets.fromLTRB(sidePadding, 14, sidePadding, 24),
-            sliver: SliverGrid.builder(
-              itemCount: 8,
-              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 280,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-                mainAxisExtent: cardExtent,
+            // 🛡️ PERF: ticker واحد لكل الـ skeletons بدلاً من واحد لكل عنصر.
+            sliver: SliverToBoxAdapter(
+              child: ShimmerGroup(
+                itemCount: 1,
+                builder: (context, _) => GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  itemCount: 8,
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 280,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    mainAxisExtent: cardExtent,
+                  ),
+                  itemBuilder: (context, index) =>
+                      const _AllahNameSkeletonCard(),
+                ),
               ),
-              itemBuilder: (context, index) {
-                return const _AllahNameSkeletonCard();
-              },
             ),
           ),
         ],
@@ -714,107 +723,37 @@ class _AllahNamesErrorState extends StatelessWidget {
   }
 }
 
-class _AllahNameSkeletonCard extends StatefulWidget {
+class _AllahNameSkeletonCard extends StatelessWidget {
   const _AllahNameSkeletonCard();
 
   @override
-  State<_AllahNameSkeletonCard> createState() => _AllahNameSkeletonCardState();
-}
-
-class _AllahNameSkeletonCardState extends State<_AllahNameSkeletonCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
-    _animation = Tween<double>(
-      begin: 0.35,
-      end: 0.8,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? Colors.white12 : Colors.black12;
-    final cardColor = isDark
-        ? AppColors.darkSurfaceHigh
-        : AppColors.parchmentLight;
+    final cardColor = skeletonCardColor(context);
 
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _animation.value,
-          child: Container(
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: AppColors.maroon700.withValues(alpha: 0.08),
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.maroon700.withValues(alpha: 0.08)),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(14),
+        child: Column(
+          children: [
+            Align(
+              alignment: AlignmentDirectional.topEnd,
+              child: SkeletonBox(width: 48, height: 22, borderRadius: 999),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: AlignmentDirectional.topEnd,
-                    child: Container(
-                      width: 48,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: baseColor,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: 120,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: baseColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    width: 150,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: baseColor,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 110,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: baseColor,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  const Spacer(),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+            Spacer(),
+            SkeletonBox(width: 120, height: 26, borderRadius: 8),
+            SizedBox(height: 10),
+            SkeletonBox(width: 150, height: 12, borderRadius: 6),
+            SizedBox(height: 8),
+            SkeletonBox(width: 110, height: 12, borderRadius: 6),
+            Spacer(),
+          ],
+        ),
+      ),
     );
   }
 }
