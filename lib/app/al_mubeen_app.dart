@@ -12,20 +12,21 @@ class AlMubeenApp extends ConsumerWidget {
     // 🛡️ PERF: نراقب فقط الحقول التي يحتاجها MaterialApp (themeMode + fontScale).
     // سابقاً كان `ref.watch(appUserPreferencesProvider)` يعيد بناء الشجرة
     // بالكامل عند أي تغيير في أي تفضيل (مثل حفظ آخر صفحة قرآن كل 900ms).
+    // ⚙️ Dart 3: نستخدم switch expressions بدلاً من maybeWhen (غير متوفر بدون Freezed).
     final themeMode = ref.watch(
       appUserPreferencesProvider.select(
-        (preferences) => preferences.maybeWhen(
-          data: (value) => value.resolvedThemeMode,
-          orElse: () => ThemeMode.system,
-        ),
+        (preferences) => switch (preferences) {
+          AsyncData(:final value) => value.resolvedThemeMode,
+          _ => ThemeMode.system,
+        },
       ),
     );
     final fontScale = ref.watch(
       appUserPreferencesProvider.select(
-        (preferences) => preferences.maybeWhen(
-          data: (value) => value.fontScale,
-          orElse: () => const AppUserPreferences.initial().fontScale,
-        ),
+        (preferences) => switch (preferences) {
+          AsyncData(:final value) => value.fontScale,
+          _ => const AppUserPreferences.initial().fontScale,
+        },
       ),
     );
 
@@ -39,7 +40,9 @@ class AlMubeenApp extends ConsumerWidget {
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
         final safeFontScale = fontScale.clamp(0.55, 1.25).toDouble();
-        final systemTextScale = mediaQuery.textScaler.scale(1.0).clamp(0.8, 1.3);
+        final systemTextScale = mediaQuery.textScaler
+            .scale(1.0)
+            .clamp(0.8, 1.3);
         final combinedTextScale = (systemTextScale * safeFontScale).clamp(
           0.8,
           1.45,

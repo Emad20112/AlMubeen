@@ -545,10 +545,10 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
     final fontScale = ref.watch(
       appUserPreferencesProvider.select(
-        (preferences) => preferences.maybeWhen(
-          data: (value) => value.fontScale,
-          orElse: () => const AppUserPreferences.initial().fontScale,
-        ),
+        (preferences) => switch (preferences) {
+          AsyncData(:final value) => value.fontScale,
+          _ => const AppUserPreferences.initial().fontScale,
+        },
       ),
     );
 
