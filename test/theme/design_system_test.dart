@@ -269,6 +269,66 @@ void main() {
     });
   });
 
+  group('AppSizes', () {
+    test('لا يستخدم `Size.fromHeight` — عرضه infinity', () {
+      // ⚠️ حارس ضد انحدار حقيقي حدث فعلًا: `Size.fromHeight(48)` ==
+      // `Size(double.infinity, 48)`. حين وُضع في `minimumSize` داخل
+      // `ButtonTheme`، طلب **كل** زر عرضًا لا نهائيًّا ورمى
+      // `BoxConstraints forces an infinite width` في كل إطار على أي زر
+      // داخل `Row` (زر «تخطّي» في شاشة الـonboarding).
+      expect(
+        Size.fromHeight(48).width,
+        double.infinity,
+        reason: 'هذه هي الفخ — لا تُستخدم أبدًا كـminimumSize',
+      );
+      expect(AppSizes.minButtonTarget.width, isNot(double.infinity));
+    });
+
+    testWidgets('زر داخل Row لا يطلب عرضًا لا نهائيًا', (tester) async {
+      // الاختبار الحاسم: تخطيط `Row` + `Spacer` + `TextButton` هو ما
+      // كشف العطل. نُعيد إنتاجه هنا صراحةً.
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Row(
+              children: [
+                TextButton(onPressed: () {}, child: const Text('السابق')),
+                const Spacer(),
+                TextButton(onPressed: () {}, child: const Text('تخطّي')),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('تخطّي'), findsOneWidget);
+    });
+
+    testWidgets('أزرار الثيم كلها لها minimumSize بعرض محدود', (tester) async {
+      // مسح شامل: أي زر في أي ثيم يعرض رمي layout.
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Column(
+              children: [
+                FilledButton(onPressed: () {}, child: const Text('a')),
+                ElevatedButton(onPressed: () {}, child: const Text('b')),
+                OutlinedButton(onPressed: () {}, child: const Text('c')),
+                TextButton(onPressed: () {}, child: const Text('d')),
+                IconButton(onPressed: () {}, icon: const Icon(Icons.add)),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('AppStateView', () {
     Widget wrap(Widget child, ThemeData theme) {
       return MaterialApp(

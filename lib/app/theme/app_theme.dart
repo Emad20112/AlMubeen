@@ -217,7 +217,10 @@ abstract final class AppTheme {
         disabledBackgroundColor: colors.surfaceSunken,
         disabledForegroundColor: colors.textDisabled,
         elevation: 0,
-        minimumSize: Size.fromHeight(AppSpacing.touchTarget),
+        minimumSize: const Size(
+          AppSizes.minButtonWidth,
+          AppSpacing.touchTarget,
+        ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,
           vertical: AppSpacing.sm,
@@ -239,7 +242,10 @@ abstract final class AppTheme {
         disabledBackgroundColor: colors.surfaceSunken,
         disabledForegroundColor: colors.textDisabled,
         elevation: 1,
-        minimumSize: Size.fromHeight(AppSpacing.touchTarget),
+        minimumSize: const Size(
+          AppSizes.minButtonWidth,
+          AppSpacing.touchTarget,
+        ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,
           vertical: AppSpacing.sm,
@@ -258,7 +264,10 @@ abstract final class AppTheme {
       style: OutlinedButton.styleFrom(
         foregroundColor: colors.primaryStrong,
         disabledForegroundColor: colors.textDisabled,
-        minimumSize: Size.fromHeight(AppSpacing.touchTarget),
+        minimumSize: const Size(
+          AppSizes.minButtonWidth,
+          AppSpacing.touchTarget,
+        ),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,
           vertical: AppSpacing.sm,
@@ -278,7 +287,7 @@ abstract final class AppTheme {
       style: TextButton.styleFrom(
         foregroundColor: colors.primaryStrong,
         disabledForegroundColor: colors.textDisabled,
-        minimumSize: Size.fromHeight(AppSpacing.touchTargetCompact),
+        minimumSize: const Size(0, AppSpacing.touchTargetCompact),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
           vertical: AppSpacing.xs,

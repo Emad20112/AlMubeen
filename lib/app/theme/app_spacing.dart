@@ -152,4 +152,26 @@ abstract final class AppSizes {
 
   /// أصغر عرض مسموح لزر نصي قبل أن يتحوّل إلى أيقونة.
   static const double minButtonWidth = 64;
+
+  // ---------------------------------------------------------------------------
+  // ⚠️ فخّ يجب ألّا يقع فيه أحد
+  // ---------------------------------------------------------------------------
+
+  /// ‏`Size.fromHeight(48)` هو حرفيًا `Size(double.infinity, 48)`.
+  ///
+  /// وضعه في `minimumSize` داخل `ButtonTheme` يجعل **كل** زر يطلب عرضًا
+  /// لا نهائيًّا، فيرمي Flutter في كل إطار:
+  ///
+  /// ```
+  /// BoxConstraints forces an infinite width.
+  ///   The offending constraints were:
+  ///   BoxConstraints(w=Infinity, 40.0<=h<=Infinity)
+  /// ```
+  ///
+  /// ولا يظهر إلا على الشاشات التي تضع الزر داخل `Row` (مثل زر «تخطّي»
+  /// في `onboarding_screen.dart`)، لأن الزر المفرد يتمدّد بلا تفسير.
+  ///
+  /// استعمل [minButtonWidth] مع ارتفاع صريح، أو `Size(0, h)` حين لا تريد
+  /// حدًّا أدنى للعرض.
+  static const Size minButtonTarget = Size(minButtonWidth, 48);
 }
