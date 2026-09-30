@@ -1,7 +1,7 @@
+import 'package:al_mubeen/core/storage/memory_kv_storage.dart';
 import 'package:al_mubeen/features/quran/application/quran_download_session_store.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -10,8 +10,7 @@ void main() {
     late QuranDownloadSessionStore store;
 
     setUp(() {
-      SharedPreferences.setMockInitialValues({});
-      store = QuranDownloadSessionStore();
+      store = QuranDownloadSessionStore(MemoryKvStorage());
     });
 
     test('saves and restores tafsir sessions', () async {

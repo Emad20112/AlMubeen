@@ -7,17 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class _InMemoryPreferencesStore extends AppUserPreferencesStore {
-  AppUserPreferences _preferences = const AppUserPreferences.initial();
-
-  @override
-  Future<AppUserPreferences> read() async {
-    return _preferences;
-  }
-
-  @override
-  Future<void> write(AppUserPreferences preferences) async {
-    _preferences = preferences;
-  }
+  _InMemoryPreferencesStore() : super();
 }
 
 void main() {

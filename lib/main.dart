@@ -1,5 +1,6 @@
 import 'package:al_mubeen/app/al_mubeen_app.dart';
 import 'package:al_mubeen/core/config/app_config.dart';
+import 'package:al_mubeen/core/storage/kv_storage_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +21,7 @@ Future<void> main() async {
     debugPrint('${details.stack}');
   };
 
+  await initializeKvStorage();
   await AppConfig.load();
 
   runApp(const ProviderScope(child: AlMubeenApp()));

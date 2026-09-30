@@ -1,8 +1,12 @@
+import 'dart:convert';
+
+import 'package:al_mubeen/core/storage/kv_storage.dart';
+import 'package:al_mubeen/core/storage/kv_storage_provider.dart';
+import 'package:al_mubeen/core/storage_keys.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class TasbihNotifier extends Notifier<List<String>> {
-  static const String _dhikrListKey = 'tasbih_dhikr_list';
+  late final KvStorage _storage;
 
   static const List<String> _defaultDhikrs = [
     'سبحان الله',
@@ -15,23 +19,27 @@ class TasbihNotifier extends Notifier<List<String>> {
 
   @override
   List<String> build() {
-    _loadState();
-    return _defaultDhikrs;
+    _storage = ref.read(kvStorageProvider);
+    final encoded = _storage.getString(StorageKeys.tasbihDhikrList);
+    final stored = switch (encoded) {
+      String value => _decodeDhikrs(value),
+      _ => const <String>[],
+    };
+    return stored.isEmpty ? _defaultDhikrs : stored;
   }
 
-  Future<void> _loadState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_dhikrListKey);
-    if (list != null && list.isNotEmpty) {
-      state = list;
-    } else {
-      state = _defaultDhikrs;
+  void _saveState() {
+    _storage.setString(StorageKeys.tasbihDhikrList, jsonEncode(state));
+  }
+
+  List<String> _decodeDhikrs(String encoded) {
+    try {
+      final decoded = jsonDecode(encoded);
+      if (decoded is! List) return const <String>[];
+      return decoded.whereType<String>().toList(growable: false);
+    } on Object {
+      return const <String>[];
     }
-  }
-
-  Future<void> _saveState() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_dhikrListKey, state);
   }
 
   void addDhikr(String dhikr) {

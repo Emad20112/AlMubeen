@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:al_mubeen/core/storage/kv_storage.dart';
+import 'package:al_mubeen/core/storage/kv_storage_provider.dart';
+import 'package:al_mubeen/core/storage_keys.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 enum QuranTextDownloadStatus {
   downloading,
@@ -218,16 +220,22 @@ final class QuranAudioDownloadSession {
 }
 
 class QuranDownloadSessionStore {
-  static const String _tafsirSessionKey = 'quran_text_download_session_tafsir';
+  QuranDownloadSessionStore([KvStorage? storage])
+      : _storage = storage ?? currentKvStorage;
+
+  final KvStorage _storage;
+
+  static const String _tafsirSessionKey =
+      StorageKeys.quranTextDownloadSessionTafsir;
   static const String _translationSessionKey =
-      'quran_text_download_session_translation';
+      StorageKeys.quranTextDownloadSessionTranslation;
 
   Future<void> saveTafsirSession(
     Tafsir tafsir, {
     required bool selectOnComplete,
     QuranTextDownloadStatus status = QuranTextDownloadStatus.downloading,
   }) async {
-    await _saveSession(
+    _saveSession(
       _tafsirSessionKey,
       QuranTextDownloadSession(
         kind: QuranTextDownloadKind.tafsir,
@@ -248,7 +256,7 @@ class QuranDownloadSessionStore {
   Future<void> updateTafsirStatus(QuranTextDownloadStatus status) async {
     final session = await readTafsirSession();
     if (session == null) return;
-    await _saveSession(
+    _saveSession(
       _tafsirSessionKey,
       session.copyWith(status: status, updatedAt: DateTime.now()),
     );
@@ -259,7 +267,7 @@ class QuranDownloadSessionStore {
   }
 
   Future<void> clearTafsirSession() async {
-    await _clearSession(_tafsirSessionKey);
+    _clearSession(_tafsirSessionKey);
   }
 
   Future<void> saveTranslationSession(
@@ -267,7 +275,7 @@ class QuranDownloadSessionStore {
     required bool selectOnComplete,
     QuranTextDownloadStatus status = QuranTextDownloadStatus.downloading,
   }) async {
-    await _saveSession(
+    _saveSession(
       _translationSessionKey,
       QuranTextDownloadSession(
         kind: QuranTextDownloadKind.translation,
@@ -288,7 +296,7 @@ class QuranDownloadSessionStore {
   Future<void> updateTranslationStatus(QuranTextDownloadStatus status) async {
     final session = await readTranslationSession();
     if (session == null) return;
-    await _saveSession(
+    _saveSession(
       _translationSessionKey,
       session.copyWith(status: status, updatedAt: DateTime.now()),
     );
@@ -299,13 +307,13 @@ class QuranDownloadSessionStore {
   }
 
   Future<void> clearTranslationSession() async {
-    await _clearSession(_translationSessionKey);
+    _clearSession(_translationSessionKey);
   }
 
   Future<void> saveAudioSession(
     QuranAudioDownloadSession session,
   ) async {
-    await _saveSession(_audioSessionKey(session.kind), session.toJson());
+    _saveSession(_audioSessionKey(session.kind), session.toJson());
   }
 
   Future<QuranAudioDownloadSession?> readAudioSession({
@@ -329,31 +337,29 @@ class QuranDownloadSessionStore {
     QuranAudioDownloadKind? kind,
   }) async {
     if (kind != null) {
-      await _clearSession(_audioSessionKey(kind));
+      _clearSession(_audioSessionKey(kind));
       return;
     }
 
-    await _clearSession(_audioSessionKey(QuranAudioDownloadKind.fullQuran));
-    await _clearSession(_audioSessionKey(QuranAudioDownloadKind.surah));
+    _clearSession(_audioSessionKey(QuranAudioDownloadKind.fullQuran));
+    _clearSession(_audioSessionKey(QuranAudioDownloadKind.surah));
   }
 
-  Future<void> _saveSession(
+  void _saveSession(
     String key,
     Object session,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
+  ) {
     final json = switch (session) {
       QuranTextDownloadSession value => value.toJson(),
       QuranAudioDownloadSession value => value.toJson(),
       Map<String, dynamic> value => value,
       _ => throw ArgumentError.value(session, 'session'),
     };
-    await prefs.setString(key, jsonEncode(json));
+    _storage.setString(key, jsonEncode(json));
   }
 
   Future<QuranTextDownloadSession?> _readSession(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    final encoded = prefs.getString(key);
+    final encoded = _storage.getString(key);
     if (encoded == null || encoded.isEmpty) {
       return null;
     }
@@ -377,21 +383,19 @@ class QuranDownloadSessionStore {
   }
 
   Future<void> _clearSession(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(key);
+    _storage.remove(key);
   }
 
   String _audioSessionKey(QuranAudioDownloadKind kind) {
     return switch (kind) {
       QuranAudioDownloadKind.fullQuran =>
-        'quran_audio_download_session_full_quran',
-      QuranAudioDownloadKind.surah => 'quran_audio_download_session_surah',
+        StorageKeys.quranAudioDownloadSessionFullQuran,
+      QuranAudioDownloadKind.surah => StorageKeys.quranAudioDownloadSessionSurah,
     };
   }
 
   Future<QuranAudioDownloadSession?> _readAudioSession(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    final encoded = prefs.getString(key);
+    final encoded = _storage.getString(key);
     if (encoded == null || encoded.isEmpty) {
       return null;
     }

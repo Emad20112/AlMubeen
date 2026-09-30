@@ -1,11 +1,11 @@
-import 'dart:convert';
-import 'dart:io';
+﻿import 'dart:convert';
 
+import 'package:al_mubeen/core/storage/kv_storage.dart';
+import 'package:al_mubeen/core/storage/kv_storage_provider.dart';
+import 'package:al_mubeen/core/storage_keys.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 const Object _unset = Object();
 
@@ -153,65 +153,124 @@ class AppUserPreferences {
 }
 
 class AppUserPreferencesStore {
-  AppUserPreferencesStore({this.fileName = 'app_user_preferences.json'});
+  AppUserPreferencesStore([KvStorage? storage])
+      : _storage = storage ?? currentKvStorage;
 
-  final String fileName;
-  File? _cachedFile;
+  final KvStorage _storage;
 
-  Future<AppUserPreferences> read() async {
-    final file = await _resolveFile();
+  AppUserPreferences read() {
+    final recentTimersJson = _storage.getString(
+      StorageKeys.appPreferencesRecentSleepTimers,
+    );
+    final recentSleepTimers = switch (recentTimersJson) {
+      String value => _decodeSleepTimers(value),
+      _ => const <int>[],
+    };
 
-    if (!await file.exists()) {
-      return const AppUserPreferences.initial();
-    }
-
-    try {
-      final encoded = await file.readAsString();
-      final decoded = jsonDecode(encoded);
-      if (decoded is Map<String, dynamic>) {
-        return AppUserPreferences.fromJson(decoded);
-      }
-      if (decoded is Map) {
-        return AppUserPreferences.fromJson(decoded.cast<String, dynamic>());
-      }
-    } catch (error, stackTrace) {
-      debugPrint('AppUserPreferencesStore.read failed: $error\n$stackTrace');
-    }
-
-    return const AppUserPreferences.initial();
+    return AppUserPreferences(
+      hasCompletedWelcome: _storage.getBool(
+            StorageKeys.appPreferencesHasCompletedWelcome,
+          ) ??
+          false,
+      themePreference: switch (_storage.getString(StorageKeys.appPreferencesTheme)) {
+        'light' => AppThemePreference.light,
+        'dark' => AppThemePreference.dark,
+        _ => AppThemePreference.system,
+      },
+      fontScale: _storage.getDouble(StorageKeys.appPreferencesFontScale) ?? 0.85,
+      preferredReciterId: _storage.getInt(
+        StorageKeys.appPreferencesPreferredReciterId,
+      ),
+      preferredReciterName: _storage.getString(
+        StorageKeys.appPreferencesPreferredReciterName,
+      ),
+      autoContinueFromLastPosition: _storage.getBool(
+            StorageKeys.appPreferencesAutoContinue,
+          ) ??
+          true,
+      easyListeningMode: _storage.getBool(
+            StorageKeys.appPreferencesEasyListening,
+          ) ??
+          true,
+      recentSleepTimers: recentSleepTimers,
+      lastQuranPage: _storage.getInt(StorageKeys.appPreferencesLastQuranPage),
+    );
   }
 
-  Future<void> write(AppUserPreferences preferences) async {
-    final file = await _resolveFile();
-    await file.parent.create(recursive: true);
-    await file.writeAsString(jsonEncode(preferences.toJson()));
+  void write(AppUserPreferences preferences) {
+    _storage.setBool(
+      StorageKeys.appPreferencesHasCompletedWelcome,
+      preferences.hasCompletedWelcome,
+    );
+    _storage.setString(
+      StorageKeys.appPreferencesTheme,
+      preferences.themePreference.name,
+    );
+    _storage.setDouble(
+      StorageKeys.appPreferencesFontScale,
+      preferences.fontScale,
+    );
+    _writeNullableInt(
+      StorageKeys.appPreferencesPreferredReciterId,
+      preferences.preferredReciterId,
+    );
+    _writeNullableString(
+      StorageKeys.appPreferencesPreferredReciterName,
+      preferences.preferredReciterName,
+    );
+    _storage.setBool(
+      StorageKeys.appPreferencesAutoContinue,
+      preferences.autoContinueFromLastPosition,
+    );
+    _storage.setBool(
+      StorageKeys.appPreferencesEasyListening,
+      preferences.easyListeningMode,
+    );
+    _storage.setString(
+      StorageKeys.appPreferencesRecentSleepTimers,
+      jsonEncode(preferences.recentSleepTimers),
+    );
+    _writeNullableInt(
+      StorageKeys.appPreferencesLastQuranPage,
+      preferences.lastQuranPage,
+    );
   }
 
-  Future<File> _resolveFile() async {
-    final cached = _cachedFile;
-    if (cached != null) {
-      return cached;
+  void _writeNullableInt(String key, int? value) {
+    if (value == null) {
+      _storage.remove(key);
+    } else {
+      _storage.setInt(key, value);
     }
+  }
 
-    Directory directory;
-    try {
-      directory = await getApplicationSupportDirectory();
-    } catch (error, stackTrace) {
-      debugPrint(
-        'AppUserPreferencesStore: falling back to temp storage: $error\n$stackTrace',
-      );
-      directory = Directory.systemTemp;
+  void _writeNullableString(String key, String? value) {
+    if (value == null) {
+      _storage.remove(key);
+    } else {
+      _storage.setString(key, value);
     }
-    final file = File(p.join(directory.path, fileName));
-    _cachedFile = file;
-    return file;
+  }
+
+  static List<int> _decodeSleepTimers(String value) {
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is! List) return const <int>[];
+      return decoded
+          .whereType<num>()
+          .map((item) => item.toInt())
+          .where((item) => item > 0)
+          .toList(growable: false);
+    } on Object {
+      return const <int>[];
+    }
   }
 }
 
 final appUserPreferencesStoreProvider = Provider<AppUserPreferencesStore>((
   ref,
 ) {
-  return AppUserPreferencesStore();
+  return AppUserPreferencesStore(ref.watch(kvStorageProvider));
 });
 
 final appUserPreferencesProvider =
@@ -224,9 +283,9 @@ class AppUserPreferencesController extends AsyncNotifier<AppUserPreferences> {
   AppUserPreferences? _cachedValue;
 
   @override
-  Future<AppUserPreferences> build() async {
+  AppUserPreferences build() {
     _store = ref.watch(appUserPreferencesStoreProvider);
-    final preferences = await _store.read();
+    final preferences = _store.read();
     _cachedValue = preferences;
     return preferences;
   }
@@ -304,7 +363,7 @@ class AppUserPreferencesController extends AsyncNotifier<AppUserPreferences> {
     }
 
     try {
-      await _store.write(updated);
+      _store.write(updated);
     } catch (error, stackTrace) {
       debugPrint(
         'AppUserPreferencesController save failed: $error\n$stackTrace',
