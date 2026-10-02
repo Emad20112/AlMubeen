@@ -1,5 +1,6 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_icon.dart';
 import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/app/theme/app_theme.dart';
 import 'package:al_mubeen/app/theme/app_typography.dart';
@@ -326,6 +327,51 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('AppIcon — اتجاه RTL', () {
+    // الفحص الحاسم: `Icons.arrow_forward_*` لا ينعكس مع `Directionality`،
+    // فمؤشّر «إلى الأمام» كان يشير لليمين داخل تطبيق عربي. `forwardFor`
+    // هو ما يمنع ذلك.
+    Future<(IconData, IconData)> resolve(
+      WidgetTester tester,
+      TextDirection direction,
+    ) async {
+      late BuildContext captured;
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: direction,
+          child: Builder(
+            builder: (context) {
+              captured = context;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      return (AppIcon.forwardFor(captured), AppIcon.backFor(captured));
+    }
+
+    testWidgets('forwardFor ينعكس بين RTL و LTR', (tester) async {
+      final (ltrForward, ltrBack) = await resolve(tester, TextDirection.ltr);
+      final (rtlForward, rtlBack) = await resolve(tester, TextDirection.rtl);
+
+      expect(ltrForward, Icons.arrow_forward_rounded);
+      expect(rtlForward, Icons.arrow_back_rounded);
+      expect(ltrBack, Icons.arrow_back_rounded);
+      expect(rtlBack, Icons.arrow_forward_rounded);
+    });
+
+    testWidgets('الأيقونات الاتجاهية مختلفة فعليًا بين الوضعين', (
+      tester,
+    ) async {
+      // حارس ضد انحدار يجعل الدالة تُرجع `arrow_forward_ios` في الحالتين،
+      // وهو بالضبط ما كان موجودًا قبل هذا الإصلاح.
+      final (ltrForward, _) = await resolve(tester, TextDirection.ltr);
+      final (rtlForward, _) = await resolve(tester, TextDirection.rtl);
+
+      expect(ltrForward, isNot(rtlForward));
     });
   });
 

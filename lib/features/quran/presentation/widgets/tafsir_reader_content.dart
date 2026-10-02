@@ -4,6 +4,7 @@ import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:al_mubeen/features/quran/domain/tafsir_defaults.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/tafsir_html_content.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qcf_quran/qcf_quran.dart';
@@ -164,7 +165,11 @@ class _ReaderHeader extends StatelessWidget {
                     color: accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(Icons.menu_book_rounded, color: accentColor, size: 20),
+                  child: Icon(
+                    Icons.menu_book_rounded,
+                    color: accentColor,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -259,7 +264,11 @@ class _TafsirSectionCard extends ConsumerWidget {
                     color: primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.auto_stories_rounded, color: primaryColor, size: 18),
+                  child: Icon(
+                    Icons.auto_stories_rounded,
+                    color: primaryColor,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -327,7 +336,12 @@ class _TafsirSectionCard extends ConsumerWidget {
             error: (error, stackTrace) {
               return _TafsirSectionError(
                 isDark: isDark,
-                error: error.toString(),
+                // ⚠️ `error` يُعرض كنص للمستخدم. في debug نُبقي النص الخام
+                // (مفيد)، وفي الإنتاج استثناءات الشبكة تظهر للمستخدم كنص
+                // إنجليزي مشوّش.
+                error: kDebugMode
+                    ? error.toString()
+                    : 'تعذّر تحميل هذا المقطع. تحقّق من اتصالك ثم أعد المحاولة.',
                 onRetry: () {
                   if (providerKey != null) {
                     ref.invalidate(tafsirAyahProvider(providerKey));

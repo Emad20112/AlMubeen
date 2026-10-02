@@ -1,5 +1,6 @@
 import 'package:al_mubeen/app/al_mubeen_app.dart';
 import 'package:al_mubeen/core/config/app_config.dart';
+import 'package:al_mubeen/core/design/app_error_boundary.dart';
 import 'package:al_mubeen/core/storage/kv_storage_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -20,6 +21,10 @@ Future<void> main() async {
     debugPrint('FlutterError: ${details.exception}');
     debugPrint('${details.stack}');
   };
+
+  // يستبدل `ErrorWidget` الخام بشاشة عربية مفهومة + RTL. في debug يُبقي
+  // السلوك الافتراضي (إطار أحمر) لأنه جزء من أدوات التطوير.
+  installReleaseErrorWidget();
 
   await initializeKvStorage();
   await AppConfig.load();

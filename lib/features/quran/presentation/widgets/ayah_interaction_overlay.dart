@@ -28,7 +28,7 @@ void showAyahOverlay({
   showGeneralDialog(
     context: context,
     barrierDismissible: false,
-    barrierLabel: 'Dismiss',
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.black.withValues(alpha: 0.12),
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) {

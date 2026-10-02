@@ -12,7 +12,9 @@
 /// - [AppSurface] — الأسطح (خلفية، بطاقة، زجاج).
 /// - [AppStateView] — حالة موحّدة: تحميل / فارغ / خطأ / بدون اتصال.
 /// - [AppAsyncView] — تحويل `AsyncValue` إلى [AppStateView].
-/// - [AppErrorBoundary] — التقاط أخطاء الودجت بدل الشاشة السوداء.
+/// - [installReleaseErrorWidget] — شبكة أمان الإنتاج: استبدال
+///   `ErrorWidget` الخام بشاشة خطأ عربية + RTL. **ليست** boundary حول
+///   الشاشات؛ اقرأ توثيقها لسبب typedef.
 /// - [AppPageHeader] — ترويسة صفحة واحدة بدل أربعة أنماط.
 /// - [AppSkeleton] — هيكل تحميل بوميض يتوقف تلقائيًا.
 library;

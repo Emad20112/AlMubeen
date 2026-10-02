@@ -58,7 +58,8 @@ abstract final class AppSpacing {
   /// أقصى عرض للمحتوى المقروء على الشاشات الكبيرة والأجهزة اللوحية.
   ///
   /// مستخدم حاليًا بقيمة `560` في `ContactStyleMenuScreen` و `520` في
-  /// `AppErrorView` / `AppLoadingView` — نوحّدها هنا على `560`.
+  /// الحالات القديمة — نوحّدها هنا على `560`، وهي القيمة التي يقرأها
+  /// `AppStateView` مباشرةً.
   static const double contentMaxWidth = 560;
 
   /// أقصى عرض لنص Quran/التفسير الطويل.
@@ -130,7 +131,7 @@ abstract final class AppSpacing {
   /// حشو قياسي لحواف الشاشة.
   static EdgeInsets get screen => const EdgeInsets.all(screenPadding);
 
-  /// حشو خفيف (يستخدمه `AppErrorView` و `AppLoadingView` حاليًا بقيمة 24).
+  /// حشو خفيف (يستخدمه `AppStateView` و `AppAsyncView` حاليًا بقيمة 24).
   static EdgeInsets get state => const EdgeInsets.all(xl);
 }
 

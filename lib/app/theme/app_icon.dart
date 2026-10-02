@@ -54,4 +54,29 @@ abstract final class AppIcon {
   static const IconData download = Icons.download_outlined;
   static const IconData check = Icons.check_circle_outline;
   static const IconData warning = Icons.warning_amber_rounded;
+
+  // ---------------------------------------------------------------------------
+  // ⚠️ أيقونات الاتجاه (RTL)
+  // ---------------------------------------------------------------------------
+
+  /// ‏`Icons.arrow_forward_*` **لا ينعكس** مع `Directionality`. النتيجة داخل
+  /// تطبيق RTL: سهم «إلى الأمام» يشير إلى اليمين فيقود المستخدم للاتجاه
+  /// المعاكس لسببه.
+  ///
+  /// لا تستخدم [chevronEnd] ولا `arrow_forward_ios` في موضع تنقّل عميق
+  /// (نصف صفحة، قائمة فرعية، عنصر التالي). استخدم هذه الدالة بدلها.
+  ///
+  /// أما الأسهم المحايدة (سهم رجوع، رجوع للخلف) فاستخدم [backFor].
+  static IconData forwardFor(BuildContext context) {
+    return Directionality.of(context) == TextDirection.rtl
+        ? Icons.arrow_back_rounded
+        : Icons.arrow_forward_rounded;
+  }
+
+  /// سهم «إلى الخلف» — عكس [forwardFor] تمامًا.
+  static IconData backFor(BuildContext context) {
+    return Directionality.of(context) == TextDirection.rtl
+        ? Icons.arrow_forward_rounded
+        : Icons.arrow_back_rounded;
+  }
 }
