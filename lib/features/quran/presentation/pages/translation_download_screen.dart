@@ -1,7 +1,9 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/design/app_design_components.dart';
 import 'package:al_mubeen/features/quran/application/translation_download_controller.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -97,35 +99,16 @@ class _TranslationDownloadScreenState
         },
         error: (error, stack) {
           if (downloadedTranslations.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'حدث خطأ أثناء تحميل الترجمات',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    error.toString(),
-                    style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.black54,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => ref.invalidate(translationsProvider),
-                    child: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
+            // ⚠️ كان يعرض `error.toString()` للمستخدم في الإنتاج — نص
+            // استثناء خام. في debug نُبقيه، وفي الإنتاج رسالة عربية نظيفة،
+            // نفس سلوك `AppAsyncView._defaultMessage`.
+            return AppStateView.error(
+              title: 'حدث خطأ أثناء تحميل الترجمات',
+              message: kDebugMode
+                  ? error.toString()
+                  : 'تعذّر تحميل قائمة الترجمات. تحقّق من اتصالك ثم أعد المحاولة.',
+              retryLabel: 'إعادة المحاولة',
+              onAction: () => ref.invalidate(translationsProvider),
             );
           }
 
@@ -468,25 +451,47 @@ class _TranslationSearchFilterBar extends StatelessWidget {
               fontSize: 14,
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(Icons.search_rounded, color: accentColor, size: 20),
-              prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: accentColor,
+                size: 20,
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 36,
+                minHeight: 36,
+              ),
               suffixIcon: query.isEmpty
                   ? null
                   : IconButton(
                       onPressed: onClearQuery,
-                      icon: Icon(Icons.clear_rounded, size: 18, color: accentColor),
+                      icon: Icon(
+                        Icons.clear_rounded,
+                        size: 18,
+                        color: accentColor,
+                      ),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
                     ),
               hintText: 'ابحث عن ترجمة أو مترجم',
-              hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 14),
+              hintStyle: TextStyle(
+                color: isDark ? Colors.white38 : Colors.black38,
+                fontSize: 14,
+              ),
               filled: true,
-              fillColor: isDark ? const Color(0xFF2B201C) : AppColors.parchmentLight,
+              fillColor: isDark
+                  ? const Color(0xFF2B201C)
+                  : AppColors.parchmentLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
               isDense: true,
             ),
           ),
@@ -514,14 +519,16 @@ class _TranslationSearchFilterBar extends StatelessWidget {
                 label: 'المحمّل',
                 isSelected: filter == _TranslationLibraryFilter.downloaded,
                 isDark: isDark,
-                onTap: () => onFilterChanged(_TranslationLibraryFilter.downloaded),
+                onTap: () =>
+                    onFilterChanged(_TranslationLibraryFilter.downloaded),
               ),
               const SizedBox(width: 6),
               _CompactFilterChip(
                 label: 'غير المحمّل',
                 isSelected: filter == _TranslationLibraryFilter.notDownloaded,
                 isDark: isDark,
-                onTap: () => onFilterChanged(_TranslationLibraryFilter.notDownloaded),
+                onTap: () =>
+                    onFilterChanged(_TranslationLibraryFilter.notDownloaded),
               ),
             ],
           ),
@@ -549,10 +556,14 @@ class _CompactFilterChip extends StatelessWidget {
     final accentColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
     final bgColor = isSelected
         ? accentColor.withValues(alpha: 0.14)
-        : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04));
+        : (isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.04));
     final borderColor = isSelected
         ? accentColor.withValues(alpha: 0.35)
-        : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.08));
+        : (isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.08));
     final textColor = isSelected
         ? accentColor
         : (isDark ? Colors.white70 : Colors.black54);

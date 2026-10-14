@@ -17,7 +17,7 @@ Future<void> showWirdHotelDoorsDialog(
   return showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Wird Dialog',
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 320),
     pageBuilder: (_, _, _) => const SizedBox.shrink(),

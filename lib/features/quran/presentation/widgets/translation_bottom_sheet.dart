@@ -4,6 +4,7 @@ import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/translation_download_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -128,7 +129,11 @@ class _TranslationBottomSheetState
                 ),
                 error: (error, stack) => _TranslationSheetError(
                   isDark: isDark,
-                  error: error.toString(),
+                  // ⚠️ يُعرض كنص للمستخدم — يُخفى في الإنتاج (انظر
+                  // `tafsir_reader_content` للسبب نفسه).
+                  error: kDebugMode
+                      ? error.toString()
+                      : 'تعذّر تحميل الترجمة. تحقّق من اتصالك ثم أعد المحاولة.',
                   onRetry: () {
                     ref.invalidate(
                       translationAyahProvider((

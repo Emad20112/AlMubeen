@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/core/design/app_design_components.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/core/models/unified_content_item.dart';
-import 'package:al_mubeen/core/widgets/app_error_view.dart';
-import 'package:al_mubeen/core/widgets/app_loading_view.dart';
 import 'package:al_mubeen/core/widgets/share_button.dart';
 import 'package:al_mubeen/features/adhkar/data/adhkar_providers.dart';
 import 'package:al_mubeen/features/adhkar/presentation/widgets/adhkar_text_settings.dart';
@@ -164,32 +163,30 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
 
     return categoryAsync.when(
       loading: () => Scaffold(
-        backgroundColor: isDark ? AppColors.darkScaffold : AppColors.parchment,
-        body: const AppLoadingView(
+        backgroundColor: AppColorScheme.of(context).canvas,
+        body: const AppStateView.loading(
           title: 'جاري تحميل القسم',
           message: 'يتم جلب تفاصيل القسم.',
         ),
       ),
       error: (error, stackTrace) => Scaffold(
-        backgroundColor: isDark ? AppColors.darkScaffold : AppColors.parchment,
-        body: AppErrorView(
+        backgroundColor: AppColorScheme.of(context).canvas,
+        body: AppStateView.error(
           title: 'تعذر تحميل القسم',
           message: 'حدث خطأ غير متوقع.',
-          actionLabel: 'العودة',
-          onActionPressed: () => Navigator.of(context).pop(),
+          retryLabel: 'العودة',
+          onAction: () => Navigator.of(context).pop(),
         ),
       ),
       data: (category) {
         if (category == null) {
           return Scaffold(
-            backgroundColor: isDark
-                ? AppColors.darkScaffold
-                : AppColors.parchment,
-            body: AppErrorView(
+            backgroundColor: AppColorScheme.of(context).canvas,
+            body: AppStateView.empty(
               title: 'لم يتم العثور على القسم',
               message: 'تعذر تحميل هذا القسم.',
               actionLabel: 'العودة',
-              onActionPressed: () => Navigator.of(context).pop(),
+              onAction: () => Navigator.of(context).pop(),
             ),
           );
         }
@@ -198,37 +195,30 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
 
         return itemsAsync.when(
           loading: () => Scaffold(
-            backgroundColor: isDark
-                ? AppColors.darkScaffold
-                : AppColors.parchment,
-            body: const AppLoadingView(
+            backgroundColor: AppColorScheme.of(context).canvas,
+            body: const AppStateView.loading(
               title: 'جاري تحميل المحتوى',
               message: 'يتم جلب النصوص.',
             ),
           ),
           error: (error, stackTrace) => Scaffold(
-            backgroundColor: isDark
-                ? AppColors.darkScaffold
-                : AppColors.parchment,
-            body: AppErrorView(
+            backgroundColor: AppColorScheme.of(context).canvas,
+            body: AppStateView.error(
               title: 'تعذر تحميل البيانات',
               message: 'حدث خطأ غير متوقع أثناء تحميل المحتوى.',
-              actionLabel: 'إعادة المحاولة',
-              onActionPressed:
-                  widget.onRetry ?? () => Navigator.of(context).pop(),
+              retryLabel: 'إعادة المحاولة',
+              onAction: widget.onRetry ?? () => Navigator.of(context).pop(),
             ),
           ),
           data: (rawItems) {
             if (rawItems.isEmpty) {
               return Scaffold(
-                backgroundColor: isDark
-                    ? AppColors.darkScaffold
-                    : AppColors.parchment,
-                body: AppErrorView(
+                backgroundColor: AppColorScheme.of(context).canvas,
+                body: AppStateView.empty(
                   title: 'لا يوجد محتوى',
                   message: 'لم يتم العثور على عناصر في هذا القسم.',
                   actionLabel: 'العودة',
-                  onActionPressed: () => Navigator.of(context).pop(),
+                  onAction: () => Navigator.of(context).pop(),
                 ),
               );
             }
@@ -236,9 +226,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
             final items = _resolveItems(rawItems);
 
             return Scaffold(
-              backgroundColor: isDark
-                  ? AppColors.darkScaffold
-                  : AppColors.parchment,
+              backgroundColor: AppColorScheme.of(context).canvas,
               body: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {

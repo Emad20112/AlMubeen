@@ -26,7 +26,7 @@ enum AppStateKind {
 ///
 /// ## لماذا هذا المكوّن؟
 ///
-/// التدقيق وج�� أن **12 شاشة موجّهة** تعيد بناء نفس الحالة يدويًا بـ
+/// التدقيق وجد أن **12 شاشة موجّهة** تعيد بناء نفس الحالة يدويًا بـ
 /// `Column` + `Icon` + `SizedBox(18)` + `Text` + `FilledButton.icon`، وبأرقام
 /// مسافات مختلفة في كل مرة (18، 20، 22، 26). كما أن 11 `SnackBar` في
 /// المشروع بلا `action`، فالمستخدم لا يستطيع "إعادة المحاولة" إلا بإغلاق
@@ -122,8 +122,8 @@ class AppStateView extends StatelessWidget {
 
     // ⚠️ `LayoutBuilder` **خارج** `SingleChildScrollView` عن قصد: داخل
     // الـscroll view تكون الارتفاع غير محدود (`maxHeight == infinity`)،
-    // و`BoxConstraints(minHeight: infinity)` يرمي عند التخطيط. هذا هو
-    // ترتيب `AppErrorView` القائم أيضًا.
+    // و`BoxConstraints(minHeight: infinity)` يرمي عند التخطيط. لهذا نقرأ
+    // `hasBoundedHeight` بدل مقارنة `maxHeight` بقيمة ثابتة.
     return LayoutBuilder(
       builder: (context, constraints) {
         final minHeight = constraints.hasBoundedHeight

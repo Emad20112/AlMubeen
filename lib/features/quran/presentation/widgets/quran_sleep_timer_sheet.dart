@@ -1,7 +1,7 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
-import 'package:al_mubeen/features/quran/application/quran_surah_player_provider.dart';
-
+import 'package:al_mubeen/app/theme/app_icon.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
+import 'package:al_mubeen/features/quran/application/quran_surah_player_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,8 +71,15 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final playerState = ref.watch(quranSurahPlayerProvider);
-    final isActive = playerState.sleepTimerSettings.isActive;
+    // ⚠️ كان `ref.watch(quranSurahPlayerProvider)` كاملًا: مشغّل النوم
+    // ينبض كل ثانية، فكان ذلك يعيد بناء الورقة كاملة (بما فيها
+    // `CupertinoTimerPicker` الثقيل) كل ثانية. الحقل الوحيد المحتاج هنا
+    // هو `isActive`.
+    final isActive = ref.watch(
+      quranSurahPlayerProvider.select(
+        (state) => state.sleepTimerSettings.isActive,
+      ),
+    );
 
     // For iOS-like dark theme
     final bgColor = const Color(0xFF000000);
@@ -100,10 +107,12 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
-                      onPressed: () {},
+                      // ⚠️ كان `onPressed: () {}` — زر ميت يوهم المستخدم
+                      // بوجود ميزة غير منفّذة. لا أزرار ميتة: نخفيه.
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
                       ),
+                      onPressed: null,
                       child: const Text(
                         'تعديل',
                         style: TextStyle(
@@ -222,8 +231,12 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                               style: TextStyle(color: Colors.white54),
                             ),
                             const SizedBox(width: 4),
+                            // ⚠️ `arrow_forward_ios_rounded` لا ينعكس مع
+                            // `Directionality`، فكان يشير لليمين داخل
+                            // تطبيق RTL. `AppIcon.forwardFor` يتعامل مع
+                            // الاتجاه صراحةً.
                             Icon(
-                              Icons.arrow_forward_ios_rounded,
+                              AppIcon.forwardFor(context),
                               size: 14,
                               color: Colors.white.withValues(alpha: 0.3),
                             ),
@@ -268,8 +281,14 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                           },
                           title: Text(
                             _formatRecentDuration(duration),
+                            // ⚠️ كان `fontSize: 32` داخل `ListTile`: مع
+                            // `textScaler` قادت لارتفاع بند ~72px يفيض
+                            // عند صفّين، وكان الرقم يتضاعف مع إعداد
+                            // النظام فيتجاوز 64.
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 32,
+                              fontSize: 26,
                               fontWeight: FontWeight.w300,
                               color: Colors.white,
                             ),
@@ -306,6 +325,11 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
   }
 }
 
+/// زر دائري للبدء/الإلغاء.
+///
+/// كان `GestureDetector` خامًا: بلا `Material` (فلا ripple ولا حالة ضغط)،
+/// وبلا `Semantics` (فلا يُنطق لقارئ الشاشة ولا يمكن الوصول له ولوحة
+/// المفاتيح). `InkWell` داخل `Material` يعطي كل ذلك مجانًا.
 class _CircleButton extends StatelessWidget {
   const _CircleButton({
     required this.label,
@@ -321,19 +345,28 @@ class _CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 86,
-        height: 86,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: textColor,
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: color,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: 86,
+            height: 86,
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
+              ),
             ),
           ),
         ),
