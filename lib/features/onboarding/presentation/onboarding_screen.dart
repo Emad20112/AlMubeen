@@ -1,4 +1,6 @@
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/constants/app_assets.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:flutter/material.dart';
@@ -95,19 +97,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.darkScaffold : AppColors.parchment;
-    final accentColor = isDark ? AppColors.parchmentMuted : AppColors.maroon800;
+    final colors = context.semanticColors;
     final isLastPage = _currentPage == _pages.length - 1;
     final isFirstPage = _currentPage == 0;
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: colors.canvas,
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                AppSpacing.sm,
+                AppSpacing.xs,
+                AppSpacing.sm,
+                0,
+              ),
               child: Row(
                 children: [
                   if (!isFirstPage)
@@ -115,7 +120,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       onPressed: _goPrevious,
                       icon: const Icon(Icons.arrow_forward_ios, size: 16),
                       label: const Text('السابق'),
-                      style: TextButton.styleFrom(foregroundColor: accentColor),
+                      style: TextButton.styleFrom(foregroundColor: colors.primaryStrong),
                     )
                   else
                     const SizedBox(width: 72),
@@ -125,7 +130,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: Text(
                       'تخطي',
                       style: TextStyle(
-                        color: accentColor.withValues(alpha: 0.6),
+                        color: colors.textTertiary,
                       ),
                     ),
                   ),
@@ -144,8 +149,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               count: _pages.length,
               current: _currentPage,
               isLastPage: isLastPage,
-              isDark: isDark,
-              accentColor: accentColor,
               onNext: _goNext,
               onComplete: _complete,
             ),
@@ -163,13 +166,12 @@ class _PageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fgColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final accentColor = isDark ? AppColors.parchmentMuted : AppColors.maroon800;
+    final colors = context.semanticColors;
+    final theme = Theme.of(context);
 
     return RepaintBoundary(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -177,36 +179,36 @@ class _PageContent extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(28),
+                color: colors.primaryStrong.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
               ),
-              child: Icon(page.icon, color: accentColor, size: 44),
+              child: Icon(page.icon, color: colors.primaryStrong, size: 44),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xxl),
             Text(
               page.title,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: fgColor,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                color: colors.textPrimary,
                 fontWeight: FontWeight.w700,
                 height: 1.2,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             SvgPicture.asset(
               AppAssets.decorativeDivider,
               width: 120,
               colorFilter: ColorFilter.mode(
-                accentColor.withValues(alpha: 0.3),
+                colors.primaryStrong.withValues(alpha: 0.3),
                 BlendMode.srcIn,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               page.description,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: fgColor.withValues(alpha: 0.8),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colors.textSecondary,
                 height: 1.7,
               ),
             ),
@@ -222,8 +224,6 @@ class _BottomBar extends StatelessWidget {
     required this.count,
     required this.current,
     required this.isLastPage,
-    required this.isDark,
-    required this.accentColor,
     required this.onNext,
     required this.onComplete,
   });
@@ -231,24 +231,29 @@ class _BottomBar extends StatelessWidget {
   final int count;
   final int current;
   final bool isLastPage;
-  final bool isDark;
-  final Color accentColor;
   final VoidCallback onNext;
   final VoidCallback onComplete;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        AppSpacing.xl,
+        AppSpacing.sm,
+        AppSpacing.xl,
+        AppSpacing.xl,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           _PageIndicator(
             count: count,
             current: current,
-            accentColor: accentColor,
+            activeColor: colors.primaryStrong,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           SizedBox(
             width: double.infinity,
             height: 52,
@@ -256,12 +261,10 @@ class _BottomBar extends StatelessWidget {
                 ? FilledButton(
                     onPressed: onComplete,
                     style: FilledButton.styleFrom(
-                      backgroundColor: accentColor,
-                      foregroundColor: isDark
-                          ? AppColors.darkScaffold
-                          : AppColors.parchmentLight,
+                      backgroundColor: colors.primaryStrong,
+                      foregroundColor: colors.onPrimaryStrong,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
                       textStyle: const TextStyle(
                         fontSize: 18,
@@ -273,12 +276,12 @@ class _BottomBar extends StatelessWidget {
                 : OutlinedButton(
                     onPressed: onNext,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: accentColor,
+                      foregroundColor: colors.primaryStrong,
                       side: BorderSide(
-                        color: accentColor.withValues(alpha: 0.5),
+                        color: colors.borderStrong,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
                       textStyle: const TextStyle(
                         fontSize: 17,
@@ -305,12 +308,12 @@ class _PageIndicator extends StatelessWidget {
   const _PageIndicator({
     required this.count,
     required this.current,
-    required this.accentColor,
+    required this.activeColor,
   });
 
   final int count;
   final int current;
-  final Color accentColor;
+  final Color activeColor;
 
   @override
   Widget build(BuildContext context) {
@@ -324,8 +327,8 @@ class _PageIndicator extends StatelessWidget {
           width: active ? 28 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: active ? accentColor : accentColor.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(4),
+            color: active ? activeColor : activeColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(AppRadii.xs),
           ),
         );
       }),

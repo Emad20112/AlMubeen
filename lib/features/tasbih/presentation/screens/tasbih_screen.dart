@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/widgets/islamic_header.dart';
 import 'package:al_mubeen/features/tasbih/application/tasbih_controller.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class TasbihScreen extends ConsumerStatefulWidget {
   const TasbihScreen({super.key});
@@ -30,12 +32,14 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final colors = context.semanticColors;
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: isDark ? AppColors.darkSurfaceHigh : AppColors.parchmentLight,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.xl),
+          ),
+          backgroundColor: colors.surfaceElevated,
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -44,56 +48,72 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.parchmentLight : AppColors.maroon800,
+                    color: colors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
                 TextField(
                   controller: textController,
-                  style: TextStyle(color: isDark ? AppColors.parchmentLight : AppColors.maroon800),
+                  style: TextStyle(color: colors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'أدخل الذكر هنا',
-                    hintStyle: TextStyle(color: (isDark ? AppColors.parchmentLight : AppColors.maroon800).withValues(alpha: 0.5)),
+                    hintStyle: TextStyle(color: colors.textTertiary),
                     filled: true,
-                    fillColor: isDark ? AppColors.darkSurface : Colors.white,
+                    fillColor: colors.surfaceSunken,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      borderSide: BorderSide(color: colors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.maroon700, width: 2),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      borderSide: BorderSide(
+                        color: colors.primaryStrong,
+                        width: 2,
+                      ),
                     ),
                   ),
                   textAlign: TextAlign.center,
                   autofocus: true,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
-                        foregroundColor: isDark ? AppColors.parchmentLight : AppColors.maroon800,
+                        foregroundColor: colors.textSecondary,
                       ),
-                      child: const Text('إلغاء', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () {
                         final text = textController.text.trim();
                         if (text.isNotEmpty) {
-                          ref.read(tasbihControllerProvider.notifier).addDhikr(text);
+                          ref
+                              .read(tasbihControllerProvider.notifier)
+                              .addDhikr(text);
                         }
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.maroon700,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        backgroundColor: colors.primaryStrong,
+                        foregroundColor: colors.onPrimaryStrong,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadii.md),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                          vertical: AppSpacing.md,
+                        ),
                       ),
-                      child: const Text('إضافة', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'إضافة',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
@@ -116,10 +136,10 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
   @override
   Widget build(BuildContext context) {
     final dhikrs = ref.watch(tasbihControllerProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.semanticColors;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D1117) : const Color(0xFF1A1A2E),
+      backgroundColor: colors.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -135,8 +155,11 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                 icon: const Icon(Icons.add),
                 label: const Text('إضافة ذكر'),
                 style: TextButton.styleFrom(
-                  foregroundColor: isDark ? AppColors.parchmentLight : AppColors.maroon800,
-                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  foregroundColor: colors.primaryStrong,
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 onPressed: _showAddDialog,
               ),
@@ -146,10 +169,13 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                 behavior: HitTestBehavior.opaque,
                 onTap: _showSunnahReminder,
                 child: dhikrs.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'لا يوجد أذكار، أضف ذكراً جديداً',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: colors.textSecondary,
+                          ),
                         ),
                       )
                     : PageView.builder(
@@ -164,9 +190,9 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                             ),
                             child: _DhikrCard(
                               dhikr: dhikrs[index],
-                              isDark: isDark,
                               onTap: _showSunnahReminder,
-                              onEdit: () => _showEditDialog(index, dhikrs[index]),
+                              onEdit: () =>
+                                  _showEditDialog(index, dhikrs[index]),
                               onDelete: () => _showDeleteDialog(index),
                             ),
                           );
@@ -185,12 +211,14 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final colors = context.semanticColors;
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: isDark ? AppColors.darkSurfaceHigh : AppColors.parchmentLight,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.xl),
+          ),
+          backgroundColor: colors.surfaceElevated,
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -199,56 +227,72 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.parchmentLight : AppColors.maroon800,
+                    color: colors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
                 TextField(
                   controller: textController,
-                  style: TextStyle(color: isDark ? AppColors.parchmentLight : AppColors.maroon800),
+                  style: TextStyle(color: colors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'أدخل الذكر هنا',
-                    hintStyle: TextStyle(color: (isDark ? AppColors.parchmentLight : AppColors.maroon800).withValues(alpha: 0.5)),
+                    hintStyle: TextStyle(color: colors.textTertiary),
                     filled: true,
-                    fillColor: isDark ? AppColors.darkSurface : Colors.white,
+                    fillColor: colors.surfaceSunken,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      borderSide: BorderSide(color: colors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.maroon700, width: 2),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      borderSide: BorderSide(
+                        color: colors.primaryStrong,
+                        width: 2,
+                      ),
                     ),
                   ),
                   textAlign: TextAlign.center,
                   autofocus: true,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
-                        foregroundColor: isDark ? AppColors.parchmentLight : AppColors.maroon800,
+                        foregroundColor: colors.textSecondary,
                       ),
-                      child: const Text('إلغاء', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () {
                         final text = textController.text.trim();
                         if (text.isNotEmpty) {
-                          ref.read(tasbihControllerProvider.notifier).editDhikr(index, text);
+                          ref
+                              .read(tasbihControllerProvider.notifier)
+                              .editDhikr(index, text);
                         }
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.maroon700,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        backgroundColor: colors.primaryStrong,
+                        foregroundColor: colors.onPrimaryStrong,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadii.md),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                          vertical: AppSpacing.md,
+                        ),
                       ),
-                      child: const Text('حفظ', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'حفظ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
@@ -264,12 +308,14 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final colors = context.semanticColors;
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: isDark ? AppColors.darkSurfaceHigh : AppColors.parchmentLight,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.xl),
+          ),
+          backgroundColor: colors.surfaceElevated,
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -278,41 +324,54 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.parchmentLight : AppColors.maroon800,
+                    color: colors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   'هل أنت متأكد من حذف هذا الذكر؟',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: isDark ? AppColors.parchmentLight : AppColors.maroon800,
+                    color: colors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
-                        foregroundColor: isDark ? AppColors.parchmentLight : AppColors.maroon800,
+                        foregroundColor: colors.textSecondary,
                       ),
-                      child: const Text('إلغاء', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        ref.read(tasbihControllerProvider.notifier).removeDhikr(index);
+                        ref
+                            .read(tasbihControllerProvider.notifier)
+                            .removeDhikr(index);
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade700,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        backgroundColor: colors.error,
+                        foregroundColor: colors.onError,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadii.md),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                          vertical: AppSpacing.md,
+                        ),
                       ),
-                      child: const Text('حذف', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'حذف',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
@@ -328,43 +387,30 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
 class _DhikrCard extends StatelessWidget {
   const _DhikrCard({
     required this.dhikr,
-    required this.isDark,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
 
   final String dhikr;
-  final bool isDark;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark ? AppColors.parchmentLight : AppColors.maroon900;
+    final colors = context.semanticColors;
+    final textColor = colors.textPrimary;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [AppColors.darkSurfaceHigh, AppColors.darkSurface]
-                : [Colors.white, AppColors.parchmentLight],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.maroon900.withValues(alpha: 0.15),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          color: colors.surfaceElevated,
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+          boxShadow: context.tokens.shadows.medium,
           border: Border.all(
-            color: AppColors.maroon700.withValues(alpha: 0.2),
+            color: colors.border,
             width: 1.5,
           ),
         ),
@@ -378,11 +424,19 @@ class _DhikrCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit, size: 20, color: textColor.withValues(alpha: 0.6)),
+                    icon: Icon(
+                      Icons.edit,
+                      size: 20,
+                      color: colors.textSecondary,
+                    ),
                     onPressed: onEdit,
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete, size: 20, color: Colors.red.withValues(alpha: 0.6)),
+                    icon: Icon(
+                      Icons.delete,
+                      size: 20,
+                      color: colors.error,
+                    ),
                     onPressed: onDelete,
                   ),
                 ],
@@ -390,7 +444,10 @@ class _DhikrCard extends StatelessWidget {
             ),
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: 40.0,
+                ),
                 child: Text(
                   dhikr,
                   style: TextStyle(
@@ -439,35 +496,37 @@ class _SunnahDialogState extends State<_SunnahDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
+    final colors = context.semanticColors;
+    final textColor = colors.textPrimary;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      backgroundColor: isDark ? AppColors.darkSurfaceHigh : AppColors.parchmentLight,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+      ),
+      backgroundColor: colors.surfaceElevated,
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 16),
-                const Icon(
+                const SizedBox(height: AppSpacing.lg),
+                Icon(
                   FlutterIslamicIcons.tasbih2,
                   size: 48,
-                  color: AppColors.maroon700,
+                  color: colors.primaryStrong,
                 ),
-                const SizedBox(height: 16),
-                const Text(
+                const SizedBox(height: AppSpacing.lg),
+                Text(
                   'إحياء سنة التسبيح',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.maroon700,
+                    color: colors.primaryStrong,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   '«عليكُنَّ بالتَّسبيحِ، والتَّهليلِ، والتَّقديسِ، واعقِدْنَ بالأناملِ؛ فإنَّهنَّ مَسؤولاتٌ مُستَنطَقاتٌ.»\n(رواه أبو داود والترمذي)',
                   style: TextStyle(
@@ -478,9 +537,9 @@ class _SunnahDialogState extends State<_SunnahDialog> {
                   textAlign: TextAlign.center,
                   textDirection: TextDirection.rtl,
                 ),
-                const SizedBox(height: 12),
-                Divider(color: AppColors.maroon700.withValues(alpha: 0.2)),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
+                Divider(color: colors.divider),
+                const SizedBox(height: AppSpacing.md),
                 Text(
                   '«رأيتُ رسولَ اللهِ ﷺ يَعقِدُ التَّسبيحَ بيَمينِه.»\n(صحيح أبي داود)',
                   style: TextStyle(
@@ -498,7 +557,7 @@ class _SunnahDialogState extends State<_SunnahDialog> {
             top: 8,
             left: 8,
             child: IconButton(
-              icon: Icon(Icons.close, color: textColor.withValues(alpha: 0.6)),
+              icon: Icon(Icons.close, color: colors.textSecondary),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
