@@ -10,8 +10,7 @@ class AppConfig {
   AppConfig._();
 
   static const String _envAssetPath = 'env/app.env';
-  static const String _defaultBackendUrl =
-      'https://quan-packend-qgl5ro509-inma-soft.vercel.app';
+  static const String _defaultBackendUrl = 'https://quan-packend.vercel.app';
 
   static late final Uri quranBackendUrl;
 
