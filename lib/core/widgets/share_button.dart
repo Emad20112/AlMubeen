@@ -8,10 +8,12 @@ class ShareButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColorScheme.of(context);
+
     return IconButton(
       tooltip: 'مشاركة',
       onPressed: onPressed,
-      color: AppColors.maroon800,
+      color: colors.primaryStrong,
       icon: const Icon(Icons.share_outlined),
     );
   }

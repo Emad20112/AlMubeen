@@ -1,4 +1,6 @@
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,7 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 class DecorativeCard extends StatelessWidget {
   const DecorativeCard({
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(AppSpacing.cardPadding),
     this.onTap,
     this.isImportant = false,
     super.key,
@@ -19,35 +21,26 @@ class DecorativeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.darkSurfaceHigh
-        : AppColors.parchmentLight;
-    final accentColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
-    final shadowColor = AppColors.maroon900.withValues(
-      alpha: isDark ? 0.28 : 0.13,
-    );
+    final colors = context.semanticColors;
+    final backgroundColor = colors.surfaceElevated;
+    final accentColor = colors.primaryStrong;
 
     return RepaintBoundary(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           onTap: onTap,
           child: Ink(
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               border: Border.all(
-                color: accentColor.withValues(alpha: isImportant ? 0.46 : 0.22),
+                color: colors.border.withValues(alpha: isImportant ? 0.8 : 0.4),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: shadowColor,
-                  blurRadius: isImportant ? 18 : 10,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+              boxShadow: isImportant
+                  ? context.tokens.shadows.elevated
+                  : context.tokens.shadows.subtle,
             ),
             child: Stack(
               fit: StackFit.passthrough,
@@ -58,7 +51,7 @@ class DecorativeCard extends StatelessWidget {
                       AppAssets.decorativeCardFrame,
                       fit: BoxFit.fill,
                       colorFilter: ColorFilter.mode(
-                        accentColor.withValues(alpha: 0.42),
+                        accentColor.withValues(alpha: 0.25),
                         BlendMode.srcIn,
                       ),
                     ),

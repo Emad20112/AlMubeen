@@ -13,11 +13,13 @@ class FavoriteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColorScheme.of(context);
+
     return IconButton(
       tooltip: isFavorite ? 'إزالة من المفضلة' : 'إضافة للمفضلة',
       onPressed: onPressed,
-      color: AppColors.maroon800,
-      icon: Icon(isFavorite ? Icons.star : Icons.star_outline),
+      color: isFavorite ? colors.accent : colors.textSecondary,
+      icon: Icon(isFavorite ? Icons.star_rounded : Icons.star_outline_rounded),
     );
   }
 }
