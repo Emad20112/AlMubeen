@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class TafsirReaderContent extends ConsumerWidget {
   const TafsirReaderContent({
@@ -130,7 +132,7 @@ class _ReaderHeader extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: accentColor.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
@@ -163,7 +165,7 @@ class _ReaderHeader extends StatelessWidget {
                   height: 42,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child: Icon(
                     Icons.menu_book_rounded,
@@ -171,7 +173,7 @@ class _ReaderHeader extends StatelessWidget {
                     size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     'تفسير سورة ${getSurahName(chapterNumber)}',
@@ -246,7 +248,7 @@ class _TafsirSectionCard extends ConsumerWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF231A17) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: primaryColor.withValues(alpha: 0.14)),
       ),
       child: Column(
@@ -262,7 +264,7 @@ class _TafsirSectionCard extends ConsumerWidget {
                   height: 38,
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child: Icon(
                     Icons.auto_stories_rounded,
@@ -270,7 +272,7 @@ class _TafsirSectionCard extends ConsumerWidget {
                     size: 18,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,7 +298,7 @@ class _TafsirSectionCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -304,7 +306,7 @@ class _TafsirSectionCard extends ConsumerWidget {
                   ),
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
                     border: Border.all(
                       color: primaryColor.withValues(alpha: 0.16),
                     ),
@@ -397,7 +399,7 @@ class _TafsirSectionError extends StatelessWidget {
       child: Column(
         children: [
           Icon(Icons.error_outline, size: 40, color: accentColor),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Text(
             'حدث خطأ أثناء تحميل التفسير',
             style: TextStyle(
@@ -407,7 +409,7 @@ class _TafsirSectionError extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             error,
             style: TextStyle(

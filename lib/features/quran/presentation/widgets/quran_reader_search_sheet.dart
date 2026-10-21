@@ -12,6 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 enum SearchFilter { all, quranText, tafsir, reciters, translations, surahNames }
 
@@ -152,7 +154,7 @@ class _QuranReaderSearchPageState
         content: const Text('تم نسخ النص للمشاركة'),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
       ),
     );
   }
@@ -303,7 +305,7 @@ class _SearchHeader extends StatelessWidget {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: TextField(
               focusNode: focusNode,
@@ -346,7 +348,7 @@ class _SearchHeader extends StatelessWidget {
                     ? AppColors.darkSurfaceHigh
                     : AppColors.parchmentLight,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -434,12 +436,12 @@ class _FilterChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(color: borderColor),
           ),
           child: Row(
@@ -447,7 +449,7 @@ class _FilterChip extends StatelessWidget {
             children: [
               if (isSelected) ...[
                 Icon(Icons.check_rounded, size: 14, color: accentColor),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
               ],
               Text(
                 label,
@@ -505,7 +507,7 @@ class _SearchResultsBody extends ConsumerWidget {
       children: [
         if (showSurahNames && surahs.isNotEmpty) ...[
           _SectionDivider(title: 'أسماء السور'),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -523,7 +525,7 @@ class _SearchResultsBody extends ConsumerWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
         if (showQuranText) ...[
           _QuranTextSearchSection(
@@ -559,7 +561,7 @@ class _SearchResultsBody extends ConsumerWidget {
             mutedColor: mutedColor,
           ),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xl),
       ],
     );
   }
@@ -637,7 +639,7 @@ class _QuranTextSearchSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SectionDivider(title: 'النص القراني'),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         for (final result in results.take(20))
           _QuranVerseResultTile(
             key: ValueKey('quran-${result.surahNumber}-${result.verseNumber}'),
@@ -683,7 +685,7 @@ class _TafsirBookSearchSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _SectionDivider(title: 'كتب التفسير'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             for (final tafsir in results.take(10))
               _BookResultTile(
                 key: ValueKey('tafsir-book-${tafsir.id}'),
@@ -731,7 +733,7 @@ class _TranslationBookSearchSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _SectionDivider(title: 'كتب الترجمات'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             for (final translation in results.take(10))
               _BookResultTile(
                 key: ValueKey('trans-book-${translation.id}'),
@@ -776,7 +778,7 @@ class _ReciterSearchSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _SectionDivider(title: 'القراء'),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             for (final recitation in results.take(10))
               _BookResultTile(
                 key: ValueKey('reciter-${recitation.id}'),
@@ -827,12 +829,12 @@ class _BookResultTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           child: Ink(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppColors.maroon800.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(
                 color: AppColors.maroon800.withValues(alpha: 0.10),
               ),
@@ -844,7 +846,7 @@ class _BookResultTile extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color: AppColors.maroon800.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: Icon(icon, color: AppColors.maroon800, size: 18),
                 ),
@@ -874,7 +876,7 @@ class _BookResultTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
@@ -932,7 +934,7 @@ class _SearchEmptyState extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               'اكتب كلمة للبحث في القرآن والموضوعات والتفاسير.',
               textAlign: TextAlign.center,
@@ -978,12 +980,12 @@ class _SurahResultCard extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               child: Ink(
                 padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
                 decoration: BoxDecoration(
                   color: AppColors.maroon800.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                   border: Border.all(
                     color: AppColors.maroon800.withValues(alpha: 0.12),
                   ),
@@ -1002,7 +1004,7 @@ class _SurahResultCard extends StatelessWidget {
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       'سورة ${convertToArabicDigits(surah.number)} • صفحة ${convertToArabicDigits(surah.firstPage)}',
                       maxLines: 1,
@@ -1066,12 +1068,12 @@ class _QuranVerseResultTile extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               child: Ink(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppColors.maroon800.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                   border: Border.all(
                     color: AppColors.maroon800.withValues(alpha: 0.10),
                   ),
@@ -1086,7 +1088,7 @@ class _QuranVerseResultTile extends StatelessWidget {
                           height: 36,
                           decoration: BoxDecoration(
                             color: AppColors.maroon800.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                           child: const Icon(
                             Icons.menu_book_rounded,
@@ -1127,7 +1129,7 @@ class _QuranVerseResultTile extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       result.verseText,
                       maxLines: 2,

@@ -5,6 +5,8 @@ import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/features/hadith_nawawi/domain/models/hadith_nawawi_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class HadithDetailScreen extends StatefulWidget {
   const HadithDetailScreen({
@@ -144,7 +146,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
               disabledForegroundColor: fgColor.withValues(alpha: 0.2),
               backgroundColor: cardBg,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
                 side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
               ),
             ),
@@ -165,7 +167,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
               disabledForegroundColor: fgColor.withValues(alpha: 0.2),
               backgroundColor: cardBg,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadii.sm),
                 side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
               ),
             ),
@@ -275,7 +277,7 @@ class _HadithDetailPageContent extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               if (entry.source.isNotEmpty)
                 Flexible(
                   child: Container(
@@ -287,7 +289,7 @@ class _HadithDetailPageContent extends StatelessWidget {
                       color: isDark
                           ? AppColors.maroon800.withValues(alpha: 0.6)
                           : AppColors.maroon700.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                     child: Text(
                       entry.source,
@@ -313,7 +315,7 @@ class _HadithDetailPageContent extends StatelessWidget {
                       content: const Text('تم نسخ الحديث'),
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
                     ),
                   );
@@ -379,7 +381,7 @@ class _HadithDetailPageContent extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.auto_stories_rounded, color: goldFg, size: 18),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   'شرح وفوائد الحديث',
                   style: TextStyle(
@@ -396,7 +398,7 @@ class _HadithDetailPageContent extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: surfaceColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
                 border: Border.all(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.06)

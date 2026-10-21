@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 class ContentDetailsScreen extends ConsumerStatefulWidget {
   const ContentDetailsScreen({
@@ -406,7 +407,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: buttonBg.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
           child: Text(
             '${_currentIndex + 1} / ${items.length}',
@@ -497,7 +498,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: fgColor.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.md),
             ),
             child: Text(
               item.fadl!,
@@ -532,7 +533,7 @@ class _ContentDetailsScreenState extends ConsumerState<ContentDetailsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: fgColor.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Text(
                   item.reference!,

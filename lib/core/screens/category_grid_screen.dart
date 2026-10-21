@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 class CategoryGridScreenTab {
   const CategoryGridScreenTab({
@@ -365,7 +366,7 @@ class _CategoryTypeTabButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         child: AnimatedContainer(
           duration: Duration.zero,
           alignment: Alignment.center,
@@ -373,7 +374,7 @@ class _CategoryTypeTabButton extends StatelessWidget {
             color: selected
                 ? selectedColor.withValues(alpha: 0.18)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
           ),
           child: Text(
             label,
@@ -422,7 +423,7 @@ class _CategorySkeleton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: skeletonCardColor(context),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
           color: AppColors.maroon700.withValues(alpha: 0.05),
         ),

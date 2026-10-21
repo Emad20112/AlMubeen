@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 void showTranslationBottomSheet({
   required BuildContext context,
@@ -169,7 +171,7 @@ class _TranslationBottomSheetState
                             color: isDark
                                 ? const Color(0xFF231A17)
                                 : const Color(0xFFFFFCF3),
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
                             border: Border.all(
                               color:
                                   (isDark
@@ -190,7 +192,7 @@ class _TranslationBottomSheetState
                                         : AppColors.maroon800,
                                     size: 20,
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: AppSpacing.sm),
                                   Expanded(
                                     child: Text(
                                       translationText.resourceName,
@@ -205,7 +207,7 @@ class _TranslationBottomSheetState
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: AppSpacing.md),
                               SelectableText(
                                 cleanedText,
                                 style: TextStyle(
@@ -305,7 +307,7 @@ class _TranslationSheetFrame extends StatelessWidget {
             color: isDark
                 ? const Color(0xFF1A1210).withValues(alpha: 0.98)
                 : AppColors.parchment.withValues(alpha: 0.98),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
           ),
           child: child,
         ),
@@ -340,7 +342,7 @@ class _TranslationSheetHeader extends StatelessWidget {
             height: 4,
             decoration: BoxDecoration(
               color: primaryColor.withValues(alpha: 0.22),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadii.pill),
             ),
           ),
           const SizedBox(height: 14),
@@ -351,11 +353,11 @@ class _TranslationSheetHeader extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: Icon(Icons.translate_rounded, color: primaryColor),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,7 +370,7 @@ class _TranslationSheetHeader extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       '$surahName - الآية ${ayahRef.ayah}',
                       style: TextStyle(
@@ -395,7 +397,7 @@ class _TranslationSheetHeader extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: primaryColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
                 border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
               ),
               child: Text(
@@ -446,7 +448,7 @@ class _TranslationSheetError extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.error_outline, size: 52, color: accentColor),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 'تعذر تحميل الترجمة',
                 style: TextStyle(
@@ -456,7 +458,7 @@ class _TranslationSheetError extends StatelessWidget {
                 ),
               ),
               if (error != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   error!,
                   textAlign: TextAlign.center,
@@ -476,7 +478,7 @@ class _TranslationSheetError extends StatelessWidget {
                       child: const Text('فتح المكتبة'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: FilledButton(
                       onPressed: onRetry,

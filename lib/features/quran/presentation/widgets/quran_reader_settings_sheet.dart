@@ -6,6 +6,8 @@ import 'package:al_mubeen/features/quran/presentation/pages/tafsir_download_scre
 import 'package:al_mubeen/features/quran/presentation/pages/translation_download_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 Future<void> showQuranReaderSettingsSheet({
   required BuildContext context,
@@ -151,7 +153,7 @@ class _QuranReaderSettingsSheetState
                     height: 38,
                     decoration: BoxDecoration(
                       color: AppColors.goldenAccent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
                     ),
                     child: Icon(
                       Icons.settings_rounded,
@@ -159,7 +161,7 @@ class _QuranReaderSettingsSheetState
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +197,7 @@ class _QuranReaderSettingsSheetState
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final spacing = 10.0;
@@ -227,7 +229,7 @@ class _QuranReaderSettingsSheetState
                                       color: AppColors.goldenAccent.withValues(
                                         alpha: 0.10,
                                       ),
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(AppRadii.sm),
                                     ),
                                     child: Icon(
                                       buttonIcon,
@@ -235,7 +237,7 @@ class _QuranReaderSettingsSheetState
                                       size: 18,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: AppSpacing.sm),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -532,7 +534,7 @@ class _SettingsSectionCard extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
@@ -563,7 +565,7 @@ class _SettingsSectionCard extends StatelessWidget {
               context,
             ).textTheme.bodySmall?.copyWith(color: mutedColor, height: 1.25),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           child,
         ],
       ),
@@ -596,12 +598,12 @@ class _LibraryActionTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         child: Ink(
           padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(
             color: accentColor.withValues(alpha: isDark ? 0.10 : 0.05),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(color: accentColor.withValues(alpha: 0.16)),
           ),
           child: Row(
@@ -611,11 +613,11 @@ class _LibraryActionTile extends StatelessWidget {
                 height: 34,
                 decoration: BoxDecoration(
                   color: accentColor.withValues(alpha: isDark ? 0.16 : 0.08),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(icon, color: accentColor, size: 19),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,7 +645,7 @@ class _LibraryActionTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 14,
@@ -684,12 +686,12 @@ class _ToggleActionCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => onChanged(!value),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         child: Ink(
           padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(
             color: accentColor.withValues(alpha: isDark ? 0.10 : 0.05),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(color: accentColor.withValues(alpha: 0.16)),
           ),
           child: Column(
@@ -704,7 +706,7 @@ class _ToggleActionCard extends StatelessWidget {
                       color: accentColor.withValues(
                         alpha: isDark ? 0.16 : 0.08,
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                     ),
                     child: Icon(icon, color: accentColor, size: 19),
                   ),
@@ -718,7 +720,7 @@ class _ToggleActionCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 title,
                 maxLines: 1,

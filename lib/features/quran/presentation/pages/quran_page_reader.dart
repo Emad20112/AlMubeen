@@ -28,6 +28,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 class QuranPageReader extends ConsumerStatefulWidget {
   const QuranPageReader({
@@ -520,7 +521,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
               backgroundColor: Theme.of(context).colorScheme.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
               margin: const EdgeInsets.all(16),
               duration: const Duration(seconds: 4),

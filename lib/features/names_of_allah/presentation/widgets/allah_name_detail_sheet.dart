@@ -4,6 +4,8 @@ import 'package:al_mubeen/features/names_of_allah/domain/models/allah_name_entry
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 void showAllahNameDetailSheet({
   required BuildContext context,
@@ -82,7 +84,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
       height: MediaQuery.sizeOf(context).height * 0.75,
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
         border: Border.all(color: accentColor.withValues(alpha: 0.25)),
         boxShadow: [
           BoxShadow(
@@ -106,7 +108,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
 
             // Top Navigation Bar
             Padding(
@@ -126,7 +128,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       disabledForegroundColor: fgColor.withValues(alpha: 0.2),
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                         side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
                       ),
                     ),
@@ -142,7 +144,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                     ),
                     decoration: BoxDecoration(
                       color: accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                       border: Border.all(
                         color: accentColor.withValues(alpha: 0.3),
                       ),
@@ -171,14 +173,14 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       disabledForegroundColor: fgColor.withValues(alpha: 0.2),
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                         side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
                       ),
                     ),
                     tooltip: 'الاسم التالي',
                   ),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
 
                   // Close Button
                   IconButton(
@@ -189,7 +191,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       foregroundColor: fgColor.withValues(alpha: 0.7),
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                         side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
                       ),
                     ),
@@ -199,7 +201,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
 
             // Page View
             Expanded(
@@ -245,7 +247,7 @@ class _AllahNameDetailPage extends StatelessWidget {
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(color: accentColor.withValues(alpha: 0.35)),
             boxShadow: [
               BoxShadow(
@@ -269,7 +271,7 @@ class _AllahNameDetailPage extends StatelessWidget {
                   color: AppColors.maroon700.withValues(
                     alpha: isDark ? 0.25 : 0.08,
                   ),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
                   border: Border.all(
                     color: AppColors.maroon700.withValues(alpha: 0.2),
                   ),
@@ -298,7 +300,7 @@ class _AllahNameDetailPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
 
               // Decorative Divider
               SvgPicture.asset(
@@ -347,7 +349,7 @@ class _AllahNameDetailPage extends StatelessWidget {
                           content: const Text('تم نسخ اسم الله ومعناه'),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
                       );
@@ -358,7 +360,7 @@ class _AllahNameDetailPage extends StatelessWidget {
                       foregroundColor: fgColor,
                       side: BorderSide(color: fgColor.withValues(alpha: 0.2)),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
                       visualDensity: VisualDensity.compact,
                     ),

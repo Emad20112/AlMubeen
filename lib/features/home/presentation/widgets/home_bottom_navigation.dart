@@ -5,6 +5,7 @@ import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/surah_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 class HomeBottomNavigation extends StatelessWidget {
   const HomeBottomNavigation({super.key});
@@ -48,7 +49,7 @@ class HomeBottomNavigation extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: backgroundColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                     border: Border.all(
                       color: foregroundColor.withValues(alpha: 0.14),
                     ),
@@ -137,9 +138,9 @@ class _CenterQuranButton extends StatelessWidget {
         label: 'اختيار سورة',
         child: Material(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
           child: InkWell(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadii.sm),
             onTap: onPressed,
             child: SizedBox.square(
               dimension: buttonSide,

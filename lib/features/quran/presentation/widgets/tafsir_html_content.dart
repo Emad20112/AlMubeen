@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 class TafsirHtmlContent extends StatelessWidget {
   const TafsirHtmlContent({
@@ -202,7 +203,7 @@ class _TafsirHtmlLoading extends StatelessWidget {
         height: 14,
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
         ),
       ),
     );

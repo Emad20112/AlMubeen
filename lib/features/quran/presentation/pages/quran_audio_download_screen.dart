@@ -7,6 +7,8 @@ import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repos
 import 'package:al_mubeen/features/quran/presentation/widgets/surah_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class QuranAudioDownloadScreen extends ConsumerStatefulWidget {
   const QuranAudioDownloadScreen({super.key});
@@ -70,7 +72,7 @@ class _QuranAudioDownloadScreenState
                                 ? AppColors.goldenAccentDark
                                 : AppColors.maroon800)
                             .withValues(alpha: isDark ? 0.16 : 0.10),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child: Icon(
                     Icons.headphones_rounded,
@@ -373,7 +375,7 @@ class _RecitersToolbarCard extends StatelessWidget {
               filled: true,
               fillColor: _fieldColor(context),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
                 borderSide: BorderSide.none,
               ),
               contentPadding: const EdgeInsets.symmetric(
@@ -382,7 +384,7 @@ class _RecitersToolbarCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
@@ -430,7 +432,7 @@ class _ActiveDownloadBanner extends ConsumerWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: Icon(
                   state.isPaused
@@ -443,7 +445,7 @@ class _ActiveDownloadBanner extends ConsumerWidget {
                   color: accent,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,13 +475,13 @@ class _ActiveDownloadBanner extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           LinearProgressIndicator(
             value: state.totalCount == 0
                 ? null
                 : state.progress.clamp(0.0, 1.0).toDouble(),
             minHeight: 7,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -498,7 +500,7 @@ class _ActiveDownloadBanner extends ConsumerWidget {
             ],
           ),
           if (state.isDownloading || state.isPaused) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
               alignment: WrapAlignment.end,
               spacing: 8,
@@ -588,7 +590,7 @@ class _ReciterCard extends StatelessWidget {
       curve: Curves.easeOut,
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.parchmentLight,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
           color: accent.withValues(alpha: isSelected ? 0.26 : 0.10),
           width: isSelected ? 1.2 : 1,
@@ -605,7 +607,7 @@ class _ReciterCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
@@ -636,7 +638,7 @@ class _ReciterCard extends StatelessWidget {
                           size: 22,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -655,7 +657,7 @@ class _ReciterCard extends StatelessWidget {
                                   ),
                                 ),
                                 if (isSelected) ...[
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: AppSpacing.sm),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
@@ -663,7 +665,7 @@ class _ReciterCard extends StatelessWidget {
                                     ),
                                     decoration: BoxDecoration(
                                       color: accent.withValues(alpha: 0.10),
-                                      borderRadius: BorderRadius.circular(999),
+                                      borderRadius: BorderRadius.circular(AppRadii.pill),
                                     ),
                                     child: Text(
                                       'الافتراضي',
@@ -679,7 +681,7 @@ class _ReciterCard extends StatelessWidget {
                                 ],
                               ],
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: AppSpacing.xs),
                             Text(
                               _reciterSubtitle(recitation),
                               maxLines: 2,
@@ -690,7 +692,7 @@ class _ReciterCard extends StatelessWidget {
                                     height: 1.35,
                                   ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppSpacing.sm),
                             Row(
                               children: [
                                 Icon(
@@ -725,7 +727,7 @@ class _ReciterCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 SizedBox(
                   width: 100,
                   child: FilledButton.tonalIcon(
@@ -744,7 +746,7 @@ class _ReciterCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
                     ),
                   ),
@@ -775,7 +777,7 @@ class _EmptyRecitersView extends StatelessWidget {
               color: Theme.of(
                 context,
               ).colorScheme.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
             ),
             child: Icon(
               Icons.search_off_rounded,
@@ -791,7 +793,7 @@ class _EmptyRecitersView extends StatelessWidget {
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'جرّب تعديل اسم القارئ أو امسح البحث لعرض جميع القراء.',
             textAlign: TextAlign.center,
@@ -826,7 +828,7 @@ class _AudioLibraryLoadingView extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const CircularProgressIndicator(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   'جاري تجهيز مكتبة القراء',
                   textAlign: TextAlign.center,
@@ -882,7 +884,7 @@ class _AudioLibraryMessageView extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   message,
                   textAlign: TextAlign.center,
@@ -891,7 +893,7 @@ class _AudioLibraryMessageView extends StatelessWidget {
                     height: 1.45,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 FilledButton.icon(
                   onPressed: onAction,
                   icon: const Icon(Icons.refresh_rounded),
@@ -948,7 +950,7 @@ class _MiniChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: _fieldColor(context),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

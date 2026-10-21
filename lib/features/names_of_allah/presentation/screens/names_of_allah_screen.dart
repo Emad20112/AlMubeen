@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
+import 'package:al_mubeen/app/theme/app_typography.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/core/widgets/shimmer_group.dart';
 import 'package:al_mubeen/features/names_of_allah/data/names_of_allah_providers.dart';
@@ -71,14 +74,10 @@ class _NamesOfAllahScreenState extends ConsumerState<NamesOfAllahScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.darkScaffold
-        : AppColors.parchment;
-    final foregroundColor = isDark ? AppColors.darkInk : AppColors.maroon800;
-    final surfaceColor = isDark
-        ? AppColors.darkSurfaceHigh
-        : AppColors.parchmentLight;
+    final colors = context.semanticColors;
+    final backgroundColor = colors.canvas;
+    final foregroundColor = colors.textPrimary;
+    final surfaceColor = colors.surfaceElevated;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final windowClass = AdaptiveBreakpoints.fromWidth(screenWidth);
@@ -133,7 +132,6 @@ class _NamesOfAllahScreenState extends ConsumerState<NamesOfAllahScreen> {
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: _AllahNamesEmptyState(
-                  isDark: isDark,
                   query: _query,
                   onClear: _clearSearch,
                 ),
@@ -157,7 +155,6 @@ class _NamesOfAllahScreenState extends ConsumerState<NamesOfAllahScreen> {
                   return AllahNameCard(
                     key: ValueKey(entry.id),
                     entry: entry,
-                    isDark: isDark,
                     onTap: () {
                       showAllahNameDetailSheet(
                         context: context,
@@ -174,7 +171,6 @@ class _NamesOfAllahScreenState extends ConsumerState<NamesOfAllahScreen> {
         loading: () => [
           SliverPadding(
             padding: EdgeInsets.fromLTRB(sidePadding, 14, sidePadding, 24),
-            // 🛡️ PERF: ticker واحد لكل الـ skeletons بدلاً من واحد لكل عنصر.
             sliver: SliverToBoxAdapter(
               child: ShimmerGroup(
                 itemCount: 1,
@@ -200,7 +196,6 @@ class _NamesOfAllahScreenState extends ConsumerState<NamesOfAllahScreen> {
           SliverFillRemaining(
             hasScrollBody: false,
             child: _AllahNamesErrorState(
-              isDark: isDark,
               error: error,
               onRetry: () => ref.invalidate(namesOfAllahEntriesProvider),
             ),
@@ -272,8 +267,9 @@ class _AllahNamesHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final borderColor = foregroundColor.withValues(alpha: 0.08);
-    final shadowColor = foregroundColor.withValues(alpha: 0.12);
+    final colors = context.semanticColors;
+    final borderColor = colors.border;
+    final shadowColor = context.tokens.shadows.color;
 
     return Container(
       decoration: BoxDecoration(
@@ -309,36 +305,34 @@ class _AllahNamesHeaderDelegate extends SliverPersistentHeaderDelegate {
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: foregroundColor,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.bold,
                         height: 1,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       subtitle,
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: foregroundColor.withValues(alpha: 0.72),
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.textSecondary,
+                        fontWeight: AppTypography.semiBold,
                         height: 1.2,
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(width: 48, child: const SizedBox.shrink()),
+              const SizedBox(width: AppSpacing.touchTarget),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           _AllahNamesSearchField(
             controller: controller,
-            backgroundColor: surfaceColor,
+            backgroundColor: colors.surfaceSunken,
             foregroundColor: foregroundColor,
             onChanged: onChanged,
             onClear: onClear,
@@ -377,33 +371,33 @@ class _AllahNamesSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
+
     return Container(
       height: 46,
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.maroon700.withValues(alpha: 0.14)),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: colors.border),
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         textInputAction: TextInputAction.search,
-        cursorColor: AppColors.maroon700,
-        style: TextStyle(
+        cursorColor: colors.primaryStrong,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           color: foregroundColor,
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppTypography.semiBold,
         ),
         decoration: InputDecoration(
           hintText: 'ابحث بالاسم أو المعنى',
-          hintStyle: TextStyle(
-            color: foregroundColor.withValues(alpha: 0.5),
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
+          hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: colors.textTertiary,
+            fontWeight: AppTypography.medium,
           ),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: foregroundColor.withValues(alpha: 0.7),
+            color: colors.textSecondary,
             size: 21,
           ),
           suffixIcon: ValueListenableBuilder<TextEditingValue>(
@@ -418,17 +412,20 @@ class _AllahNamesSearchField extends StatelessWidget {
                 onPressed: onClear,
                 icon: Icon(
                   Icons.close_rounded,
-                  color: foregroundColor.withValues(alpha: 0.7),
+                  color: colors.textSecondary,
                   size: 20,
                 ),
               );
             },
           ),
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          filled: false,
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
           ),
         ),
       ),
@@ -439,53 +436,33 @@ class _AllahNamesSearchField extends StatelessWidget {
 class AllahNameCard extends StatelessWidget {
   const AllahNameCard({
     required this.entry,
-    required this.isDark,
     this.onTap,
     super.key,
   });
 
   final AllahNameEntry entry;
-  final bool isDark;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = isDark
-        ? AppColors.darkSurfaceHigh
-        : AppColors.cardCream;
-    final borderColor = isDark
-        ? AppColors.goldenAccentDark
-        : AppColors.goldenAccent;
-    final titleColor = isDark ? AppColors.darkInk : AppColors.maroon800;
-    final meaningColor = isDark ? AppColors.darkInk : AppColors.ink;
+    final colors = context.semanticColors;
+    final backgroundColor = colors.surfaceElevated;
+    final borderColor = colors.accent;
+    final titleColor = colors.primaryStrong;
+    final meaningColor = colors.textPrimary;
 
     return RepaintBoundary(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [
-                  backgroundColor,
-                  isDark ? AppColors.darkSurface : AppColors.parchmentLight,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(18),
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(color: borderColor.withValues(alpha: 0.58)),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.maroon900.withValues(
-                    alpha: isDark ? 0.24 : 0.14,
-                  ),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              boxShadow: context.tokens.shadows.medium,
             ),
             child: Stack(
               children: [
@@ -498,14 +475,11 @@ class AllahNameCard extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // Eye Icon Button
                             Container(
                               width: 28,
                               height: 28,
                               decoration: BoxDecoration(
-                                color: titleColor.withValues(
-                                  alpha: isDark ? 0.12 : 0.08,
-                                ),
+                                color: titleColor.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: titleColor.withValues(alpha: 0.15),
@@ -517,33 +491,31 @@ class AllahNameCard extends StatelessWidget {
                                 size: 15,
                               ),
                             ),
-                            _AllahIndexBadge(number: entry.id, isDark: isDark),
+                            _AllahIndexBadge(number: entry.id),
                           ],
                         ),
                         const Spacer(),
-                        Text(
-                          entry.name,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: titleColor,
-                            fontSize: 30,
-                            height: 1.02,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            entry.name,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: titleColor,
+                              fontWeight: AppTypography.bold,
+                              height: 1.15,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         Text(
                           entry.meaning,
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: meaningColor.withValues(
-                              alpha: isDark ? 0.92 : 0.88,
-                            ),
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: meaningColor.withValues(alpha: 0.85),
+                            fontWeight: AppTypography.medium,
                             height: 1.35,
                           ),
                         ),
@@ -562,35 +534,30 @@ class AllahNameCard extends StatelessWidget {
 }
 
 class _AllahIndexBadge extends StatelessWidget {
-  const _AllahIndexBadge({required this.number, required this.isDark});
+  const _AllahIndexBadge({required this.number});
 
   final int number;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = isDark
-        ? AppColors.maroon800.withValues(alpha: 0.9)
-        : AppColors.maroon700.withValues(alpha: 0.12);
-    final foregroundColor = isDark
-        ? AppColors.goldenAccentDark
-        : AppColors.maroon700;
+    final colors = context.semanticColors;
+    final backgroundColor = colors.surfaceMuted;
+    final foregroundColor = colors.accent;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
-          color: foregroundColor.withValues(alpha: isDark ? 0.35 : 0.28),
+          color: foregroundColor.withValues(alpha: 0.35),
         ),
       ),
       child: Text(
         '#$number',
-        style: TextStyle(
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: foregroundColor,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppTypography.bold,
           height: 1,
         ),
       ),
@@ -600,57 +567,54 @@ class _AllahIndexBadge extends StatelessWidget {
 
 class _AllahNamesEmptyState extends StatelessWidget {
   const _AllahNamesEmptyState({
-    required this.isDark,
     required this.query,
     required this.onClear,
   });
 
-  final bool isDark;
   final String query;
   final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
-    final foregroundColor = isDark ? AppColors.darkInk : AppColors.maroon800;
+    final colors = context.semanticColors;
+    final foregroundColor = colors.textPrimary;
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.search_off_rounded,
               size: 54,
-              color: foregroundColor.withValues(alpha: 0.65),
+              color: colors.textSecondary,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               query.isEmpty
                   ? 'لا توجد بيانات لعرضها الآن'
                   : 'لا توجد نتائج مطابقة',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: foregroundColor,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTypography.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               query.isEmpty
                   ? 'سنحاول مجددًا عند فتح الشاشة أو بعد اكتمال التحميل.'
                   : 'جرّب لفظًا آخر أو امسح البحث لتظهر جميع الأسماء.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: foregroundColor.withValues(alpha: 0.72),
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colors.textSecondary,
+                fontWeight: AppTypography.medium,
                 height: 1.4,
               ),
             ),
             if (query.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton.icon(
                 onPressed: onClear,
                 icon: const Icon(Icons.close_rounded),
@@ -666,51 +630,48 @@ class _AllahNamesEmptyState extends StatelessWidget {
 
 class _AllahNamesErrorState extends StatelessWidget {
   const _AllahNamesErrorState({
-    required this.isDark,
     required this.error,
     required this.onRetry,
   });
 
-  final bool isDark;
   final Object error;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final foregroundColor = isDark ? AppColors.darkInk : AppColors.maroon800;
+    final colors = context.semanticColors;
+    final foregroundColor = colors.textPrimary;
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.error_outline_rounded,
               size: 54,
-              color: AppColors.maroon700.withValues(alpha: 0.8),
+              color: colors.error,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'تعذر تحميل الأسماء الحسنى',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: foregroundColor,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTypography.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               '$error',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: foregroundColor.withValues(alpha: 0.72),
-                fontSize: 13,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colors.textSecondary,
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
@@ -728,13 +689,14 @@ class _AllahNameSkeletonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
     final cardColor = skeletonCardColor(context);
 
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.maroon700.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: colors.border),
       ),
       child: const Padding(
         padding: EdgeInsets.all(14),
@@ -748,7 +710,7 @@ class _AllahNameSkeletonCard extends StatelessWidget {
             SkeletonBox(width: 120, height: 26, borderRadius: 8),
             SizedBox(height: 10),
             SkeletonBox(width: 150, height: 12, borderRadius: 6),
-            SizedBox(height: 8),
+            SizedBox(height: AppSpacing.sm),
             SkeletonBox(width: 110, height: 12, borderRadius: 6),
             Spacer(),
           ],

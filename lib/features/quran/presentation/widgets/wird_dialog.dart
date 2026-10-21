@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 Future<void> showWirdHotelDoorsDialog(
   BuildContext context, {
@@ -271,7 +272,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.24),
@@ -281,7 +282,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.sizeOf(context).height * 0.82,
@@ -339,7 +340,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
           decoration: InputDecoration(
             labelText: 'مقدار الورد اليومي',
             prefixIcon: const Icon(Icons.menu_book_rounded),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
           ),
           items: WirdAmountType.values
               .map(
@@ -362,7 +363,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             labelText: 'عدد أيام الخطة',
             prefixIcon: const Icon(Icons.event_available_rounded),
             isDense: true,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
           ),
           onChanged: (value) {
             final parsed = int.tryParse(value);
@@ -431,7 +432,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
         DecoratedBox(
           decoration: BoxDecoration(
             color: accent.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(color: accent.withValues(alpha: 0.18)),
           ),
           child: Padding(
@@ -685,7 +686,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
               labelText: 'مقدار الورد اليومي',
               prefixIcon: const Icon(Icons.menu_book_rounded),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadii.md),
               ),
             ),
             items: WirdAmountType.values
@@ -708,7 +709,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             decoration: InputDecoration(
               labelText: 'عدد أيام الخطة',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
             ),
             onChanged: (value) {
