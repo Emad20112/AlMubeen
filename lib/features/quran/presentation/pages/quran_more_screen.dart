@@ -21,6 +21,8 @@ class QuranMoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = readerActions;
+    // 🎨 ألوان تمييز الأفعال (accent) دلالية: هوية التطبيق بدل مراجع خام.
+    final accent = AppColorScheme.of(context).primaryStrong;
 
     return ContactStyleMenuScreen(
       title: 'المزيد',
@@ -36,7 +38,7 @@ class QuranMoreScreen extends StatelessWidget {
                 icon: Icons.search_rounded,
                 title: 'البحث',
                 subtitle: 'ابحث عن صفحة أو سورة داخل المصحف.',
-                accentColor: AppColors.maroon800,
+                accentColor: accent,
                 onTap: () => _runReaderAction(context, actions.onSearch),
               ),
               ContactStyleMenuItem(
@@ -90,7 +92,7 @@ class QuranMoreScreen extends StatelessWidget {
               icon: Icons.auto_awesome_rounded,
               title: 'أسماء الله الحسنى',
               subtitle: 'تصفح الأسماء ومعانيها.',
-              accentColor: AppColors.maroon800,
+              accentColor: accent,
               onTap: () => context.push(NamesOfAllahScreen.routePath),
             ),
             ContactStyleMenuItem(

@@ -35,7 +35,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
 
     final result = await _apiClient.getJson(
       'api/recitations',
-      queryParameters: {'language': language},
+      queryParameters: {'language_name': language},
     );
 
     return result.when(
@@ -139,7 +139,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
 
     final result = await _apiClient.getJson(
       'api/tafsirs',
-      queryParameters: {'language': language},
+      queryParameters: {'language_name': language},
     );
     return _readList(result, 'tafsirs');
   }
@@ -155,7 +155,7 @@ final class QuranComRemoteDataSource implements QuranDataSource {
 
     final result = await _apiClient.getJson(
       'api/translations',
-      queryParameters: {'language': language},
+      queryParameters: {'language_name': language},
     );
     return _readList(result, 'translations');
   }

@@ -237,6 +237,7 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.semanticColors;
+    final textTheme = Theme.of(context).textTheme;
 
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(
@@ -266,8 +267,7 @@ class _BottomBar extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
-                      textStyle: const TextStyle(
-                        fontSize: 18,
+                      textStyle: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -283,8 +283,7 @@ class _BottomBar extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadii.md),
                       ),
-                      textStyle: const TextStyle(
-                        fontSize: 17,
+                      textStyle: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:al_mubeen/app/theme/app_design_tokens.dart';
 import 'package:al_mubeen/app/theme/app_radii.dart';
 import 'package:al_mubeen/app/theme/app_spacing.dart';
@@ -33,6 +33,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
       context: context,
       builder: (context) {
         final colors = context.semanticColors;
+        final textTheme = Theme.of(context).textTheme;
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.xl),
@@ -44,9 +45,8 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'إضافة ذكر جديد',
-                  style: TextStyle(
-                    fontSize: 20,
+                  'Ø¥Ø¶Ø§ÙØ© Ø°ÙƒØ± Ø¬Ø¯ÙŠØ¯',
+                  style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colors.textPrimary,
                   ),
@@ -56,7 +56,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                   controller: textController,
                   style: TextStyle(color: colors.textPrimary),
                   decoration: InputDecoration(
-                    hintText: 'أدخل الذكر هنا',
+                    hintText: 'Ø£Ø¯Ø®Ù„ Ø§Ù„Ø°ÙƒØ± Ù‡Ù†Ø§',
                     hintStyle: TextStyle(color: colors.textTertiary),
                     filled: true,
                     fillColor: colors.surfaceSunken,
@@ -85,7 +85,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                         foregroundColor: colors.textSecondary,
                       ),
                       child: const Text(
-                        'إلغاء',
+                        'Ø¥Ù„ØºØ§Ø¡',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -111,7 +111,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                         ),
                       ),
                       child: const Text(
-                        'إضافة',
+                        'Ø¥Ø¶Ø§ÙØ©',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -137,6 +137,8 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
   Widget build(BuildContext context) {
     final dhikrs = ref.watch(tasbihControllerProvider);
     final colors = context.semanticColors;
+    final textTheme = Theme.of(context).textTheme;
+    final bodyLarge = textTheme.bodyLarge;
 
     return Scaffold(
       backgroundColor: colors.canvas,
@@ -144,22 +146,19 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
         child: Column(
           children: [
             IslamicHeader(
-              title: 'التسبيح',
-              subtitle: 'إحياءً لسنة النبي ﷺ',
+              title: 'Ø§Ù„ØªØ³Ø¨ÙŠØ­',
+              subtitle: 'Ø¥Ø­ÙŠØ§Ø¡Ù‹ Ù„Ø³Ù†Ø© Ø§Ù„Ù†Ø¨ÙŠ ï·º',
               leading: IconButton(
-                tooltip: 'رجوع',
+                tooltip: 'Ø±Ø¬ÙˆØ¹',
                 onPressed: () => context.go('/'),
                 icon: const Icon(Icons.arrow_back_ios_new),
               ),
               trailing: TextButton.icon(
                 icon: const Icon(Icons.add),
-                label: const Text('إضافة ذكر'),
+                label: const Text('Ø¥Ø¶Ø§ÙØ© Ø°ÙƒØ±'),
                 style: TextButton.styleFrom(
                   foregroundColor: colors.primaryStrong,
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  textStyle: bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 onPressed: _showAddDialog,
               ),
@@ -171,9 +170,8 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                 child: dhikrs.isEmpty
                     ? Center(
                         child: Text(
-                          'لا يوجد أذكار، أضف ذكراً جديداً',
-                          style: TextStyle(
-                            fontSize: 18,
+                          'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø£Ø°ÙƒØ§Ø±ØŒ Ø£Ø¶Ù Ø°ÙƒØ±Ø§Ù‹ Ø¬Ø¯ÙŠØ¯Ø§Ù‹',
+                          style: textTheme.titleMedium?.copyWith(
                             color: colors.textSecondary,
                           ),
                         ),
@@ -212,6 +210,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
       context: context,
       builder: (context) {
         final colors = context.semanticColors;
+        final textTheme = Theme.of(context).textTheme;
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.xl),
@@ -223,9 +222,8 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'تعديل الذكر',
-                  style: TextStyle(
-                    fontSize: 20,
+                  'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø°ÙƒØ±',
+                  style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colors.textPrimary,
                   ),
@@ -235,7 +233,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                   controller: textController,
                   style: TextStyle(color: colors.textPrimary),
                   decoration: InputDecoration(
-                    hintText: 'أدخل الذكر هنا',
+                    hintText: 'Ø£Ø¯Ø®Ù„ Ø§Ù„Ø°ÙƒØ± Ù‡Ù†Ø§',
                     hintStyle: TextStyle(color: colors.textTertiary),
                     filled: true,
                     fillColor: colors.surfaceSunken,
@@ -264,7 +262,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                         foregroundColor: colors.textSecondary,
                       ),
                       child: const Text(
-                        'إلغاء',
+                        'Ø¥Ù„ØºØ§Ø¡',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -290,7 +288,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                         ),
                       ),
                       child: const Text(
-                        'حفظ',
+                        'Ø­ÙØ¸',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -309,6 +307,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
       context: context,
       builder: (context) {
         final colors = context.semanticColors;
+        final textTheme = Theme.of(context).textTheme;
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.xl),
@@ -320,19 +319,17 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'حذف الذكر',
-                  style: TextStyle(
-                    fontSize: 20,
+                  'Ø­Ø°Ù Ø§Ù„Ø°ÙƒØ±',
+                  style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'هل أنت متأكد من حذف هذا الذكر؟',
+                  'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø°ÙƒØ±ØŸ',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
+                  style: textTheme.bodyLarge?.copyWith(
                     color: colors.textSecondary,
                   ),
                 ),
@@ -346,7 +343,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                         foregroundColor: colors.textSecondary,
                       ),
                       child: const Text(
-                        'إلغاء',
+                        'Ø¥Ù„ØºØ§Ø¡',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -369,7 +366,7 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen> {
                         ),
                       ),
                       child: const Text(
-                        'حذف',
+                        'Ø­Ø°Ù',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -401,6 +398,9 @@ class _DhikrCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.semanticColors;
     final textColor = colors.textPrimary;
+    // ðŸ“ Ø³Ù„Ù… Ø§Ù„Ø·Ø¨Ø§Ø¹Ø©: Ø­Ø¬Ù… Ø§Ù„ØªØ£Ù…Ù‘Ù„ ÙŠÙ†ØªÙ‚Ù„ Ù…Ù† Ø±Ù‚Ù… Ø«Ø§Ø¨Øª (32) Ø¥Ù„Ù‰ `headlineSmall`
+    // ÙÙŠÙƒØ¨Ø±/ÙŠØµØºØ± Ù…Ø¹ Ù…Ù‚ÙŠØ§Ø³ Ø®Ø· Ø§Ù„Ù†Ø¸Ø§Ù… Ø¨Ø¯Ù„ Ø§Ù„ØªØ¬Ù…Ù‘Ø¯ Ø¹Ù†Ø¯ Ù‚ÙŠÙ…Ø© ÙˆØ§Ø­Ø¯Ø©.
+    final textTheme = Theme.of(context).textTheme;
 
     return GestureDetector(
       onTap: onTap,
@@ -450,8 +450,7 @@ class _DhikrCard extends StatelessWidget {
                 ),
                 child: Text(
                   dhikr,
-                  style: TextStyle(
-                    fontSize: 32,
+                  style: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: textColor,
                     height: 1.5,
@@ -498,6 +497,7 @@ class _SunnahDialogState extends State<_SunnahDialog> {
   Widget build(BuildContext context) {
     final colors = context.semanticColors;
     final textColor = colors.textPrimary;
+    final textTheme = Theme.of(context).textTheme;
 
     return Dialog(
       shape: RoundedRectangleBorder(
@@ -519,18 +519,16 @@ class _SunnahDialogState extends State<_SunnahDialog> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'إحياء سنة التسبيح',
-                  style: TextStyle(
-                    fontSize: 22,
+                  'Ø¥Ø­ÙŠØ§Ø¡ Ø³Ù†Ø© Ø§Ù„ØªØ³Ø¨ÙŠØ­',
+                  style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colors.primaryStrong,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  '«عليكُنَّ بالتَّسبيحِ، والتَّهليلِ، والتَّقديسِ، واعقِدْنَ بالأناملِ؛ فإنَّهنَّ مَسؤولاتٌ مُستَنطَقاتٌ.»\n(رواه أبو داود والترمذي)',
-                  style: TextStyle(
-                    fontSize: 16,
+                  'Â«Ø¹Ù„ÙŠÙƒÙÙ†Ù‘ÙŽ Ø¨Ø§Ù„ØªÙ‘ÙŽØ³Ø¨ÙŠØ­ÙØŒ ÙˆØ§Ù„ØªÙ‘ÙŽÙ‡Ù„ÙŠÙ„ÙØŒ ÙˆØ§Ù„ØªÙ‘ÙŽÙ‚Ø¯ÙŠØ³ÙØŒ ÙˆØ§Ø¹Ù‚ÙØ¯Ù’Ù†ÙŽ Ø¨Ø§Ù„Ø£Ù†Ø§Ù…Ù„ÙØ› ÙØ¥Ù†Ù‘ÙŽÙ‡Ù†Ù‘ÙŽ Ù…ÙŽØ³Ø¤ÙˆÙ„Ø§ØªÙŒ Ù…ÙØ³ØªÙŽÙ†Ø·ÙŽÙ‚Ø§ØªÙŒ.Â»\n(Ø±ÙˆØ§Ù‡ Ø£Ø¨Ùˆ Ø¯Ø§ÙˆØ¯ ÙˆØ§Ù„ØªØ±Ù…Ø°ÙŠ)',
+                  style: textTheme.bodyLarge?.copyWith(
                     height: 1.5,
                     color: textColor,
                   ),
@@ -541,9 +539,8 @@ class _SunnahDialogState extends State<_SunnahDialog> {
                 Divider(color: colors.divider),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  '«رأيتُ رسولَ اللهِ ﷺ يَعقِدُ التَّسبيحَ بيَمينِه.»\n(صحيح أبي داود)',
-                  style: TextStyle(
-                    fontSize: 16,
+                  'Â«Ø±Ø£ÙŠØªÙ Ø±Ø³ÙˆÙ„ÙŽ Ø§Ù„Ù„Ù‡Ù ï·º ÙŠÙŽØ¹Ù‚ÙØ¯Ù Ø§Ù„ØªÙ‘ÙŽØ³Ø¨ÙŠØ­ÙŽ Ø¨ÙŠÙŽÙ…ÙŠÙ†ÙÙ‡.Â»\n(ØµØ­ÙŠØ­ Ø£Ø¨ÙŠ Ø¯Ø§ÙˆØ¯)',
+                  style: textTheme.bodyLarge?.copyWith(
                     height: 1.5,
                     color: textColor,
                   ),
