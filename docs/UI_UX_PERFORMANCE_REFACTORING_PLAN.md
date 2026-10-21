@@ -121,26 +121,61 @@ flowchart TD
 
 ### المرحلة 1: بناء وتفعيل نظام التصميم الموحد (Design System Foundation)
 
+> **حالة المراجعة (آخر تحديث: 2026-10-21 — مراجعة ثانية):** تمت مطابقة بنود هذه المرحلة مع الكود الفعلي
+> ثم **إكمال المتبقي** منها. الأساسيات (Theme + Extensions + الرموز + الخط) مبنية ومختبرة.
+>
+> **نطاق «إكمال المرحلة 1»:** تم إغلاق البنود المعمارية (خط، سلم حجم، `textScaler`،
+> تباين النص الثانوي، حسم سلّم الاستدارات). أما **بنود المهاجرة الكمية** (تحويل 128
+> `Color(0x…)` و167 `fontSize:` و187 `BorderRadius.circular` و45 `EdgeInsets.fromLTRB`
+> في `lib/features/`) فهي **مهاجرة لا انتهاء مرحلة**: أُنجزت البنية الكاملة التي تجعلها
+> ممكنة، وتبقى مجدولة ضمن مرحلتي 2 و3 كما في الجدول الزمني (الأسبوعان 1 و2).
+> الأرقام أدناه محدَّثة بعد التنفيذ (قياس مباشر على الشجرة).
+
 #### 1.1. توحيد الخطوط والطباعة (Typography Scale):
-- [ ] 1. اعتماد خط عربي أصيل وعصري ذو مقروئية عالية مخصص للقراءة على الشاشات (مثل: **IBM Plex Sans Arabic** أو **Cairo** أو **Readex Pro**).
-- [ ] 2. إدراج أوزان الخط (Regular 400, Medium 500, SemiBold 600, Bold 700) داخل مجلد `assets/fonts/` وتسجيلها رسمياً في `pubspec.yaml`.
-- [x] 3. تفعيل السلم الطباعي الموحد داخل `AppTypography`، وربط كافة عناصر الواجهة به عبر Material 3 `TextTheme`، مع منع استخدام `fontSize` الثابت، وضمان التوافق مع `MediaQuery.textScaler`.
+- [x] 1. اعتماد خط عربي أصيل وعصري ذو مقروئية عالية مخصص للقراءة على الشاشات: **IBM Plex Sans Arabic**.
+- [x] 2. إدراج أوزان الخط (Regular 400, Medium 500, SemiBold 600, Bold 700) داخل `assets/fonts/` وتسجيلها رسمياً في `pubspec.yaml`.
+  - 4 ملفات TTF (‏~236–247KB لكل منها) + `OFL.txt` (ترخيص SIL OFL 1.1) بجانبها.
+- [x] 3. تفعيل السلم الطباعي الموحد داخل `AppTypography`، وربط كافة عناصر الواجهة به عبر Material 3 `TextTheme`.
+  - [x] `fontFamily` مفعَّل (`AppTypography.fontFamily = 'IBMPlexSansArabic'`) وينطبق على `TextTheme` الفاتح والداكن وعلى كل أدوار الـTheme (أزرار، حقول، حوارات، شرائح، `NavigationBar` …).
+  - [x] **سلم حجم صريح**: كان `_build` يمرر العائلة دون تعريف أحجام، فتركت `ThemeData` الافتراضية تحددها. الآن تُعرّف كل أدوار M3 (11…57) داخل `_build` مع `height` عربي مناسب (1.5 لـ`bodyLarge`).
+  - [x] اختبارات حارسة: العائلة موجودة في الثيم، الأوزان الأربعة، والأحجام المرجعية (`test/theme/design_system_test.dart`).
+  - [ ] **منع `fontSize` الثابت:** ما زال هناك **166 موضع `fontSize:`** في `lib/features/` (‏191 في `lib/` كاملاً). نقلها إلى `TextTheme` **يجب** أن يقترن بمراجعة بصرية لكل شاشة لتفادي انحدار تخطيط — جزء من مرحلة الأزرار/الشاشات.
+  - [x] **توافق `textScaler`:** أُزيل القيد `0.8–1.45`. الآن: مقياس النظام يُمرَّر بلا قصّ، تفضيل التطبيق مُضاعِف `0.55–1.25`، والسقف الدفاعي `AlMubeenApp.maxEffectiveTextScale = 2.0`.
+  - [ ] **ملاحظة للمرحلة 4:** بعض الشاشات تقرأ `MediaQuery.textScalerOf` يدوياً وتحسب أحجام أيقونات منها (`home_bottom_navigation`, `surah_picker`, `network_error_banner`). مع رفع السقف يجب اختبارها على 200% للتأكد من عدم فيض التخطيط.
 
 #### 1.2. تفعيل لوحة الألوان الدلالية وتجريد الألوان الخام:
-- [x] 1. إيقاف استخدام `AppColors.maroon...` و `Color(0x...)` داخل طبقة الواجهة (`lib/features/`) - تم ترحيل شاشات: `AboutAppScreen`, `OnboardingScreen`, `TasbihScreen`.
-- [x] 2. ربط جميع الودجات حصرياً بـ:
-   * `Theme.of(context).colorScheme` (للأدوار القياسية: `primary`, `surface`, `error`).
-   * `context.semanticColors` الممتدة عبر `AppColorScheme` (للأسطح المرتفعة، خلفيات الآيات، خطوط الإطارات، وزخارف الصفحات).
-- [x] 3. التأكد من أن نسبة التباين تتجاوز **4.5:1** في كافة الشاشات المحدثة لكلا الوضعين (النهاري والليلي).
+- [~] 1. إيقاف `AppColors.maroon...` و `Color(0x...)` داخل `lib/features/` — **منجَز جزئياً**:
+  - [x] مهاجرة 3 شاشات كاملة: `AboutAppScreen`, `OnboardingScreen`, `TasbihScreen` (وهي الوحيدة من `features/` التي تقرأ `context.semanticColors`).
+  - [ ] المتبقي: **128** `Color(0x...)` و **325** مرجع `AppColors.` في `lib/features/` (أهمها `quran/*`, `hadith_nawawi/*`, `names_of_allah/*`, `adhkar/*`, `qibla/*`).
+- [~] 2. ربط الودجات حصرياً بـ `colorScheme` و `context.semanticColors`:
+  - [x] البنية جاهزة: `AppColorScheme` (`surfaceElevated`, `surfaceSunken`, `canvas`, `pageSurface`, `accentGradient`, `errorSurface` ...) + `context.semanticColors` و `context.tokens`.
+  - [x] طبقة `lib/core/` (widgets/design/screens) تحوّلت بالكامل تقريباً (≈30 موضعاً).
+  - [ ] **الشاشات لا تزال تعتمد نمط `isDark = brightness == dark` مع ألوان يدوية** بدل الأدوار الدلالية.
+- [~] 3. التباين ≥ 4.5:1 — **مُتحقَّق للـTokens في الوضعين**:
+  - [x] اختبارات تباين آلية على `textPrimary` × الأسطح الخمسة و`primaryStrong/error/success` على `canvas` (حدود AA).
+  - [x] **النصوص الثانوية `textSecondary`** أصبحت مُختبرة مقابل 4.5:1 على `canvas/surface/surfaceElevated` في الوضعين — وكشفت الاختبار **مخالفة حقيقية** كانت مذكورة في §2.4: القيمة القديمة `#8A7E68` تعطي **3.54:1** فقط على الورق الفاتح.
+  - [x] الإصلاح: أُضيف `AppColors.mutedTaupeStrong = #6E6452` (5.69:1 على `lightSurface`، 5.50 على `cardCream`، 5.16 على `lightBackground`) واستُخدم دورياً في `AppColorScheme.textSecondary`. الوضع الداكن كان سليماً أصلاً (`sand` يعطي 8.42:1). اللون القديم بقي للحدود والأيقونات الزخرفية فقط.
+  - [ ] لا يوجد فحص للشاشات المهاجَرة بصرياً (صورة/Widget test) لكلا الوضعين.
 
 #### 1.3. توحيد الاستدارات والمسافات والحركة:
-- [x] 1. توحيد أنصاف الأقطار في سلم ثابت (`AppRadii`):
-   * أزرار وشرائح صغيرة: `sm = 8`
-   * أزرار رئيسية وحقول إدخال: `md = 12`
-   * بطاقات وحاويات: `lg = 16`
-   * حوارات وقوائم سفلية (Sheets & Dialogs): `xl = 24`
-- [x] 2. توحيد فواصل التباعد عبر حزمة `gap` وسلّم `AppSpacing` (4, 8, 12, 16, 24, 32, 48).
-- [x] 3. استخدام `EdgeInsetsDirectional` في جميع المواضع لضمان التوافق التام والتلقائي مع الواجهة العربية (RTL).
+- [~] 1. سلم `AppRadii`:
+  - [x] السلم موجود ومربوط بالثيم عبر `AppDesignTokens`/`AppRadiusTokens`.
+  - [x] **قرار محسوم**: `lg = 16` و`xl = 24` (كان الكود `20`/`28`) — الوثيقة تقول 16/24 وهي الآن مضاعفات مطابقة لـ`AppSpacing` (4/8/12/16/24). القرار موثّق في رأس `app_radii.dart` ومحمي باختبار في `design_system_test.dart`.
+  - [x] الأثر البصري محدود ومقصود: 7 استدعاءات فقط تستخدم `AppRadii.lg/xl` (بطاقات الثيم، الحوارات، أوراق `BottomSheet`، `tasbih`, `about`, `onboarding`) وتغيّرت بمقدار 4dp فقط.
+  - [ ] `BorderRadius.circular(...)` المباشر ما زال **187** موضعاً في `lib/features/` — مهاجرة مرحلة 2.
+- [~] 2. سلم `AppSpacing` (4/8/12/16/24/32/48) وحزمة `gap`:
+  - [x] السلم + `AppSizes` + مساعدات `EdgeInsets` جاهزة، و`gap` ^3.0.1 مضافة إلى `pubspec.yaml`.
+  - [ ] الاعتماد الفعلي ما زال محدوداً: **42** مرجع `AppSpacing.` مقابل مئات القيم الصريحة (`SizedBox(height:)` و`EdgeInsets`) داخل `features/`.
+- [~] 3. `EdgeInsetsDirectional` للتوافق RTL:
+  - [x] المساعد `AppSpacing.directional(...)` + قاعدة موثّقة في الملف نفسه.
+  - [ ] الواقع: **45 `EdgeInsets.fromLTRB` + 12 `EdgeInsets.only(left/right/top/bottom)`** مقابل **5** استخدامات فقط لـ `EdgeInsetsDirectional` في `lib/features/` — أي أن البند **غير منفَّذ** بعد.
+
+#### ملاحظات معمارية على المرحلة 1 (تحتاج قراراً):
+- `AppTheme.light()/dark()` تُبنى مرة واحدة (lazy) — جيد للأداء، لكنها **تخزّن نسخة واحدة من `AppColorScheme` مع `Brightness` ثابتة**؛ أي تعديل ديناميكي على الثيم (تبديل فوري للوضع) يحتاج تحققاً من عدم بقاء ألوان الوضع السابق معلّقة.
+- `test/theme/design_system_test.dart` حُدِّث: الحارس القديم `expect(AppTypography.fontFamily, isNull)` استُبدل بحارس جديد يشترط `'IBMPlexSansArabic'` في `TextTheme` الفاتح والداكن — أي أن العودة إلى خط النظام بعد اليوم تُفشل البناء.
+- **حالة الاختبارات:** `flutter test test/theme/design_system_test.dart` → **35 اختباراً ناجحاً**. `flutter analyze lib` → **صفر مشاكل**.
+- **اختبارات فاشلة قبل هذه المرحلة (ليست نتيجة هذه التغييرات):** `test/widget_test.dart` («first-time users») و`test/quran_more_screen_test.dart` («daily wird») يفشلان على الشجرة الأصلية أيضاً (تحوّق عليهما بـ`git stash`). تحتاج مهمة مستقلة.
+- **قيد معروف:** في `tafsir_reader_content.dart` يُطلب خط `'Amiri'` الصريح كعائلة للنص القرآني داخل بطاقة التفسير، وهو **غير مسجّل في `pubspec.yaml`** — فيسقط بصمت إلى خط النظام. إما تسجيل Amiri كأصل، أو استخدام خط صفحة `qcf_quran`. خارج نطاق المرحلة 1 (نصوص قرآنية لا UI) لكنه يُدرج هنا لأن `fontFamilyFallback` لا يعالجه.
 
 ---
 
