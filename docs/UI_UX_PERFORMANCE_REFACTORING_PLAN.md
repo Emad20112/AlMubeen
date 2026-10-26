@@ -224,7 +224,7 @@ flowchart TD
 
 | الملف الحالي الضخم | عدد الأسطر | الهيكل المقترح بعد التفكيك |
 | :--- | :--- | :--- |
-| `quran_surah_player_screen.dart` | 1,677 | • `presentation/screens/quran_surah_player_screen.dart` (لا يتجاوز 200 سطر - شاشة التجميع)<br>• `presentation/widgets/player/surah_player_bar.dart`<br>• `presentation/widgets/player/surah_playlist_view.dart`<br>• `presentation/widgets/player/surah_info_header.dart`<br>• `application/surah_player_view_state.dart` (نماذج الحالة المنعزلة) |
+| `quran_surah_player_screen.dart` | 1,807 ➔ ~180 سطر | ✅ **تم التفكيك بنجاح بالكامل** إلى:<br>• `surah_player_state_models.dart` (نماذج الحالة وعزل التقدّم 350ms)<br>• `surah_player_buttons.dart` (أزرار التشغيل والتنقل والتحميل)<br>• `surah_player_header.dart` (الترويسة واختيار القارئ والتحميل الكلي)<br>• `surah_list_tile.dart` (قائمة السور وبطاقات التشغيل)<br>• `floating_player_bar.dart` (شريط المشغل العائم)<br>• `expanded_controls.dart` (عناصر التحكم الموسعة والحماية من قيم NaN) |
 | `translation_download_screen.dart` | 1,109 | • `presentation/screens/translation_download_screen.dart`<br>• `presentation/widgets/translation_item_tile.dart`<br>• `presentation/widgets/translation_filter_chips.dart`<br>• الاستعانة بـ `AppSearchBar` الموحد |
 | `quran_reader_search_sheet.dart` | 1,098 | • `presentation/widgets/search/quran_search_sheet.dart`<br>• `presentation/widgets/search/search_result_item.dart`<br>• `presentation/widgets/search/search_history_view.dart` |
 | `quran_reciters_list_view.dart` | 1,050 | • `presentation/widgets/reciters/reciter_list_tile.dart`<br>• `presentation/widgets/reciters/reciter_download_action.dart`<br>• تجريد دوال التنسيق إلى UseCases |
