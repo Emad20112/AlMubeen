@@ -186,10 +186,11 @@ flowchart TD
 ### المرحلة 2: توحيد المكونات التفاعلية (Unified Component Library)
 
 #### 2.1. مصنع الأزرار الموحد (Unified Button System):
-إنشاء ودجات أزرار معيارية تعتمد على إعدادات الثيم المركزي وتفي باشتراطات سهولة الاستخدام:
-* `AppPrimaryButton`: الزر التفاعلي الأساسي (Primary CTA) بارتفاع 48dp، وبحالة تحميل مدمجة (`isLoading`)، وأيقونة اختيارية، ودعم إمكانية الوصول.
-* `AppSecondaryButton`: الزر الثانوي المفرغ أو المحاط بإطار (`OutlinedButtonTheme`).
-* `AppGhostButton` / `AppIconButton`: أزرار نصية وأيقونية بمساحة لمس آمنة (لا تقل عن 48x48 dp) مع ردود فعل لمسية لطيفة (Haptic Feedback).
+- [x] إنشاء حزمة الأزرار الموحدة في `lib/core/widgets/app_buttons.dart`:
+  - [x] `AppPrimaryButton`: الزر التفاعلي الأساسي بارتفاع 48dp مع مؤشر تحميل مدمج `isLoading` وتوافق تام مع `context.semanticColors` ورد فعل لمسي (Haptic Feedback).
+  - [x] `AppSecondaryButton`: الزر الثانوي ذو الإطار/الخلفية المخففة بحجم لمس قياسي.
+  - [x] `AppGhostButton`: الزر النصي بمساحة تفاعلية 48x48dp.
+  - [x] `AppIconButton`: زر أيقوني بمساحة نقر آمنة مع دعم Tooltip ورد فعل لمسي.
 
 #### 2.2. نظام النوافذ المنبثقة والقوائم السفلية (Unified Modals & Sheets):
 * بناء ودجت مركزية `AppBottomSheet.show(context, ...)`:
