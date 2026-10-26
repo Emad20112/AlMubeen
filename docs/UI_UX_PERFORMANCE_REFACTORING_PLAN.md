@@ -153,7 +153,8 @@ flowchart TD
   - [x] ترحيل شاشة أسماء الله الحسنى بالكامل (`names_of_allah_screen.dart` و `allah_name_detail_sheet.dart`) إلى الألوان الدلالية `context.semanticColors`.
   - [x] ترحيل شاشات الأحاديث النبوية بالكامل (`hadith_nawawi_screen.dart` و `hadith_detail_screen.dart`) إلى الألوان الدلالية `context.semanticColors` وحواف `AppRadii` ومسافات `AppSpacing`.
   - [x] ترحيل شاشة القبلة والبوصلة بالكامل (`qibla_compass_screen.dart`) إلى الألوان الدلالية `context.semanticColors` واستخدام `colors.success` ومسافات واستدارات `AppRadii` و `AppSpacing`.
-  - [~] بقية عناصر ومكونات `quran` جاري استكمال ترحيلها تباعاً.
+  - [x] ترحيل النوافذ المنبثقة للقرآن الكريم ومحدد القراء (`quran_reciters_list_view.dart` و `quran_reader_settings_sheet.dart`) إلى الألوان الدلالية `context.semanticColors` وحواف `AppRadii` ومسافات `AppSpacing` وتجريد الألوان الصلبة القديمة بالكامل.
+  - [~] بقية شاشات المصحف ومشغل السور جاري معالجتها.
 - [~] 3. التباين ≥ 4.5:1 — **مُتحقَّق للـTokens في الوضعين**:
   - [x] اختبارات تباين آلية على `textPrimary` × الأسطح الخمسة و`primaryStrong/error/success` على `canvas` (حدود AA).
   - [x] **النصوص الثانوية `textSecondary`** أصبحت مُختبرة مقابل 4.5:1 على `canvas/surface/surfaceElevated` في الوضعين — وكشفت الاختبار **مخالفة حقيقية** كانت مذكورة في §2.4: القيمة القديمة `#8A7E68` تعطي **3.54:1** فقط على الورق الفاتح.
