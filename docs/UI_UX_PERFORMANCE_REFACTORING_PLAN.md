@@ -193,23 +193,22 @@ flowchart TD
   - [x] `AppIconButton`: زر أيقوني بمساحة نقر آمنة مع دعم Tooltip ورد فعل لمسي.
 
 #### 2.2. نظام النوافذ المنبثقة والقوائم السفلية (Unified Modals & Sheets):
-* بناء ودجت مركزية `AppBottomSheet.show(context, ...)`:
-  * تحتوي على شريط السحب الموحد `DragHandle`.
-  * ترويسة قياسية تضم (العنوان، الوصف، وزر الإغلاق عند الحاجة).
-  * تكيف تلقائي مع ارتفاع لوحة المفاتيح وشاشات الأجهزة اللوحية (Max Width Constraint: 560dp).
-* بناء ودجت مركزية `AppDialog.show(context, ...)`:
-  * ذات استدارة موحدة `AppRadii.xl`.
-  * مساحات أزرار قياسية في الأسفل (تأكيد / إلغاء).
+- [x] بناء ودجت مركزية `AppBottomSheet.show(context, ...)` في `lib/core/widgets/app_modal.dart`:
+  - [x] شريط سحب موحد `DragHandle`.
+  - [x] ترويسة قياسية (عنوان، وصف اختياري، زر إغلاق).
+  - [x] تكيف تلقائي مع قياسات الشاشات والأجهزة اللوحية (Max Width Constraint: 560dp).
+- [x] بناء ودجت مركزية `AppDialog.show(context, ...)`:
+  - [x] ذات استدارة موحدة `AppRadii.xl`.
+  - [x] مساحات أزرار قياسية في الأسفل (تأكيد / إلغاء) باستخدام `AppPrimaryButton` و `AppSecondaryButton`.
 
 #### 2.3. توحيد حالات الشاشة وعناصر البحث (Search & State Views):
-* استبدال كافة حقول البحث اليدوية بودجت موحدة `AppSearchBar`:
-  * تحتوي على حقل إدخال قياسي بنمط `AppShapes.input`.
-  * زر مسح فوري ذكي، وحالة تحميل أثناء البحث، ومنطق تأخير الاستعلام (Debouncing) المدمج.
-* تعميم استخدام `AppAsyncView<T>` و `AppStateView` في كافة الشاشات لتوحيد مظهر:
-  * حالة التحميل (Loading / Skeletons).
-  * حالة انقطاع الإنترنت (No Internet).
-  * حالة الخطأ مع زر إعادة المحاولة (Error with Retry).
-  * حالة البيانات الفارغة (Empty State) برسوميات معبرة.
+- [x] بناء حقل البحث الموحد `AppSearchBar` في `lib/core/widgets/app_search_bar.dart`:
+  - [x] تصميم قياسي متناسق مع حواف `AppRadii.pill` والألوان الدلالية.
+  - [x] زر مسح فوري ذكي وحالة تحميل أثناء البحث.
+  - [x] مؤقت تأخير مدمج (Debounce) لمنع تكرار الاستعلامات مع كل حرف.
+- [x] بناء واجهات الحالات الموحدة في `lib/core/widgets/app_state_views.dart`:
+  - [x] `AppEmptyStateView`: لحالة عدم وجود نتائج أو محتوى فارغ.
+  - [x] `AppErrorStateView`: لحالة حدوث خطأ مع زر إعادة المحاولة.
 
 ---
 
