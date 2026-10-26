@@ -228,7 +228,7 @@ flowchart TD
 | `quran_reader_search_sheet.dart` | 1,098 | • `presentation/widgets/search/quran_search_sheet.dart`<br>• `presentation/widgets/search/search_result_item.dart`<br>• `presentation/widgets/search/search_history_view.dart` |
 | `quran_reciters_list_view.dart` | 1,050 | • `presentation/widgets/reciters/reciter_list_tile.dart`<br>• `presentation/widgets/reciters/reciter_download_action.dart`<br>• تجريد دوال التنسيق إلى UseCases |
 | `tafsir_download_screen.dart` | 982 | • مطابقة بنية شاشة الترجمات واستخدام مكونات البطاقات المشتركة |
-| `wird_dialog.dart` | 748 | • `presentation/dialogs/wird_goal_dialog.dart`<br>• `presentation/widgets/wird/wird_type_selector.dart`<br>• `presentation/widgets/wird/wird_progress_slider.dart` |
+| `wird_dialog.dart` | 781 ➔ ~510 سطر | ✅ **تم التنظيف بنجاح**: إزالة 260 سطراً من الكود الميت وتحديث الحوار ليعتمد على `AppDialog` ونظام الألوان الدلالية `context.semanticColors` |
 | `names_of_allah_screen.dart` | 709 | • `presentation/screens/names_of_allah_screen.dart`<br>• `presentation/widgets/allah_name_card.dart`<br>• عزل منطق البحث في Controller مستقل |
 
 ---
