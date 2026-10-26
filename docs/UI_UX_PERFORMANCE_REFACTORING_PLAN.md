@@ -151,7 +151,8 @@ flowchart TD
   - [x] البنية جاهزة: `AppColorScheme` (`surfaceElevated`, `surfaceSunken`, `canvas`, `pageSurface`, `accentGradient`, `errorSurface` ...) + `context.semanticColors` و `context.tokens`.
   - [x] طبقة `lib/core/` (widgets/design/screens) تحوّلت بالكامل تقريباً (≈30 موضعاً).
   - [x] ترحيل شاشة أسماء الله الحسنى بالكامل (`names_of_allah_screen.dart` و `allah_name_detail_sheet.dart`) إلى الألوان الدلالية `context.semanticColors`.
-  - [~] بقية الشاشات (`hadith_nawawi`, `qibla`, `quran`) جاري استكمال ترحيلها تباعاً.
+  - [x] ترحيل شاشات الأحاديث النبوية بالكامل (`hadith_nawawi_screen.dart` و `hadith_detail_screen.dart`) إلى الألوان الدلالية `context.semanticColors` وحواف `AppRadii` ومسافات `AppSpacing`.
+  - [~] بقية الشاشات (`qibla`, `quran`) جاري استكمال ترحيلها تباعاً.
 - [~] 3. التباين ≥ 4.5:1 — **مُتحقَّق للـTokens في الوضعين**:
   - [x] اختبارات تباين آلية على `textPrimary` × الأسطح الخمسة و`primaryStrong/error/success` على `canvas` (حدود AA).
   - [x] **النصوص الثانوية `textSecondary`** أصبحت مُختبرة مقابل 4.5:1 على `canvas/surface/surfaceElevated` في الوضعين — وكشفت الاختبار **مخالفة حقيقية** كانت مذكورة في §2.4: القيمة القديمة `#8A7E68` تعطي **3.54:1** فقط على الورق الفاتح.
