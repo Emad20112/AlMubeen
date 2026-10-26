@@ -1,4 +1,6 @@
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/presentation/pages/quran_audio_download_screen.dart';
@@ -6,8 +8,6 @@ import 'package:al_mubeen/features/quran/presentation/pages/tafsir_download_scre
 import 'package:al_mubeen/features/quran/presentation/pages/translation_download_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:al_mubeen/app/theme/app_radii.dart';
-import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 Future<void> showQuranReaderSettingsSheet({
   required BuildContext context,
@@ -100,6 +100,7 @@ class _QuranReaderSettingsSheetState
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final preferences = ref
         .watch(appUserPreferencesProvider)
@@ -108,17 +109,11 @@ class _QuranReaderSettingsSheetState
           orElse: () => const AppUserPreferences.initial(),
         );
     final preferencesNotifier = ref.read(appUserPreferencesProvider.notifier);
-    final backgroundColor = isDark
-        ? AppColors.darkScaffold
-        : AppColors.parchment;
-    final surfaceColor = isDark
-        ? AppColors.darkSurfaceHigh
-        : AppColors.parchmentLight;
-    final titleColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
-    final borderColor = AppColors.goldenAccent.withValues(
-      alpha: isDark ? 0.24 : 0.14,
-    );
+    final backgroundColor = colors.pageSurface;
+    final surfaceColor = colors.surfaceElevated;
+    final titleColor = colors.textPrimary;
+    final mutedColor = colors.textSecondary;
+    final borderColor = colors.border;
     final buttonIcon = isDark
         ? Icons.light_mode_rounded
         : Icons.dark_mode_rounded;
@@ -133,7 +128,7 @@ class _QuranReaderSettingsSheetState
         borderRadius: const BorderRadius.horizontal(left: Radius.circular(22)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.maroon900.withValues(alpha: isDark ? 0.28 : 0.10),
+            color: colors.surfaceSunken.withValues(alpha: isDark ? 0.35 : 0.10),
             blurRadius: 24,
             offset: const Offset(-8, 0),
           ),
@@ -152,12 +147,12 @@ class _QuranReaderSettingsSheetState
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: AppColors.goldenAccent.withValues(alpha: 0.12),
+                      color: colors.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppRadii.md),
                     ),
                     child: Icon(
                       Icons.settings_rounded,
-                      color: AppColors.goldenAccent,
+                      color: colors.accent,
                       size: 20,
                     ),
                   ),
@@ -226,14 +221,14 @@ class _QuranReaderSettingsSheetState
                                     width: 34,
                                     height: 34,
                                     decoration: BoxDecoration(
-                                      color: AppColors.goldenAccent.withValues(
+                                      color: colors.accent.withValues(
                                         alpha: 0.10,
                                       ),
                                       borderRadius: BorderRadius.circular(AppRadii.sm),
                                     ),
                                     child: Icon(
                                       buttonIcon,
-                                      color: AppColors.goldenAccent,
+                                      color: colors.accent,
                                       size: 18,
                                     ),
                                   ),
@@ -345,11 +340,10 @@ class _QuranReaderSettingsSheetState
                                 max: 1.25,
                                 divisions: 14,
                                 label: '${(fontScale * 100).round()}%',
-                                activeColor: AppColors.goldenAccent,
-                                inactiveColor: AppColors.goldenAccent
-                                    .withValues(alpha: 0.18),
+                                activeColor: colors.accent,
+                                inactiveColor: colors.accent.withValues(alpha: 0.18),
                                 onChanged: (value) {
-                                  setState(() => _draftFontScale = value);
+                                   setState(() => _draftFontScale = value);
                                 },
                                 onChangeEnd: (value) {
                                   setState(() => _draftFontScale = null);
@@ -415,7 +409,7 @@ class _QuranReaderSettingsSheetState
                                       icon: Icons.menu_book_rounded,
                                       title: 'مكتبة التفاسير',
                                       subtitle: 'حمّل أو افتح التفاسير.',
-                                      accentColor: AppColors.goldenAccent,
+                                      accentColor: colors.accent,
                                       onTap: () => _openScreen(
                                         const TafsirDownloadScreen(),
                                       ),
@@ -427,7 +421,7 @@ class _QuranReaderSettingsSheetState
                                       icon: Icons.translate_rounded,
                                       title: 'مكتبة الترجمات',
                                       subtitle: 'اختر الترجمات المناسبة.',
-                                      accentColor: const Color(0xFF2E6E6A),
+                                      accentColor: colors.primaryStrong,
                                       onTap: () => _openScreen(
                                         const TranslationDownloadScreen(),
                                       ),
@@ -439,7 +433,7 @@ class _QuranReaderSettingsSheetState
                                       icon: Icons.headphones_rounded,
                                       title: 'مكتبة القراء',
                                       subtitle: 'استعرض القراء وحمّل التلاوات.',
-                                      accentColor: const Color(0xFF8A6B3B),
+                                      accentColor: colors.accent,
                                       onTap: () => _openScreen(
                                         const QuranAudioDownloadScreen(),
                                       ),
@@ -477,7 +471,7 @@ class _QuranReaderSettingsSheetState
                                         icon: Icons.bookmark_add_rounded,
                                         title: 'حفظ الصفحة الحالية',
                                         subtitle: 'صفحة ${widget.currentPage}',
-                                        accentColor: AppColors.goldenAccent,
+                                        accentColor: colors.accent,
                                         value: _isPageBookmarked!,
                                         onChanged: (value) async {
                                           await ref
@@ -526,9 +520,10 @@ class _SettingsSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final titleColor = colors.textPrimary;
+    final mutedColor = colors.textSecondary;
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -538,7 +533,7 @@ class _SettingsSectionCard extends StatelessWidget {
         border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: AppColors.maroon900.withValues(alpha: isDark ? 0.10 : 0.04),
+            color: colors.surfaceSunken.withValues(alpha: isDark ? 0.15 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -590,9 +585,10 @@ class _LibraryActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final titleColor = colors.textPrimary;
+    final mutedColor = colors.textSecondary;
 
     return Material(
       color: Colors.transparent,
@@ -678,9 +674,10 @@ class _ToggleActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final titleColor = colors.textPrimary;
+    final mutedColor = colors.textSecondary;
 
     return Material(
       color: Colors.transparent,

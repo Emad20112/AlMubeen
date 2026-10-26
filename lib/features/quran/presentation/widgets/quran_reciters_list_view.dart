@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
@@ -42,10 +42,8 @@ Future<void> showReciterPickerForSurahPlayer({
     context: context,
     builder: (context) {
       final size = MediaQuery.sizeOf(context);
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      final backgroundColor = isDark
-          ? AppColors.darkSurface
-          : AppColors.parchmentLight;
+      final colors = context.semanticColors;
+      final backgroundColor = colors.surfaceElevated;
 
       return Dialog(
         backgroundColor: backgroundColor,
@@ -78,10 +76,8 @@ class _SurahPlayerReciterSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.darkSurface
-        : AppColors.parchmentLight;
+    final colors = context.semanticColors;
+    final backgroundColor = colors.surfaceElevated;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -127,10 +123,8 @@ class _SurahPlayerReciterContentState
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final foregroundColor = isDark
-        ? AppColors.parchmentLight
-        : AppColors.maroon800;
+    final colors = context.semanticColors;
+    final foregroundColor = colors.textPrimary;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -145,7 +139,7 @@ class _SurahPlayerReciterContentState
                 widthFactor: 0.12,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.maroon700.withValues(alpha: 0.32),
+                    color: colors.border.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const SizedBox(height: 5),
@@ -294,8 +288,9 @@ class _SurahPlayerReciterBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.semanticColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final mutedColor = colors.textSecondary;
 
     return ref
         .watch(quranRecitationsProvider)
@@ -407,10 +402,8 @@ Future<void> showReciterPickerSheet({
     context: context,
     builder: (context) {
       final size = MediaQuery.sizeOf(context);
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      final backgroundColor = isDark
-          ? AppColors.darkSurface
-          : AppColors.parchmentLight;
+      final colors = context.semanticColors;
+      final backgroundColor = colors.surfaceElevated;
 
       return Dialog(
         backgroundColor: backgroundColor,
@@ -446,10 +439,8 @@ class _ReciterPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.darkSurface
-        : AppColors.parchmentLight;
+    final colors = context.semanticColors;
+    final backgroundColor = colors.surfaceElevated;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -497,10 +488,8 @@ class _ReciterPickerContentState extends ConsumerState<_ReciterPickerContent> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final foregroundColor = isDark
-        ? AppColors.parchmentLight
-        : AppColors.maroon800;
+    final colors = context.semanticColors;
+    final foregroundColor = colors.textPrimary;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -515,7 +504,7 @@ class _ReciterPickerContentState extends ConsumerState<_ReciterPickerContent> {
                 widthFactor: 0.12,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.maroon700.withValues(alpha: 0.32),
+                    color: colors.border.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const SizedBox(height: 5),
@@ -664,8 +653,9 @@ class _ReciterPickerBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.semanticColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
+    final mutedColor = colors.textSecondary;
     final preferencesAsync = ref.watch(appUserPreferencesProvider);
     final selectedRecitation = ref.watch(selectedQuranRecitationProvider);
     final preferredReciterId = preferencesAsync.maybeWhen(
@@ -851,13 +841,10 @@ class _ReciterSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = isDark ? const Color(0xFFE8C860) : AppColors.maroon800;
-    final subtitleColor = isDark
-        ? AppColors.parchmentMuted.withValues(alpha: 0.75)
-        : AppColors.maroon700.withValues(alpha: 0.65);
-    final dividerColor = isDark
-        ? const Color(0xFFE8C860).withValues(alpha: 0.18)
-        : AppColors.maroon700.withValues(alpha: 0.12);
+    final colors = context.semanticColors;
+    final titleColor = colors.accent;
+    final subtitleColor = colors.textSecondary;
+    final dividerColor = colors.border;
 
     return Padding(
       padding: const EdgeInsets.only(top: 18, bottom: 10, left: 6, right: 6),
@@ -870,7 +857,7 @@ class _ReciterSectionHeader extends StatelessWidget {
                 width: 3,
                 height: 18,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFFE8C860) : AppColors.maroon700,
+                  color: colors.accent,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -925,17 +912,18 @@ class _ReciterPickerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = isDark ? AppColors.parchmentLight : AppColors.maroon800;
-    final mutedColor = isDark ? AppColors.parchmentMuted : AppColors.maroon700;
-    final accentColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+    final titleColor = colors.textPrimary;
+    final mutedColor = colors.textSecondary;
+    final accentColor = colors.accent;
 
     // Determine source badge label
     final isIslamicApp = recitation.id < 0;
     final sourceBadge = isIslamicApp ? 'Islamic.app' : 'Quran.com';
     final sourceBadgeColor = isIslamicApp
         ? const Color(0xFF2E7D55)
-        : AppColors.maroon700;
+        : colors.primaryStrong;
 
     // Arabic name = reciterName, English name = translatedName
     final arabicName = recitation.reciterName;
