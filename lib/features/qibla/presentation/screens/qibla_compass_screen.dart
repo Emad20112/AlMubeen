@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/widgets/islamic_header.dart';
 import 'package:al_mubeen/features/qibla/application/qibla_service.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +11,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:al_mubeen/app/theme/app_radii.dart';
-import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class QiblaCompassScreen extends StatefulWidget {
   const QiblaCompassScreen({super.key});
@@ -154,10 +154,10 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.semanticColors;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkScaffold : AppColors.parchment,
+      backgroundColor: colors.pageSurface,
       body: SafeArea(
         child: Column(
           children: [
@@ -169,30 +169,24 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                 onPressed: () => context.go('/'),
                 icon: Icon(
                   Icons.arrow_back_ios_new,
-                  color: isDark
-                      ? AppColors.parchmentLight
-                      : AppColors.maroon800,
+                  color: colors.textPrimary,
                 ),
               ),
               trailing: Icon(
                 FlutterIslamicIcons.qibla,
-                color: isDark
-                    ? AppColors.goldenAccentDark
-                    : AppColors.maroon800,
+                color: colors.accent,
               ),
             ),
             Expanded(
               child: _isLoading
                   ? Center(
                       child: CircularProgressIndicator(
-                        color: isDark
-                            ? AppColors.goldenAccentDark
-                            : AppColors.maroon800,
+                        color: colors.primaryStrong,
                       ),
                     )
                   : _locationError != null
-                      ? _buildErrorView(isDark)
-                      : _buildCompass(isDark),
+                      ? _buildErrorView(colors)
+                      : _buildCompass(colors),
             ),
           ],
         ),
@@ -202,20 +196,17 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
 
   // ─── Error view ────────────────────────────────────────────
 
-  Widget _buildErrorView(bool isDark) {
+  Widget _buildErrorView(dynamic colors) {
     final error = _locationError!;
     final isDisabled = error is QiblaServiceDisabledException;
     final isPermanentlyDenied =
         error is QiblaPermissionPermanentlyDeniedException;
 
-    final surfaceColor =
-        isDark ? AppColors.darkSurface : AppColors.parchmentLight;
-    final titleColor =
-        isDark ? AppColors.parchmentLight : AppColors.maroon800;
-    final mutedColor =
-        isDark ? AppColors.parchmentMuted : AppColors.maroon700;
-    final accentColor =
-        isDark ? AppColors.goldenAccentDark : AppColors.maroon800;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = colors.surfaceElevated;
+    final titleColor = colors.textPrimary;
+    final mutedColor = colors.textSecondary;
+    final accentColor = colors.primaryStrong;
 
     return Center(
       child: SingleChildScrollView(
@@ -227,13 +218,11 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
             color: surfaceColor,
             borderRadius: BorderRadius.circular(AppRadii.xl),
             border: Border.all(
-              color:
-                  AppColors.maroon700.withValues(alpha: isDark ? 0.2 : 0.1),
+              color: colors.border.withValues(alpha: isDark ? 0.2 : 0.1),
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.maroon900
-                    .withValues(alpha: isDark ? 0.3 : 0.08),
+                color: colors.surfaceSunken.withValues(alpha: isDark ? 0.3 : 0.08),
                 blurRadius: 20,
                 offset: const Offset(0, 6),
               ),
@@ -248,19 +237,15 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isDisabled
-                      ? AppColors.goldenAccent.withValues(alpha: 0.12)
-                      : AppColors.maroon700.withValues(alpha: 0.1),
+                      ? colors.accent.withValues(alpha: 0.12)
+                      : colors.error.withValues(alpha: 0.1),
                 ),
                 child: Icon(
                   isDisabled
                       ? Icons.location_off_rounded
                       : Icons.location_disabled_rounded,
                   size: 36,
-                  color: isDisabled
-                      ? (isDark
-                          ? AppColors.goldenAccentDark
-                          : AppColors.goldenAccent)
-                      : AppColors.maroon700,
+                  color: isDisabled ? colors.accent : colors.error,
                 ),
               ),
               const SizedBox(height: 20),
@@ -303,8 +288,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: accentColor,
-                  foregroundColor:
-                      isDark ? AppColors.darkScaffold : AppColors.parchmentLight,
+                  foregroundColor: colors.onPrimaryStrong,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 28,
                     vertical: 14,
@@ -334,11 +318,11 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
 
   // ─── Compass ───────────────────────────────────────────────
 
-  Widget _buildCompass(bool isDark) {
+  Widget _buildCompass(dynamic colors) {
     if (_currentDirection == null) {
       return Center(
         child: CircularProgressIndicator(
-          color: isDark ? AppColors.goldenAccentDark : AppColors.maroon800,
+          color: colors.primaryStrong,
         ),
       );
     }
@@ -349,15 +333,12 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
     final deviceHeading = _currentDirection!.deviceHeading;
     final qiblaDirection = _currentDirection!.qiblaDirection;
 
-    final accentColor =
-        isDark ? AppColors.goldenAccentDark : AppColors.maroon800;
-    final surfaceColor =
-        isDark ? AppColors.darkSurfaceHigh : AppColors.parchmentLight;
-    final borderColor = isDark
-        ? AppColors.goldenAccent.withValues(alpha: 0.2)
-        : AppColors.maroon700.withValues(alpha: 0.15);
-    final textColor =
-        isDark ? AppColors.parchmentLight : AppColors.maroon800;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accentColor = colors.primaryStrong;
+    final successColor = colors.success;
+    final surfaceColor = colors.surfaceElevated;
+    final borderColor = colors.border.withValues(alpha: isDark ? 0.2 : 0.15);
+    final textColor = colors.textPrimary;
 
     return Column(
       children: [
@@ -407,9 +388,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                       width: 4,
                       height: 24,
                       decoration: BoxDecoration(
-                        color: isFacingQibla
-                            ? const Color(0xFF10B981)
-                            : accentColor,
+                        color: isFacingQibla ? successColor : accentColor,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -426,17 +405,15 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                         color: surfaceColor,
                         border: Border.all(
                           color: isFacingQibla
-                              ? const Color(0xFF10B981)
-                                  .withValues(alpha: 0.35)
+                              ? successColor.withValues(alpha: 0.35)
                               : borderColor,
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: isFacingQibla
-                                ? const Color(0xFF10B981)
-                                    .withValues(alpha: 0.12)
-                                : AppColors.maroon900.withValues(
+                                ? successColor.withValues(alpha: 0.12)
+                                : colors.surfaceSunken.withValues(
                                     alpha: isDark ? 0.25 : 0.08,
                                   ),
                             blurRadius: 24,
@@ -445,7 +422,10 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                         ],
                       ),
                       child: CustomPaint(
-                        painter: _CompassRosePainter(isDark: isDark),
+                        painter: _CompassRosePainter(
+                          majorColor: textColor,
+                          tickColor: colors.textSecondary.withValues(alpha: 0.3),
+                        ),
                       ),
                     ),
                   ),
@@ -463,6 +443,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                             size: Size(compassSize, compassSize),
                             painter: _QiblaArrowPainter(
                               isFacingQibla: isFacingQibla,
+                              arrowColor: isFacingQibla ? successColor : accentColor,
                             ),
                           ),
                           Positioned(
@@ -470,9 +451,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                             child: Icon(
                               FlutterIslamicIcons.kaaba,
                               size: 42,
-                              color: isFacingQibla
-                                  ? const Color(0xFF10B981)
-                                  : accentColor,
+                              color: isFacingQibla ? successColor : accentColor,
                             ),
                           ),
                         ],
@@ -489,12 +468,11 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
+                        color: successColor,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF10B981)
-                                .withValues(alpha: 0.4),
+                            color: successColor.withValues(alpha: 0.4),
                             blurRadius: 12,
                             spreadRadius: 2,
                           ),
@@ -536,12 +514,12 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
           decoration: BoxDecoration(
             color: isFacingQibla
-                ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                ? successColor.withValues(alpha: 0.12)
                 : surfaceColor,
             borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
               color: isFacingQibla
-                  ? const Color(0xFF10B981).withValues(alpha: 0.45)
+                  ? successColor.withValues(alpha: 0.45)
                   : borderColor,
               width: 1.5,
             ),
@@ -553,9 +531,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                 isFacingQibla
                     ? Icons.verified_rounded
                     : Icons.screen_rotation,
-                color: isFacingQibla
-                    ? const Color(0xFF10B981)
-                    : accentColor,
+                color: isFacingQibla ? successColor : accentColor,
                 size: 22,
               ),
               const SizedBox(width: 10),
@@ -567,9 +543,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
-                    color: isFacingQibla
-                        ? const Color(0xFF10B981)
-                        : textColor,
+                    color: isFacingQibla ? successColor : textColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
@@ -589,19 +563,18 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
 // ─── Compass rose painter ────────────────────────────────────
 
 class _CompassRosePainter extends CustomPainter {
-  final bool isDark;
+  final Color majorColor;
+  final Color tickColor;
 
-  _CompassRosePainter({required this.isDark});
+  _CompassRosePainter({
+    required this.majorColor,
+    required this.tickColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-
-    final tickColor = (isDark ? AppColors.parchmentLight : AppColors.maroon800)
-        .withValues(alpha: 0.3);
-    final majorColor =
-        isDark ? AppColors.parchmentLight : AppColors.maroon800;
 
     final tickPaint = Paint()
       ..color = tickColor
@@ -671,7 +644,8 @@ class _CompassRosePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CompassRosePainter oldDelegate) {
-    return oldDelegate.isDark != isDark;
+    return oldDelegate.majorColor != majorColor ||
+        oldDelegate.tickColor != tickColor;
   }
 }
 
@@ -679,16 +653,19 @@ class _CompassRosePainter extends CustomPainter {
 
 class _QiblaArrowPainter extends CustomPainter {
   final bool isFacingQibla;
+  final Color arrowColor;
 
-  _QiblaArrowPainter({required this.isFacingQibla});
+  _QiblaArrowPainter({
+    required this.isFacingQibla,
+    required this.arrowColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final paint = Paint()
       ..style = PaintingStyle.fill
-      ..color =
-          isFacingQibla ? const Color(0xFF10B981) : AppColors.maroon700;
+      ..color = arrowColor;
 
     final path = Path();
     final yOffset = 25.0;
@@ -717,6 +694,7 @@ class _QiblaArrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_QiblaArrowPainter oldDelegate) {
-    return oldDelegate.isFacingQibla != isFacingQibla;
+    return oldDelegate.isFacingQibla != isFacingQibla ||
+        oldDelegate.arrowColor != arrowColor;
   }
 }
