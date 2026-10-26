@@ -10,6 +10,8 @@ import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 /// Shows a reciter picker from the Surah Player screen.
 /// Unlike [showReciterPickerSheet], it does NOT auto-play an ayah;
@@ -84,7 +86,7 @@ class _SurahPlayerReciterSheet extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
       ),
       child: _SurahPlayerReciterContent(
         activeRecitation: activeRecitation,
@@ -159,7 +161,7 @@ class _SurahPlayerReciterContentState
                     height: 36,
                     decoration: BoxDecoration(
                       color: foregroundColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                     ),
                     child: Icon(
                       Icons.record_voice_over_rounded,
@@ -247,7 +249,7 @@ class _SurahPlayerReciterContentState
                           vertical: 0,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadii.md),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -452,7 +454,7 @@ class _ReciterPickerSheet extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
       ),
       child: _ReciterPickerContent(
         currentAyah: currentAyah,
@@ -529,7 +531,7 @@ class _ReciterPickerContentState extends ConsumerState<_ReciterPickerContent> {
                     height: 36,
                     decoration: BoxDecoration(
                       color: foregroundColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
                     ),
                     child: Icon(
                       Icons.record_voice_over_rounded,
@@ -617,7 +619,7 @@ class _ReciterPickerContentState extends ConsumerState<_ReciterPickerContent> {
                           vertical: 0,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadii.md),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -872,7 +874,7 @@ class _ReciterSectionHeader extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   header.title,
@@ -901,7 +903,7 @@ class _ReciterSectionHeader extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Divider(height: 1, thickness: 1, color: dividerColor),
         ],
       ),
@@ -947,14 +949,14 @@ class _ReciterPickerTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
                 ? accentColor.withValues(alpha: isDark ? 0.15 : 0.08)
                 : accentColor.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(
               color: isSelected
                   ? accentColor.withValues(alpha: 0.35)
@@ -976,7 +978,7 @@ class _ReciterPickerTile extends StatelessWidget {
                       accentColor.withValues(alpha: isDark ? 0.10 : 0.06),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                   border: Border.all(
                     color: accentColor.withValues(alpha: 0.14),
                   ),
@@ -987,7 +989,7 @@ class _ReciterPickerTile extends StatelessWidget {
                   size: 22,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
 
               // Names + source badge
               Expanded(
@@ -1014,7 +1016,7 @@ class _ReciterPickerTile extends StatelessWidget {
                             size: 13,
                             color: accentColor,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: AppSpacing.xs),
                           Flexible(
                             child: Text(
                               'القارئ المستخدم حالياً',
@@ -1043,9 +1045,9 @@ class _ReciterPickerTile extends StatelessWidget {
                           fontSize: 11,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                     ] else
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                     // Source badge
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -1069,7 +1071,7 @@ class _ReciterPickerTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
 
               // Selection indicator
               AnimatedContainer(

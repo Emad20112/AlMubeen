@@ -5,6 +5,8 @@ import 'package:al_mubeen/features/quran/application/quran_surah_player_provider
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class QuranSleepTimerSheet extends ConsumerStatefulWidget {
   const QuranSleepTimerSheet({super.key});
@@ -90,7 +92,7 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
       child: Container(
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
         ),
         child: DraggableScrollableSheet(
           expand: false,
@@ -199,7 +201,7 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                 Container(
                   decoration: BoxDecoration(
                     color: surfaceColor,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.lg),
                   ),
                   child: Column(
                     children: [
@@ -230,7 +232,7 @@ class _QuranSleepTimerSheetState extends ConsumerState<QuranSleepTimerSheet> {
                               'إيقاف المشغّل',
                               style: TextStyle(color: Colors.white54),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppSpacing.xs),
                             // ⚠️ `arrow_forward_ios_rounded` لا ينعكس مع
                             // `Directionality`، فكان يشير لليمين داخل
                             // تطبيق RTL. `AppIcon.forwardFor` يتعامل مع

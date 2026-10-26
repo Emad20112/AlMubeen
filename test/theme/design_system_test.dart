@@ -1,6 +1,7 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/app/theme/app_design_tokens.dart';
 import 'package:al_mubeen/app/theme/app_icon.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/app/theme/app_theme.dart';
 import 'package:al_mubeen/app/theme/app_typography.dart';
@@ -84,34 +85,33 @@ void main() {
       );
     });
 
-    test('عائلة خط الـUI لم تُغيَّر عن السلوك السابق', () {
-      // ملاحظة مهمّة: `fontFamily == null` لا تعني "بلا خط" — بل تعني
-      // "لا نتجاوز الأساس". الأساس `Typography.blackMountainView` يزوّد
-      // `Roboto` على Android، فكان التطبيق يعرض Roboto قبل هذه المرحلة
-      // وبعدها. المطلوب ألّا نُدخل عائلة جديدة.
-      expect(AppTypography.fontFamily, isNull);
+    test('يعتمد خط الـUI العربي الموحّد بدل خط النظام', () {
+      // البند 1.1: التطبيق كان يعتمد على خط النظام المتغيّر بين الأجهزة.
+      // الآن هناك عائلة واحدة مسجّلة في `pubspec.yaml` ومستخدمة في
+      // `TextTheme` لكلا الوضعين.
+      expect(AppTypography.fontFamily, 'IBMPlexSansArabic');
 
-      final previous = Typography.blackMountainView.apply(
-        bodyColor: const Color(0xFF1E1A16),
-        displayColor: const Color(0xFF1E1A16),
-      );
-      final now = AppTheme.light().textTheme;
+      for (final theme in [AppTheme.light(), AppTheme.dark()]) {
+        expect(theme.textTheme.bodyMedium?.fontFamily, 'IBMPlexSansArabic');
+        expect(theme.textTheme.titleLarge?.fontFamily, 'IBMPlexSansArabic');
+        expect(theme.textTheme.labelLarge?.fontFamily, 'IBMPlexSansArabic');
+      }
+    });
 
-      expect(
-        now.bodyMedium?.fontFamily,
-        previous.bodyMedium?.fontFamily,
-        reason: 'bodyMedium',
-      );
-      expect(
-        now.titleLarge?.fontFamily,
-        previous.titleLarge?.fontFamily,
-        reason: 'titleLarge',
-      );
-      expect(
-        now.bodyLarge?.fontSize,
-        previous.bodyLarge?.fontSize,
-        reason: 'bodyLarge fontSize',
-      );
+    test('سلم أوزان الخط الأربعة هو نفسه المعتمد في التصميم', () {
+      // الحارس: تسجيل وزن في `pubspec.yaml` دون وجوده هنا (أو العكس) يجعل
+      // Flutter يستخدم faux-bold بدل الملف الحقيقي.
+      expect(AppTypography.regular, FontWeight.w400);
+      expect(AppTypography.medium, FontWeight.w500);
+      expect(AppTypography.semiBold, FontWeight.w600);
+      expect(AppTypography.bold, FontWeight.w700);
+    });
+
+    test('أحجام النص الأساسية لم تنحرف عن سلم Material 3', () {
+      // تغيير العائلة لا يغيّر الأحجام: نتحقق من القيم المرجعية.
+      expect(AppTheme.light().textTheme.bodyLarge?.fontSize, 16);
+      expect(AppTheme.light().textTheme.bodyMedium?.fontSize, 14);
+      expect(AppTheme.light().textTheme.titleLarge?.fontSize, 22);
     });
 
     test('لا تسرّب لخط المصحف (QCF_*) إلى نصوص الواجهة', () {
@@ -124,7 +124,7 @@ void main() {
       expect(
         AppTypography.fontFamilyFallback.contains('Amiri'),
         isFalse,
-        reason: 'Amiri غير معلن في pubspec ولا يستخدم خط المصحف',
+        reason: 'Amiri غير مسجّل في pubspec — سيُسقط إلى خط النظام بصمت',
       );
     });
 
@@ -211,6 +211,36 @@ void main() {
       }
     });
 
+    test('النص الثانوي يفي بحد WCAG AA (≥ 4.5:1) على الأسطح القابلة للقراءة', () {
+      // البند 1.2.3 — الفجوة المذكورة في §2.4 من الخطة: «نسبة التباين بين
+      // النصوص الثانوية في الوضع الداكن تقل عن 3:1».
+      //
+      // نستثني `surfaceSunken` عمدًا: لا يُستخدم خلف النص الثانوي (حقول
+      // إدخال فارغة فقط) كما نستثني `surfaceMuted` في الوضع الفاتح لأن
+      // `textSecondary` فوقه كان ولا يزال تصميماً مختلفاً — الحدّ المُلزم
+      // هنا هو الحدّ الذي تفرضه WCAG على النص العادي: 4.5:1.
+      for (final theme in [AppTheme.light(), AppTheme.dark()]) {
+        final colors = AppColorScheme.from(
+          theme.colorScheme,
+          isDark: theme.brightness == Brightness.dark,
+        );
+        for (final surface in [
+          colors.canvas,
+          colors.surface,
+          colors.surfaceElevated,
+        ]) {
+          expect(
+            _contrast(colors.textSecondary, surface),
+            greaterThanOrEqualTo(4.5),
+            reason:
+                'textSecondary على $surface '
+                '(${colors.isDark ? 'داكن' : 'فاتح'}) — '
+                'الحالي ${_contrast(colors.textSecondary, surface).toStringAsFixed(2)}:1',
+          );
+        }
+      }
+    });
+
     test('lerp عند t=0 و t=1 يعيد الطرفين', () {
       final light = AppColorScheme.from(
         AppTheme.light().colorScheme,
@@ -241,6 +271,32 @@ void main() {
       for (var i = 1; i < scale.length; i++) {
         expect(scale[i], greaterThan(scale[i - 1]));
       }
+    });
+  });
+
+  group('AppRadii', () {
+    test('السلم تصاعدي ومبني على مضاعفات AppSpacing', () {
+      // البند 1.3.1 كان مفتوحًا لأن الكود كان `lg=20`/`xl=28` والخطة تقول
+      // 16/24. تم الحسم على 16/24. هذا الاختبار يمنع الانحراف الصامت.
+      expect(AppRadii.xs, 4);
+      expect(AppRadii.sm, 8);
+      expect(AppRadii.md, 12);
+      expect(AppRadii.lg, 16);
+      expect(AppRadii.xl, 24);
+
+      expect(AppRadii.xs, AppSpacing.xs);
+      expect(AppRadii.sm, AppSpacing.sm);
+      expect(AppRadii.md, AppSpacing.md);
+      expect(AppRadii.lg, AppSpacing.lg);
+      expect(AppRadii.xl, AppSpacing.xl);
+    });
+
+    test('الأسماء الوصفية والتوكنز تقرأ من السلم نفسه', () {
+      const tokens = AppDesignTokens.standard();
+      expect(tokens.radii.large, AppRadii.lg);
+      expect(tokens.radii.extraLarge, AppRadii.xl);
+      expect(AppRadii.large, AppRadii.lg);
+      expect(AppRadii.extraLarge, AppRadii.xl);
     });
   });
 

@@ -30,7 +30,19 @@ abstract final class AppColors {
   static const Color brandBrown = Color(0xFF8A6B3B);
 
   /// `#8A7E68` — رمادي دافئ (69 استدعاءًا). الاسم التاريخي `maroon700`.
+  ///
+  /// ⚠️ **لا يصلح كنص**: تباينه 3.54:1 على الورق الفاتح، أي تحت حدّ WCAG
+  /// AA للنص العادي (4.5:1). يُستخدم للحدود والأيقونات الزخرفية فقط.
+  /// للنص الثانوي استخدم [`mutedTaupeStrong`].
   static const Color mutedTaupe = Color(0xFF8A7E68);
+
+  /// `#6E6452` — النص الثانوي المعتمد في الوضع الفاتح.
+  ///
+  /// نفس عائلة [`mutedTaupe`] لكن أغمق بما يكفي لتجاوز WCAG AA:
+  /// 5.69:1 على `lightSurface`، و5.50:1 على `cardCream`، و5.16:1 على
+  /// `lightBackground`. الغمق اللازم أدنى من ذلك (‏`#746A56` يعطي 4.73)
+  /// لكنه قريب جدًا من الحدّ؛ اخترنا الهامش الأوسع.
+  static const Color mutedTaupeStrong = Color(0xFF6E6452);
 
   /// `#B9AB8E` — رملي فاتح. الاسم التاريخي `maroon600`.
   static const Color sand = Color(0xFFB9AB8E);
@@ -273,7 +285,7 @@ class AppColorScheme extends ThemeExtension<AppColorScheme> {
             surfaceSunken: const Color(0xFFEDE6D8),
             surfaceGlass: const Color(0xCCFFFFFC),
             textPrimary: AppColors.lightInk,
-            textSecondary: AppColors.mutedTaupe,
+            textSecondary: AppColors.mutedTaupeStrong,
             textTertiary: const Color(0xFF8A7D72),
             textDisabled: AppColors.sand,
             textInverse: AppColors.lightSurface,

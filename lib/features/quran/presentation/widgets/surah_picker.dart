@@ -6,6 +6,8 @@ import 'package:al_mubeen/features/quran/presentation/pages/quran_page_reader.da
 import 'package:flutter/material.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 Future<void> openSurahPickerAndReader(BuildContext context) async {
   final surahNumber = await showSurahPicker(context);
@@ -75,7 +77,7 @@ class _SurahPickerSheet extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.sm)),
       ),
       child: const _SurahPickerContent(showDragHandle: true),
     );
@@ -218,7 +220,7 @@ class _SurahPickerContentState extends State<_SurahPickerContent> {
                           vertical: 0,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadii.sm),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -290,7 +292,7 @@ class _SurahPickerBody extends StatelessWidget {
             itemBuilder: (context, index) {
               return SurahPickerTile(surahNumber: filteredSurahs[index]);
             },
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
             itemCount: filteredSurahs.length,
           );
         }
@@ -343,12 +345,12 @@ class SurahPickerTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         onTap: () => Navigator.of(context).pop(surahNumber),
         child: Ink(
           decoration: BoxDecoration(
             color: tileColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(color: accentColor.withValues(alpha: 0.16)),
             boxShadow: [
               BoxShadow(
@@ -368,7 +370,7 @@ class SurahPickerTile extends StatelessWidget {
                   height: 38,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                   ),
                   child: Icon(icon, size: 18, color: accentColor),
                 ),
@@ -403,7 +405,7 @@ class SurahPickerTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Align(
                   alignment: Alignment.bottomLeft,
                   child: _SurahNumberBadge(number: surahNumber),

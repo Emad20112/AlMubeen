@@ -1,5 +1,6 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 const double kQuranReaderIconNavBarHeight = 64;
 
@@ -100,7 +101,7 @@ class _NavItem extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Column(

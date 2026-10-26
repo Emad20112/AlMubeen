@@ -6,6 +6,8 @@ import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.da
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class TranslationDownloadScreen extends ConsumerStatefulWidget {
   const TranslationDownloadScreen({super.key, this.initialResourceId});
@@ -224,7 +226,7 @@ class _TranslationDownloadScreenState
               decoration: BoxDecoration(
                 color: (isDark ? const Color(0xFF2B201C) : AppColors.maroon800)
                     .withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
                 border: Border.all(
                   color:
                       (isDark ? const Color(0xFFD8B457) : AppColors.maroon800)
@@ -485,7 +487,7 @@ class _TranslationSearchFilterBar extends StatelessWidget {
                   ? const Color(0xFF2B201C)
                   : AppColors.parchmentLight,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadii.md),
                 borderSide: BorderSide.none,
               ),
               contentPadding: const EdgeInsets.symmetric(
@@ -572,12 +574,12 @@ class _CompactFilterChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(color: borderColor),
           ),
           child: Row(
@@ -623,14 +625,14 @@ class _TranslationEmptyResults extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF231A17) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(color: accentColor.withValues(alpha: 0.14)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.search_off_rounded, size: 52, color: accentColor),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 'لا توجد نتائج مطابقة',
                 style: TextStyle(
@@ -639,7 +641,7 @@ class _TranslationEmptyResults extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 'جرّب تعديل البحث أو مسح الفلترة لإظهار جميع الترجمات.',
                 style: TextStyle(
@@ -649,7 +651,7 @@ class _TranslationEmptyResults extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               ElevatedButton.icon(
                 onPressed: onClearFilters,
                 icon: const Icon(Icons.clear_all_rounded),
@@ -691,14 +693,14 @@ class _TranslationEmptyMessage extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF231A17) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(color: accentColor.withValues(alpha: 0.14)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 52, color: accentColor),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 title,
                 style: TextStyle(
@@ -708,7 +710,7 @@ class _TranslationEmptyMessage extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 message,
                 style: TextStyle(
@@ -718,7 +720,7 @@ class _TranslationEmptyMessage extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
               ElevatedButton.icon(
                 onPressed: onAction,
                 icon: const Icon(Icons.refresh_rounded),
@@ -775,14 +777,14 @@ class _TranslationFallbackSection extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF231A17) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(color: accentColor.withValues(alpha: 0.14)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.translate_rounded, size: 52, color: accentColor),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   'تعذر تحميل قائمة الترجمات',
                   style: TextStyle(
@@ -791,7 +793,7 @@ class _TranslationFallbackSection extends ConsumerWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   'تأكد من تشغيل الخادم المحلي ثم أعد المحاولة. إذا كانت لديك ترجمات محفوظة مسبقًا فستظهر هنا تلقائيًا.',
                   style: TextStyle(
@@ -801,7 +803,7 @@ class _TranslationFallbackSection extends ConsumerWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 ElevatedButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh_rounded),
@@ -823,7 +825,7 @@ class _TranslationFallbackSection extends ConsumerWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: accentColor.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(color: accentColor.withValues(alpha: 0.14)),
             ),
             child: Row(
@@ -892,7 +894,7 @@ class _TranslationDownloadProgressBanner extends ConsumerWidget {
         color: isDark
             ? const Color(0xFF2B201C)
             : AppColors.maroon800.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
           color: isDark
               ? const Color(0xFFD8B457).withValues(alpha: 0.25)
@@ -921,9 +923,9 @@ class _TranslationDownloadProgressBanner extends ConsumerWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           LinearProgressIndicator(value: state.progress),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -944,7 +946,7 @@ class _TranslationDownloadProgressBanner extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -968,7 +970,7 @@ class _TranslationDownloadProgressBanner extends ConsumerWidget {
                   icon: const Icon(Icons.play_arrow_rounded, size: 18),
                   label: const Text('استئناف'),
                 ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               TextButton.icon(
                 onPressed: () {
                   ref
@@ -1017,9 +1019,9 @@ class _TranslationTile extends StatelessWidget {
 
     if (isDownloading) {
       statusWidgets.addAll([
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         LinearProgressIndicator(value: downloadProgress),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           'جاري التنزيل...',
           style: TextStyle(
@@ -1038,9 +1040,9 @@ class _TranslationTile extends StatelessWidget {
       );
     } else if (isPaused) {
       statusWidgets.addAll([
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         LinearProgressIndicator(value: downloadProgress),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           'متوقف مؤقتًا',
           style: TextStyle(
@@ -1056,7 +1058,7 @@ class _TranslationTile extends StatelessWidget {
       );
     } else if (isDownloaded) {
       statusWidgets.addAll([
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           'محمّلة محليًا',
           style: TextStyle(
@@ -1087,14 +1089,14 @@ class _TranslationTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       elevation: isSelected ? 4 : 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         side: isSelected
             ? BorderSide(color: primaryColor, width: 2)
             : BorderSide.none,
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -1104,7 +1106,7 @@ class _TranslationTile extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
                 ),
                 child: Icon(
                   Icons.translate_rounded,
@@ -1112,7 +1114,7 @@ class _TranslationTile extends StatelessWidget {
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1127,7 +1129,7 @@ class _TranslationTile extends StatelessWidget {
                     ),
                     if (translation.resourceName != null &&
                         translation.resourceName != translation.name) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         translation.resourceName!,
                         style: TextStyle(
@@ -1137,7 +1139,7 @@ class _TranslationTile extends StatelessWidget {
                       ),
                     ],
                     if (translation.authorName != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         'المترجم: ${translation.authorName!}',
                         style: TextStyle(

@@ -4,6 +4,8 @@ import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 Future<void> showQuranBookmarksSheet({
   required BuildContext context,
@@ -49,11 +51,11 @@ class _QuranBookmarksSheet extends ConsumerWidget {
         return Container(
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
           ),
           child: Column(
             children: [
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Container(
                 width: 40,
                 height: 4,

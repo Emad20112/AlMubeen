@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 /// A compact, visually polished banner that slides into view when
 /// the device loses connectivity. Supports an optional retry button.
@@ -83,7 +85,7 @@ class _FullBanner extends StatelessWidget {
               ? [const Color(0xFF3A1A1C), const Color(0xFF2E1215)]
               : [const Color(0xFFFFF0F0), const Color(0xFFFFE6E6)],
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(
           color: isDark
               ? const Color(0xFF8B3A3A).withValues(alpha: 0.4)
@@ -130,7 +132,7 @@ class _FullBanner extends StatelessWidget {
           ),
           // Retry button
           if (onRetry != null) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             _RetryPill(onTap: onRetry!, isDark: isDark),
           ],
         ],
@@ -157,7 +159,7 @@ class _CompactBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(AppRadii.pill),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
@@ -166,7 +168,7 @@ class _CompactBanner extends StatelessWidget {
             color: isDark
                 ? const Color(0xFF3A1A1C).withValues(alpha: 0.9)
                 : const Color(0xFFFFE6E6).withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
               color: isDark
                   ? const Color(0xFF8B3A3A).withValues(alpha: 0.35)
@@ -183,7 +185,7 @@ class _CompactBanner extends StatelessWidget {
                     : const Color(0xFF8B0000),
                 size: textScaler.scale(16).clamp(14, 20).toDouble(),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Flexible(
                 child: Text(
                   message,
@@ -198,7 +200,7 @@ class _CompactBanner extends StatelessWidget {
                 ),
               ),
               if (onRetry != null) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 _RetryPill(onTap: onRetry!, isDark: isDark, compact: true),
               ],
             ],
@@ -228,7 +230,7 @@ class _RetryPill extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         child: Container(
           padding: EdgeInsets.symmetric(
             horizontal: compact ? 10 : 14,
@@ -240,7 +242,7 @@ class _RetryPill extends StatelessWidget {
                   ? [const Color(0xFFD8B457), const Color(0xFFB8943A)]
                   : [const Color(0xFF5A2A2E), const Color(0xFF3F1D20)],
             ),
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

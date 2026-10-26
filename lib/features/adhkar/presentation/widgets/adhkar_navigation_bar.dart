@@ -1,5 +1,6 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 class AdhkarNavigationBar extends StatelessWidget {
   const AdhkarNavigationBar({
@@ -326,7 +327,7 @@ class _SkipButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           child: Container(
             constraints: const BoxConstraints(minHeight: 40),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -334,7 +335,7 @@ class _SkipButton extends StatelessWidget {
               color: enabled
                   ? primaryColor.withValues(alpha: 0.08)
                   : AppColors.maroon800.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               border: Border.all(
                 color: primaryColor.withValues(alpha: enabled ? 0.15 : 0.05),
               ),
@@ -386,7 +387,7 @@ class _IndexChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: primaryColor.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         border: Border.all(color: primaryColor.withValues(alpha: 0.08)),
       ),
       child: Text(

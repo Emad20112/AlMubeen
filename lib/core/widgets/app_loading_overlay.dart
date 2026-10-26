@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 class AppLoadingOverlay extends StatefulWidget {
@@ -40,7 +41,7 @@ class _AppLoadingOverlayState extends State<AppLoadingOverlay>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.semanticColors;
     final iconSize = widget.size * 0.47;
 
     return Column(
@@ -59,31 +60,20 @@ class _AppLoadingOverlayState extends State<AppLoadingOverlay>
             height: widget.size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.maroon700, AppColors.maroon900],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.maroon800.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              color: colors.primaryStrong,
+              boxShadow: context.tokens.shadows.medium,
             ),
-            child: Icon(widget.icon, size: iconSize, color: Colors.white),
+            child: Icon(widget.icon, size: iconSize, color: colors.onPrimaryStrong),
           ),
         ),
         if (widget.message != null) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           Text(
             widget.message!,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white70 : AppColors.ink.withValues(alpha: 0.8),
+              color: colors.textSecondary,
             ),
           ),
         ],

@@ -2,6 +2,8 @@ import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class CustomBottomNav extends StatelessWidget {
   const CustomBottomNav({
@@ -138,7 +140,7 @@ class CustomBottomNav extends StatelessWidget {
                         color: selectedIndex == 2 ? selectedColor : backgroundColor,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(36),
-                          bottom: Radius.circular(16),
+                          bottom: Radius.circular(AppRadii.lg),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -212,7 +214,7 @@ class _BottomNavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadii.sm),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -225,7 +227,7 @@ class _BottomNavButton extends StatelessWidget {
               size: 26,
               color: isSelected ? selectedColor : foregroundColor,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               item.label,
               maxLines: 1,

@@ -1,4 +1,5 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,8 +12,8 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = isDark ? AppColors.parchmentLight : AppColors.maroon800;
+    final colors = AppColorScheme.of(context);
+    final color = colors.primaryStrong;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -21,15 +22,18 @@ class SectionTitle extends StatelessWidget {
           child: SvgPicture.asset(
             AppAssets.decorativeDivider,
             fit: BoxFit.contain,
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            colorFilter: ColorFilter.mode(
+              color.withValues(alpha: 0.5),
+              BlendMode.srcIn,
+            ),
           ),
         ),
         if (icon != null) ...[
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Icon(icon, color: color, size: 20),
         ],
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text(
             title,
             maxLines: 1,
@@ -46,7 +50,10 @@ class SectionTitle extends StatelessWidget {
           child: SvgPicture.asset(
             AppAssets.decorativeDivider,
             fit: BoxFit.contain,
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            colorFilter: ColorFilter.mode(
+              color.withValues(alpha: 0.5),
+              BlendMode.srcIn,
+            ),
           ),
         ),
       ],

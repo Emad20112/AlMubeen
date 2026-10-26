@@ -99,6 +99,24 @@ flutter:
     - assets/svg/
     - assets/data/
 
+  # الخط العربي الموحّد للواجهة (انظر `lib/app/theme/app_typography.dart`).
+  #
+  # ⚠️ لا يمسّ هذا الخط نصوص المصحف: تلك تُصيَّر بخط صفحة `qcf_quran` حصرًا.
+  #
+  # أوزان 400/500/600/700 فقط — وهي نفسها المعتمدة في `AppTypography`.
+  # الترخيص: SIL Open Font License 1.1 (`assets/fonts/OFL.txt`).
+  fonts:
+    - family: IBMPlexSansArabic
+      fonts:
+        - asset: assets/fonts/IBMPlexSansArabic-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexSansArabic-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IBMPlexSansArabic-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IBMPlexSansArabic-Bold.ttf
+          weight: 700
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

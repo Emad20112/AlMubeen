@@ -9,30 +9,36 @@ import 'package:flutter/material.dart';
 /// باسم `QCF_P001 … QCF_P604` وتُصيّر النص عبر widgets خاصة بها.
 /// **لا يمسّ هذا الملف حرفًا من ذلك الخط، ولا يجوز أن يمسّه.**
 ///
-/// للInterface فقط، [`fontFamily`] هو ثابت واحد يمكن تفعيله لاحقًا.
-/// نبقيه `null` في المرحلة الأولى لأن `pubspec.yaml` **لا يحتوي قسم `fonts:`
-/// إطلاقًا** — أي أن التطبيق اليوم لا يحزم أي خط، ويعتمد على خط النظام.
-/// تفعيل خط جديد هنا قبل إضافة ملف الخط إلى `pubspec.yaml` سيكسر العرض،
-/// لذلك نتركه `null` عمدًا:
+/// للInterface فقط، [`fontFamily`] هو ثابت واحد مفعَّل حاليًا على **IBM Plex
+/// Sans Arabic** (أربعة أوزان: 400/500/600/700)، والملفات مسجّلة في
+/// `pubspec.yaml` تحت `assets/fonts/` (ترخيص SIL OFL 1.1)، فلا حاجة لأي
+/// إجراء إضافي لتفعيله.
+///
+/// **لماذا هذا الخط:** حزمة `qcf_quran` تعتمد على خطوط QCF المخصّصة للصفحات
+/// فقط، وخط المصحف ملك لـ`Text(page)` من الحزمة، لذلك تُقرأ **الواجهة**
+/// كلها (العناوين، الأزرار، القوائم، النصوص التعريفية) بخط عربي موحّد بدل
+/// خط النظام المتغيّر بين الأجهزة. عند تبديل الخط مستقبلًا:
 ///
 /// ```yaml
-/// # الخطوة 1 (مهمة لاحقة): أضف ملفات الخط إلى assets/fonts/
-/// # الخطوة 2: سجّلها في pubspec.yaml
+/// # 1) ضع ملفات الخط في assets/fonts/
+/// # 2) سجّلها في pubspec.yaml تحت fonts:
 /// #   fonts:
 /// #     - family: IBM_Plex_Sans_Arabic
 /// #       fonts:
 /// #         - asset: assets/fonts/IBMPlexSansArabic-Regular.ttf
 /// #         - asset: assets/fonts/IBMPlexSansArabic-Bold.ttf
 /// #           weight: 700
-/// # الخطوة 3: غيّر السطر التالي من null إلى اسم العائلة
+/// # 3) غيّر [fontFamily] أدناه إلى اسم العائلة الجديد
 /// ```
 abstract final class AppTypography {
   const AppTypography._();
 
-  /// خط الـUI. `null` = خط النظام (سلوك التطبيق الحالي بالضبط).
+  /// خط الـUI العربي الموحّد.
   ///
-  /// عند تفعيله، يجب أن يكون مسجّلًا في قسم `fonts:` من `pubspec.yaml`.
-  static const String? fontFamily = null;
+  /// مسجّل في `pubspec.yaml` (`fonts:` → `IBMPlexSansArabic`) بأوزان
+  /// 400/500/600/700. أي تبديل هنا **يجب** أن يسبقه تسجيل العائلة نفسها في
+  /// `pubspec.yaml`، وإلا سقط Flutter بصمت إلى [fontFamilyFallback].
+  static const String fontFamily = 'IBMPlexSansArabic';
 
   /// خطوط احتياطية للنصوص العربية عند عدم توفّر [fontFamily].
   ///
@@ -63,9 +69,9 @@ abstract final class AppTypography {
   // بناء الـTextTheme
   // ---------------------------------------------------------------------------
 
-  /// الـTextTheme الفاتح — **مطابق تمامًا** لما كان يستخدمه `AppTheme` قبل
-  /// هذا الملف (`Typography.blackMountainView.apply(bodyColor: ink, …)`)،
-  /// حتى لا يتغير أي حرف في الشاشة.
+  /// الـTextTheme الفاتح — مبني على `Typography.blackMountainView` (السلم
+  /// المرجعي لـMaterial 3) مع سلم حجم صريح في [_build]، ثم تُطبَّق عليه
+  /// عائلة الخط العربي وألوان النص.
   static TextTheme light(ColorScheme scheme) => _build(
     base: Typography.blackMountainView,
     bodyColor: scheme.onSurface,
@@ -84,12 +90,80 @@ abstract final class AppTypography {
     required Color bodyColor,
     required Color displayColor,
   }) {
-    return base.apply(
-      fontFamily: fontFamily,
-      fontFamilyFallback: fontFamilyFallback,
-      bodyColor: bodyColor,
-      displayColor: displayColor,
-    );
+    return base
+        .apply(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          bodyColor: bodyColor,
+          displayColor: displayColor,
+        )
+        .copyWith(
+          displayLarge: base.displayLarge?.copyWith(fontSize: 57, height: 1.12),
+          displayMedium: base.displayMedium?.copyWith(
+            fontSize: 45,
+            height: 1.16,
+          ),
+          displaySmall: base.displaySmall?.copyWith(fontSize: 36, height: 1.22),
+          headlineLarge: base.headlineLarge?.copyWith(
+            fontSize: 32,
+            height: 1.25,
+          ),
+          headlineMedium: base.headlineMedium?.copyWith(
+            fontSize: 28,
+            height: 1.29,
+          ),
+          headlineSmall: base.headlineSmall?.copyWith(
+            fontSize: 24,
+            height: 1.33,
+          ),
+          titleLarge: base.titleLarge?.copyWith(fontSize: 22, height: 1.27),
+          titleMedium: base.titleMedium?.copyWith(
+            fontSize: 16,
+            height: 1.5,
+            letterSpacing: 0.15,
+          ),
+          titleSmall: base.titleSmall?.copyWith(
+            fontSize: 14,
+            height: 1.43,
+            letterSpacing: 0.1,
+          ),
+          bodyLarge: base.bodyLarge?.copyWith(
+            fontSize: 16,
+            height: 1.5,
+            letterSpacing: 0.5,
+          ),
+          bodyMedium: base.bodyMedium?.copyWith(
+            fontSize: 14,
+            height: 1.43,
+            letterSpacing: 0.25,
+          ),
+          bodySmall: base.bodySmall?.copyWith(
+            fontSize: 12,
+            height: 1.33,
+            letterSpacing: 0.4,
+          ),
+          labelLarge: base.labelLarge?.copyWith(
+            fontSize: 14,
+            height: 1.43,
+            letterSpacing: 0.1,
+          ),
+          labelMedium: base.labelMedium?.copyWith(
+            fontSize: 12,
+            height: 1.33,
+            letterSpacing: 0.5,
+          ),
+          labelSmall: base.labelSmall?.copyWith(
+            fontSize: 11,
+            height: 1.45,
+            letterSpacing: 0.5,
+          ),
+        )
+        .apply(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+          bodyColor: bodyColor,
+          displayColor: displayColor,
+        );
   }
 
   // ---------------------------------------------------------------------------

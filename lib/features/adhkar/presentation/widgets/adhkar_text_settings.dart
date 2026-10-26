@@ -1,5 +1,7 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class AdhkarTextSettings extends StatelessWidget {
   const AdhkarTextSettings({
@@ -20,7 +22,7 @@ class AdhkarTextSettings extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.parchmentLight,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.lg)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -36,7 +38,7 @@ class AdhkarTextSettings extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             'حجم الخط',
             textAlign: TextAlign.center,
@@ -46,7 +48,7 @@ class AdhkarTextSettings extends StatelessWidget {
               color: fgColor,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Icon(Icons.format_size, size: 16, color: fgColor),
@@ -65,7 +67,7 @@ class AdhkarTextSettings extends StatelessWidget {
               Icon(Icons.format_size, size: 28, color: fgColor),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
             textAlign: TextAlign.center,
@@ -75,7 +77,7 @@ class AdhkarTextSettings extends StatelessWidget {
               color: fgColor,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
     );

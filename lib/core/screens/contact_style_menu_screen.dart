@@ -3,6 +3,8 @@ import 'package:al_mubeen/core/widgets/islamic_header.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reader_icon_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class ContactStyleMenuScreen extends StatelessWidget {
   const ContactStyleMenuScreen({
@@ -114,7 +116,7 @@ class ContactStyleMenuScreen extends StatelessWidget {
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: AppSpacing.sm),
                                       Text(
                                         section.title!,
                                         style: Theme.of(context)
@@ -133,7 +135,7 @@ class ContactStyleMenuScreen extends StatelessWidget {
                               DecoratedBox(
                                 decoration: BoxDecoration(
                                   color: surfaceColor,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(AppRadii.lg),
                                   border: Border.all(
                                     color: accentColor.withValues(
                                       alpha: isDark ? 0.14 : 0.08,
@@ -157,7 +159,7 @@ class ContactStyleMenuScreen extends StatelessWidget {
                                   ],
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(AppRadii.lg),
                                   child: Column(
                                     children: [
                                       for (
@@ -297,7 +299,7 @@ class _ContactStyleMenuTileState extends State<ContactStyleMenuTile> {
                     ),
                     child: Icon(item.icon, color: item.accentColor, size: 22),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +319,7 @@ class _ContactStyleMenuTileState extends State<ContactStyleMenuTile> {
                               ),
                             ),
                             if (item.badge != null) ...[
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.sm),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
@@ -330,7 +332,7 @@ class _ContactStyleMenuTileState extends State<ContactStyleMenuTile> {
                                       item.accentColor.withValues(alpha: 0.08),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.circular(999),
+                                  borderRadius: BorderRadius.circular(AppRadii.pill),
                                   border: Border.all(
                                     color: item.accentColor.withValues(
                                       alpha: 0.18,
@@ -349,7 +351,7 @@ class _ContactStyleMenuTileState extends State<ContactStyleMenuTile> {
                             ],
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
                           item.subtitle,
                           maxLines: 2,
@@ -360,7 +362,7 @@ class _ContactStyleMenuTileState extends State<ContactStyleMenuTile> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   // ── Arrow icon reversed for RTL ──
                   Container(
                     width: 28,
@@ -409,7 +411,7 @@ class _HeaderAccentIcon extends StatelessWidget {
       height: 42,
       decoration: BoxDecoration(
         color: accentColor.withValues(alpha: isDark ? 0.16 : 0.10),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         border: Border.all(
           color: accentColor.withValues(alpha: isDark ? 0.22 : 0.14),
         ),

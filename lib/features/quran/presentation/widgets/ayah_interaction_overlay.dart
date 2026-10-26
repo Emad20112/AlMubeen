@@ -14,6 +14,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qcf_quran/qcf_quran.dart';
 
 import 'package:flutter/services.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 void showAyahOverlay({
   required BuildContext context,
@@ -398,7 +400,7 @@ class _GlassToolbar extends ConsumerWidget {
       width: 52,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
           child: Column(
@@ -413,7 +415,7 @@ class _GlassToolbar extends ConsumerWidget {
                 ),
                 child: Center(child: icon),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 label,
                 maxLines: 1,
@@ -487,7 +489,7 @@ class _GlassCard extends ConsumerWidget {
                   height: 30,
                   decoration: BoxDecoration(
                     color: primaryColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: IconButton(
                     onPressed: () => Navigator.pop(context),
@@ -563,7 +565,7 @@ class _GlassCard extends ConsumerWidget {
         Navigator.pop(context);
         onTap();
       },
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadii.md),
       child: Container(
         width: 150,
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -571,7 +573,7 @@ class _GlassCard extends ConsumerWidget {
           color: isDark
               ? Colors.white.withValues(alpha: 0.04)
               : color.withValues(alpha: 0.045),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(color: color.withValues(alpha: 0.14)),
         ),
         child: Row(
@@ -586,7 +588,7 @@ class _GlassCard extends ConsumerWidget {
               ),
               child: Icon(icon, color: color, size: 16),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 title,

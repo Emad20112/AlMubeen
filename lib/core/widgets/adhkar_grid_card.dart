@@ -1,4 +1,6 @@
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 class AdhkarGridCard extends StatelessWidget {
@@ -19,32 +21,31 @@ class AdhkarGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-        isDark ? AppColors.darkSurfaceHigh : AppColors.cardCream;
-    final goldenColor =
-        isDark ? AppColors.goldenAccentDark : AppColors.goldenAccent;
-    final redColor = isDark ? AppColors.cardRedDark : AppColors.cardRed;
+    final colors = context.semanticColors;
+    final backgroundColor = colors.surfaceElevated;
+    final goldenColor = colors.accent;
+    final textColor = colors.primaryStrong;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         onTap: onTap,
         child: Container(
           clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(color: goldenColor, width: 1.5),
+            boxShadow: context.tokens.shadows.subtle,
           ),
           child: Stack(
             children: [
               Positioned.fill(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 10,
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.sm,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -54,23 +55,21 @@ class AdhkarGridCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: redColor,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: textColor,
                           fontWeight: FontWeight.w700,
-                          fontSize: 15,
                           height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: redColor.withValues(alpha: 0.6),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.textSecondary,
                           fontWeight: FontWeight.w400,
-                          fontSize: 11,
                           height: 1.2,
                         ),
                       ),
@@ -78,9 +77,9 @@ class AdhkarGridCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
+              PositionedDirectional(
                 top: 6,
-                right: 6,
+                end: 6,
                 child: GestureDetector(
                   onTap: onFavoriteToggle,
                   behavior: HitTestBehavior.opaque,
@@ -89,7 +88,7 @@ class AdhkarGridCard extends StatelessWidget {
                         ? Icons.star_rounded
                         : Icons.star_outline_rounded,
                     color: isFavorite
-                        ? AppColors.goldenAccent
+                        ? goldenColor
                         : goldenColor.withValues(alpha: 0.4),
                     size: 22,
                   ),

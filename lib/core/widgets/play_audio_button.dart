@@ -13,20 +13,14 @@ class PlayAudioButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.parchmentLight
-        : AppColors.maroon800;
-    final foregroundColor = isDark
-        ? AppColors.maroon800
-        : AppColors.parchmentLight;
+    final colors = AppColorScheme.of(context);
 
     return IconButton.filled(
       tooltip: isPlaying ? 'إيقاف' : 'تشغيل',
       onPressed: onPressed,
       style: IconButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: foregroundColor,
+        backgroundColor: colors.primaryStrong,
+        foregroundColor: colors.onPrimaryStrong,
         minimumSize: const Size.square(56),
       ),
       icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),

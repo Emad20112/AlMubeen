@@ -17,13 +17,9 @@ class DecorativeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg =
-        backgroundColor ??
-        (isDark ? AppColors.parchmentLight : AppColors.maroon800);
-    final fg =
-        foregroundColor ??
-        (isDark ? AppColors.maroon800 : AppColors.parchmentLight);
+    final colors = AppColorScheme.of(context);
+    final bg = backgroundColor ?? colors.primaryStrong;
+    final fg = foregroundColor ?? colors.onPrimaryStrong;
 
     return AspectRatio(
       aspectRatio: 1,

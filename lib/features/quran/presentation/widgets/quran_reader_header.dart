@@ -1,5 +1,8 @@
 import 'dart:ui';
 
+import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 
@@ -21,23 +24,28 @@ class QuranReaderHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldColor = isDark
-        ? const Color(0xFF161616).withValues(alpha: 0.75)
-        : const Color(0xFFF7F4EB).withValues(alpha: 0.85);
-    final borderColor = isDark
+    // 🎨 Design tokens: بدل `isDark ? Color(0xFF161616) : Color(0xFFF7F4EB)`
+    // اليدويين، نقرأ ورقة المصحف وحدوده من الأدوار الدلالية.
+    final colors = AppColorScheme.of(context);
+
+    // الشريط شبه شفاف فوق صفحة المصحف؛ تبقى الشفافية لأنه يُرسم فوق
+    // `BackdropFilter` (زجاج). القيمة الدلالية هي اللون الأساس لا الشفافية.
+    final scaffoldColor = colors.pageSurface.withValues(
+      alpha: colors.isDark ? 0.75 : 0.85,
+    );
+    final borderColor = colors.isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.05);
-    final searchBorder = isDark
+    final searchBorder = colors.isDark
         ? Colors.white.withValues(alpha: 0.12)
         : Colors.black.withValues(alpha: 0.08);
-    final searchFill = isDark
+    final searchFill = colors.isDark
         ? Colors.white.withValues(alpha: 0.06)
         : Colors.black.withValues(alpha: 0.04);
-    final searchHint = isDark
+    final searchHint = colors.isDark
         ? Colors.white.withValues(alpha: 0.6)
         : Colors.black.withValues(alpha: 0.5);
-    final iconColor = isDark
+    final iconColor = colors.isDark
         ? Colors.white.withValues(alpha: 0.7)
         : Colors.black.withValues(alpha: 0.6);
 
@@ -49,15 +57,19 @@ class QuranReaderHeader extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: AppSpacing.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
               decoration: BoxDecoration(
                 color: scaffoldColor,
-                border: Border(
-                  bottom: BorderSide(color: borderColor, width: 1),
-                ),
+                border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+                // الظل أضعف في الوضع الفاتح (0.03) لأنه يظهر كخط رمادي خفيف.
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
+                    color: Colors.black.withValues(
+                      alpha: colors.isDark ? 0.3 : 0.03,
+                    ),
                     blurRadius: 15,
                     offset: const Offset(0, 2),
                   ),
@@ -70,7 +82,7 @@ class QuranReaderHeader extends StatelessWidget {
                     color: iconColor,
                     onTap: onSurahListTapped,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _SearchBarButton(
                       borderColor: searchBorder,
@@ -79,14 +91,14 @@ class QuranReaderHeader extends StatelessWidget {
                       onTap: onSearchTapped,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   if (onWirdTapped != null)
                     _HeaderIconButton(
                       icon: Icons.auto_stories_rounded,
                       color: iconColor,
                       onTap: onWirdTapped,
                     ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   _HeaderIconButton(
                     icon: Icons.settings_rounded,
                     color: iconColor,
@@ -119,7 +131,7 @@ class _HeaderIconButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         child: Container(
           width: 36,
           height: 36,
@@ -150,29 +162,30 @@ class _SearchBarButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.md),
         child: Container(
           height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: AppSpacing.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
             color: fillColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             border: Border.all(color: borderColor),
           ),
           child: Row(
             children: [
               Icon(Icons.search_rounded, size: 17, color: hintColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   'بحث: الصفحة، السورة، القارئ...',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  // 📐 سلم الطباعة: `bodySmall` (12) بدل `fontSize: 12`
+                  // اليدوي فوق `bodyMedium` (14) — نفس الحجم المعروض تماماً.
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: hintColor,
                     fontWeight: FontWeight.w600,
-                    fontSize: 12,
                   ),
                 ),
               ),

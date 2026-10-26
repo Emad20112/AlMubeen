@@ -1,4 +1,7 @@
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
+import 'package:al_mubeen/app/theme/app_typography.dart';
 import 'package:al_mubeen/core/constants/app_assets.dart';
 import 'package:al_mubeen/features/names_of_allah/domain/models/allah_name_entry.dart';
 import 'package:flutter/material.dart';
@@ -70,47 +73,40 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF1E1715) : AppColors.parchmentLight;
-    final fgColor = isDark ? AppColors.darkInk : AppColors.maroon800;
-    final accentColor = isDark
-        ? AppColors.goldenAccentDark
-        : AppColors.goldenAccent;
-    final cardColor = isDark ? AppColors.darkSurfaceHigh : Colors.white;
+    final colors = context.semanticColors;
+    final bgColor = colors.surface;
+    final fgColor = colors.textPrimary;
+    final accentColor = colors.accent;
+    final cardColor = colors.surfaceElevated;
 
     return Container(
       height: MediaQuery.sizeOf(context).height * 0.75,
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: accentColor.withValues(alpha: 0.25)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 24,
-            offset: const Offset(0, -8),
-          ),
-        ],
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadii.xl),
+        ),
+        border: Border.all(color: colors.border),
+        boxShadow: context.tokens.shadows.elevated,
       ),
       child: SafeArea(
         top: false,
         child: Column(
           children: [
-            // Handle bar
             const SizedBox(height: 10),
             Container(
               width: 38,
               height: 4,
               decoration: BoxDecoration(
-                color: fgColor.withValues(alpha: 0.2),
+                color: colors.textSecondary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
 
             // Top Navigation Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Row(
                 children: [
                   // Previous button
@@ -126,8 +122,8 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       disabledForegroundColor: fgColor.withValues(alpha: 0.2),
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
+                        side: BorderSide(color: colors.border),
                       ),
                     ),
                     tooltip: 'الاسم السابق',
@@ -137,22 +133,21 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                   // Counter Badge
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
+                      horizontal: AppSpacing.md,
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
                       color: accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                       border: Border.all(
                         color: accentColor.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
                       '${_currentIndex + 1} من ${widget.entries.length}',
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: accentColor,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.bold,
                       ),
                     ),
                   ),
@@ -171,14 +166,14 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       disabledForegroundColor: fgColor.withValues(alpha: 0.2),
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
+                        side: BorderSide(color: colors.border),
                       ),
                     ),
                     tooltip: 'الاسم التالي',
                   ),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
 
                   // Close Button
                   IconButton(
@@ -189,8 +184,8 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                       foregroundColor: fgColor.withValues(alpha: 0.7),
                       backgroundColor: cardColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
+                        side: BorderSide(color: colors.border),
                       ),
                     ),
                     tooltip: 'إغلاق',
@@ -199,7 +194,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
 
             // Page View
             Expanded(
@@ -211,7 +206,7 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
                 },
                 itemBuilder: (context, index) {
                   final entry = widget.entries[index];
-                  return _AllahNameDetailPage(entry: entry, isDark: isDark);
+                  return _AllahNameDetailPage(entry: entry);
                 },
               ),
             ),
@@ -223,19 +218,17 @@ class _AllahNameDetailSheetState extends State<AllahNameDetailSheet> {
 }
 
 class _AllahNameDetailPage extends StatelessWidget {
-  const _AllahNameDetailPage({required this.entry, required this.isDark});
+  const _AllahNameDetailPage({required this.entry});
 
   final AllahNameEntry entry;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = isDark ? AppColors.darkSurfaceHigh : Colors.white;
-    final fgColor = isDark ? AppColors.darkInk : AppColors.maroon800;
-    final meaningColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final accentColor = isDark
-        ? AppColors.goldenAccentDark
-        : AppColors.goldenAccent;
+    final colors = context.semanticColors;
+    final cardBg = colors.surfaceElevated;
+    final fgColor = colors.primaryStrong;
+    final meaningColor = colors.textPrimary;
+    final accentColor = colors.accent;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
@@ -245,17 +238,9 @@ class _AllahNameDetailPage extends StatelessWidget {
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(color: accentColor.withValues(alpha: 0.35)),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.maroon900.withValues(
-                  alpha: isDark ? 0.2 : 0.08,
-                ),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            boxShadow: context.tokens.shadows.medium,
           ),
           child: Column(
             children: [
@@ -266,20 +251,17 @@ class _AllahNameDetailPage extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.maroon700.withValues(
-                    alpha: isDark ? 0.25 : 0.08,
-                  ),
-                  borderRadius: BorderRadius.circular(999),
+                  color: colors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
                   border: Border.all(
-                    color: AppColors.maroon700.withValues(alpha: 0.2),
+                    color: accentColor.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
                   'الاسم #${entry.id}',
-                  style: TextStyle(
-                    color: AppColors.maroon800,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: accentColor,
+                    fontWeight: AppTypography.bold,
                   ),
                 ),
               ),
@@ -298,35 +280,32 @@ class _AllahNameDetailPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
 
               // Decorative Divider
               SvgPicture.asset(
                 AppAssets.decorativeDivider,
                 width: 130,
                 colorFilter: ColorFilter.mode(
-                  accentColor.withValues(alpha: 0.5),
+                  accentColor.withValues(alpha: 0.45),
                   BlendMode.srcIn,
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
 
-              // Meaning Text
-              Expanded(
+              // Meaning
+              Flexible(
                 flex: 3,
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: SelectableText(
                     entry.meaning,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: meaningColor.withValues(
-                        alpha: isDark ? 0.95 : 0.88,
-                      ),
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w600,
-                      height: 1.7,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: meaningColor.withValues(alpha: 0.9),
+                      height: 1.6,
+                      fontWeight: AppTypography.regular,
                     ),
                   ),
                 ),
@@ -334,21 +313,21 @@ class _AllahNameDetailPage extends StatelessWidget {
 
               const Spacer(),
 
-              // Action Bar
+              // Action Bar (Share/Copy)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   OutlinedButton.icon(
                     onPressed: () {
-                      final text = '${entry.name}\n${entry.meaning}';
-                      Clipboard.setData(ClipboardData(text: text));
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: '${entry.name}\n\n${entry.meaning}',
+                        ),
+                      );
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('تم نسخ اسم الله ومعناه'),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                        const SnackBar(
+                          content: Text('تم نسخ الاسم ومعناه إلى الحافظة'),
+                          duration: Duration(seconds: 2),
                         ),
                       );
                     },
@@ -356,11 +335,16 @@ class _AllahNameDetailPage extends StatelessWidget {
                     label: const Text('نسخ'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: fgColor,
-                      side: BorderSide(color: fgColor.withValues(alpha: 0.2)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: fgColor.withValues(alpha: 0.3),
                       ),
-                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadii.md),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.sm,
+                      ),
                     ),
                   ),
                 ],

@@ -3,6 +3,7 @@ import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 
 class QuranPageCarousel extends StatefulWidget {
   const QuranPageCarousel({
@@ -417,7 +418,7 @@ class _PageMarker extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
           child: Transform.translate(
             offset: Offset(xOffset, yOffset),
             child: Transform.scale(
@@ -429,7 +430,7 @@ class _PageMarker extends StatelessWidget {
                 height: height,
                 decoration: BoxDecoration(
                   color: isActive ? primaryColor : mutedColor,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
                   boxShadow: isActive
                       ? [
                           BoxShadow(

@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_islamic_icons/flutter_islamic_icons.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class QiblaCompassScreen extends StatefulWidget {
   const QiblaCompassScreen({super.key});
@@ -223,7 +225,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
           decoration: BoxDecoration(
             color: surfaceColor,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
             border: Border.all(
               color:
                   AppColors.maroon700.withValues(alpha: isDark ? 0.2 : 0.1),
@@ -308,11 +310,11 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                     vertical: 14,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadii.lg),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               TextButton(
                 onPressed: _retry,
                 child: Text(
@@ -359,21 +361,21 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
 
     return Column(
       children: [
-        const SizedBox(height: 32),
+        const SizedBox(height: AppSpacing.xxl),
 
         // Qibla angle pill
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
           decoration: BoxDecoration(
             color: surfaceColor,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(color: borderColor),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.explore_rounded, color: accentColor, size: 18),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 'زاوية القبلة: ${qiblaAngle.toStringAsFixed(1)}°',
                 style: TextStyle(
@@ -526,7 +528,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
           ),
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: AppSpacing.xxl),
 
         // Status pill
         AnimatedContainer(
@@ -536,7 +538,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
             color: isFacingQibla
                 ? const Color(0xFF10B981).withValues(alpha: 0.12)
                 : surfaceColor,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
               color: isFacingQibla
                   ? const Color(0xFF10B981).withValues(alpha: 0.45)

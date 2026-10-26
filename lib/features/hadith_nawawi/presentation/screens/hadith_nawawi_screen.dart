@@ -9,6 +9,8 @@ import 'package:al_mubeen/features/hadith_nawawi/domain/models/hadith_nawawi_ent
 import 'package:al_mubeen/features/hadith_nawawi/presentation/screens/hadith_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class HadithNawawiScreen extends ConsumerStatefulWidget {
   const HadithNawawiScreen({super.key});
@@ -308,7 +310,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'جرّب كلمة بحث مختلفة أو امسح شريط البحث.',
               textAlign: TextAlign.center,
@@ -337,7 +339,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
               size: 52,
               color: AppColors.maroon700.withValues(alpha: 0.8),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'تعذر تحميل الأحاديث',
               textAlign: TextAlign.center,
@@ -347,7 +349,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               '$error',
               textAlign: TextAlign.center,
@@ -449,7 +451,7 @@ class _HadithCard extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
 
                 // Middle: Content
                 Expanded(
@@ -469,7 +471,7 @@ class _HadithCard extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
 
                       // Preview
                       Text(
@@ -484,7 +486,7 @@ class _HadithCard extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
 
                       // Source chip
                       if (entry.source.isNotEmpty)
@@ -495,7 +497,7 @@ class _HadithCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: chipBg,
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(AppRadii.pill),
                           ),
                           constraints: const BoxConstraints(maxWidth: 200),
                           child: Text(
@@ -615,7 +617,7 @@ class _SkeletonCard extends StatelessWidget {
                   height: 16,
                   decoration: BoxDecoration(
                     color: baseColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -636,13 +638,13 @@ class _SkeletonCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 Container(
                   width: 80,
                   height: 22,
                   decoration: BoxDecoration(
                     color: baseColor,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
                   ),
                 ),
               ],

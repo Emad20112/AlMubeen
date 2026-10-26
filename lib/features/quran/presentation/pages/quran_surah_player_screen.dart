@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 // ==============================================================================
 //  Quran Surah Listening Screen  ·  شاشة الاستماع
@@ -485,7 +487,7 @@ class _MiniDownloadIconButton extends StatelessWidget {
       message: tooltip,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         child: Padding(
           padding: const EdgeInsets.all(4),
           child: Icon(icon, size: 16, color: accentColor),
@@ -689,7 +691,7 @@ class _ReciterRow extends StatelessWidget {
               onChanged: onReciterChanged,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           // Download all button
           _DownloadAllIconButton(
             downloadState: downloadState,
@@ -745,11 +747,11 @@ class _ReciterDropdown extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: () => _openPickerSheet(context),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             child: Ink(
               decoration: BoxDecoration(
                 color: accentColor.withValues(alpha: isDark ? 0.10 : 0.06),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadii.md),
                 border: Border.all(color: accentColor.withValues(alpha: 0.15)),
               ),
               child: SizedBox(
@@ -763,7 +765,7 @@ class _ReciterDropdown extends StatelessWidget {
                         size: 16,
                         color: accentColor.withValues(alpha: 0.75),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           label,
@@ -831,10 +833,10 @@ class _DownloadAllIconButton extends StatelessWidget {
         height: 44,
         child: Material(
           color: accentColor.withValues(alpha: isDark ? 0.1 : 0.06),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           child: InkWell(
             onTap: isActive ? null : onPressed,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadii.md),
             child: isActive
                 ? Padding(
                     padding: const EdgeInsets.all(10),
@@ -887,14 +889,14 @@ class _SurahDownloadActionBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: accentColor.withValues(alpha: isDark ? 0.09 : 0.06),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(color: accentColor.withValues(alpha: 0.10)),
         ),
         child: Row(
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
                 child: LinearProgressIndicator(
                   value: clampedProgress > 0 ? clampedProgress : null,
                   minHeight: 4,
@@ -903,7 +905,7 @@ class _SurahDownloadActionBar extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               '${(clampedProgress * 100).toInt()}%',
               style: TextStyle(
@@ -992,7 +994,7 @@ class _SurahListTile extends StatelessWidget {
             color: isActive
                 ? accentColor.withValues(alpha: isDark ? 0.15 : 0.08)
                 : accentColor.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             border: Border.all(
               color: isActive
                   ? accentColor.withValues(alpha: 0.3)
@@ -1004,8 +1006,8 @@ class _SurahListTile extends StatelessWidget {
               InkWell(
                 onTap: onPlay,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                  bottom: Radius.circular(16),
+                  top: Radius.circular(AppRadii.lg),
+                  bottom: Radius.circular(AppRadii.lg),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -1045,7 +1047,7 @@ class _SurahListTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.md),
                       // Names
                       Expanded(
                         child: Column(
@@ -1087,7 +1089,7 @@ class _SurahListTile extends StatelessWidget {
                           isDark: isDark,
                           onPressed: isFullyDownloaded ? null : onDownload,
                         ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       // Play button
                       _SurahPlayButton(
                         isPlaying: isPlaying,
@@ -1275,7 +1277,7 @@ class _FloatingPlayerBar extends ConsumerWidget {
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceHigh : AppColors.parchmentLight,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
         border: Border.all(color: accentColor.withValues(alpha: 0.2), width: 1),
         boxShadow: [
           BoxShadow(
@@ -1291,7 +1293,7 @@ class _FloatingPlayerBar extends ConsumerWidget {
           // Collapsed row: surah name + controls + close
           InkWell(
             onTap: onExpandToggle,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -1360,7 +1362,7 @@ class _FloatingPlayerBar extends ConsumerWidget {
                       }
                     },
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   // Close
                   GestureDetector(
                     onTap: onClose,
@@ -1534,7 +1536,7 @@ class _ExpandedControls extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           // Control buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1762,7 +1764,7 @@ class _QuranSurahPlayerScreenState extends ConsumerState<QuranSurahPlayerScreen>
                         : null,
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
 
                   // ── Surah list ──
                   Expanded(

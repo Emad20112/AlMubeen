@@ -1,4 +1,6 @@
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -40,7 +42,6 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
 
   void _updateHijriDate() {
     final now = DateTime.now();
-    // Simple Hijri approximation (not precise, for display purposes)
     final gregorianYear = now.year;
     final hijriYear = gregorianYear - 622 + (gregorianYear - 622) ~/ 32;
     final hijriMonth = (now.month - 3 + 12) % 12 + 1;
@@ -68,26 +69,20 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.darkSurface
-        : AppColors.parchmentLight;
-    final foregroundColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final accentColor = isDark
-        ? AppColors.goldenAccentDark
-        : AppColors.goldenAccent;
+    final colors = context.semanticColors;
+    final backgroundColor = colors.surface;
+    final foregroundColor = colors.textPrimary;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.maroon900.withValues(alpha: isDark ? 0.28 : 0.10),
-            blurRadius: 14,
-            offset: const Offset(0, 7),
-          ),
-        ],
+        boxShadow: context.tokens.shadows.medium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,7 +97,7 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
                   color: foregroundColor,
                 )
               else
-                const SizedBox(width: 48),
+                const SizedBox(width: AppSpacing.touchTarget),
               Text(
                 widget.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -119,41 +114,50 @@ class _AdhkarCustomHeaderState extends State<AdhkarCustomHeader> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            height: 38,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
+            ),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurfaceHigh : AppColors.parchment,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: accentColor.withValues(alpha: 0.18)),
+              color: colors.surfaceSunken,
+              borderRadius: BorderRadius.circular(AppRadii.md),
+              border: Border.all(color: colors.border),
             ),
             child: TextField(
               onChanged: widget.onSearch,
               decoration: InputDecoration(
                 hintText: 'البحث بإسم الذكر',
                 hintStyle: TextStyle(
-                  color: foregroundColor.withValues(alpha: 0.5),
+                  color: colors.textTertiary,
                   fontSize: 12,
                 ),
                 prefixIcon: Icon(
                   Icons.search,
-                  color: foregroundColor.withValues(alpha: 0.7),
+                  color: colors.textSecondary,
                   size: 18,
                 ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                filled: false,
                 contentPadding: EdgeInsets.zero,
                 isDense: true,
               ),
-              style: TextStyle(color: foregroundColor, fontSize: 12),
+              style: TextStyle(color: foregroundColor, fontSize: 13),
             ),
           ),
-          if (widget.tabs != null) ...[const SizedBox(height: 8), widget.tabs!],
-          const SizedBox(height: 12),
+          if (widget.tabs != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            widget.tabs!,
+          ],
+          const SizedBox(height: AppSpacing.md),
           Text(
             _hijriDate,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: foregroundColor.withValues(alpha: 0.7),
+              color: colors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),

@@ -5,6 +5,7 @@ import 'package:al_mubeen/features/quran/application/quran_surah_player_provider
 import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 /// Player controls widget for Surah Player screen
 /// Includes playback controls (forward/backward 10s, play/pause, repeat)
@@ -31,7 +32,7 @@ class SurahPlayerControls extends ConsumerWidget {
       children: [
         Column(
           children: [
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
 
             // ── Control buttons row ──
             Padding(
@@ -137,7 +138,7 @@ class _ControlIconButton extends StatelessWidget {
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           label,
           style: TextStyle(
@@ -198,7 +199,7 @@ class _SeekButton extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
       ],
     );
   }

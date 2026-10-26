@@ -1,4 +1,6 @@
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
 class IslamicHeader extends StatelessWidget {
@@ -17,28 +19,23 @@ class IslamicHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.darkSurface
-        : AppColors.parchmentLight;
-    final titleColor = isDark ? AppColors.darkInk : AppColors.ink;
-    final accentColor = isDark
-        ? AppColors.goldenAccentDark
-        : AppColors.goldenAccent;
+    final colors = context.semanticColors;
+    final backgroundColor = colors.surface;
+    final titleColor = colors.textPrimary;
+    final accentColor = colors.accent;
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.maroon900.withValues(alpha: isDark ? 0.28 : 0.10),
-            blurRadius: 14,
-            offset: const Offset(0, 7),
-          ),
-        ],
+        boxShadow: context.tokens.shadows.medium,
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+        padding: const EdgeInsetsDirectional.fromSTEB(
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.md,
+          0,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -46,7 +43,9 @@ class IslamicHeader extends StatelessWidget {
               children: [
                 Container(
                   alignment: Alignment.center,
-                  constraints: const BoxConstraints(minWidth: 48),
+                  constraints: const BoxConstraints(
+                    minWidth: AppSpacing.touchTarget,
+                  ),
                   child: leading ?? const SizedBox.shrink(),
                 ),
                 Expanded(
@@ -54,8 +53,8 @@ class IslamicHeader extends StatelessWidget {
                     constraints: const BoxConstraints(maxWidth: 420),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
                       ),
                       child: Text(
                         title,
@@ -75,12 +74,14 @@ class IslamicHeader extends StatelessWidget {
                 ),
                 Container(
                   alignment: Alignment.center,
-                  constraints: const BoxConstraints(minWidth: 48),
+                  constraints: const BoxConstraints(
+                    minWidth: AppSpacing.touchTarget,
+                  ),
                   child: trailing ?? const SizedBox.shrink(),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Stack(
               alignment: Alignment.topCenter,
               children: [
@@ -89,22 +90,24 @@ class IslamicHeader extends StatelessWidget {
                   height: 18,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: isDark ? 0.82 : 0.92),
+                    color: accentColor.withValues(
+                      alpha: colors.isDark ? 0.82 : 0.92,
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 if (subtitle != null)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
                       color: backgroundColor,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
                       border: Border.all(
                         color: accentColor.withValues(
-                          alpha: isDark ? 0.8 : 0.72,
+                          alpha: colors.isDark ? 0.8 : 0.72,
                         ),
                         width: 1.5,
                       ),

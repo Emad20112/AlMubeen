@@ -3,6 +3,8 @@ import 'package:al_mubeen/features/quran/presentation/pages/tafsir_download_scre
 import 'package:al_mubeen/features/quran/presentation/widgets/tafsir_reader_content.dart';
 import 'package:flutter/material.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 void showTafsirBottomSheet({
   required BuildContext context,
@@ -97,7 +99,7 @@ class _TafsirBottomSheetState extends State<TafsirBottomSheet> {
       ),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
         border: Border.all(
           color: accentColor.withValues(alpha: 0.2),
         ),
@@ -142,7 +144,7 @@ class _TafsirBottomSheetState extends State<TafsirBottomSheet> {
                       disabledForegroundColor: fgColor.withValues(alpha: 0.2),
                       backgroundColor: cardBg,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                         side: BorderSide(
                           color: accentColor.withValues(alpha: 0.15),
                         ),
@@ -173,7 +175,7 @@ class _TafsirBottomSheetState extends State<TafsirBottomSheet> {
                         ),
                         decoration: BoxDecoration(
                           color: accentColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(AppRadii.pill),
                           border: Border.all(
                             color: accentColor.withValues(alpha: 0.3),
                           ),
@@ -202,7 +204,7 @@ class _TafsirBottomSheetState extends State<TafsirBottomSheet> {
                       disabledForegroundColor: fgColor.withValues(alpha: 0.2),
                       backgroundColor: cardBg,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                         side: BorderSide(
                           color: accentColor.withValues(alpha: 0.15),
                         ),
@@ -211,7 +213,7 @@ class _TafsirBottomSheetState extends State<TafsirBottomSheet> {
                     tooltip: 'الآية التالية',
                   ),
 
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
 
                   // Library Button
                   IconButton(
@@ -222,7 +224,7 @@ class _TafsirBottomSheetState extends State<TafsirBottomSheet> {
                       foregroundColor: accentColor,
                       backgroundColor: cardBg,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                         side: BorderSide(
                           color: accentColor.withValues(alpha: 0.2),
                         ),
@@ -242,7 +244,7 @@ class _TafsirBottomSheetState extends State<TafsirBottomSheet> {
                       foregroundColor: fgColor.withValues(alpha: 0.7),
                       backgroundColor: cardBg,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
                         side: BorderSide(
                           color: fgColor.withValues(alpha: 0.1),
                         ),
@@ -254,7 +256,7 @@ class _TafsirBottomSheetState extends State<TafsirBottomSheet> {
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
 
             // PageView content
             Expanded(

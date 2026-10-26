@@ -1,4 +1,5 @@
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -17,10 +18,8 @@ class AdhkarCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final foregroundColor = isDark
-        ? AppColors.parchmentLight
-        : AppColors.maroon800;
+    final colors = AppColorScheme.of(context);
+    final foregroundColor = colors.primaryStrong;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -35,7 +34,7 @@ class AdhkarCounter extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -44,7 +43,7 @@ class AdhkarCounter extends StatelessWidget {
               onPressed: onDecrement,
               color: foregroundColor,
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.lg),
             SizedBox(
               width: 140,
               height: 52,
@@ -89,7 +88,7 @@ class AdhkarCounter extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: AppSpacing.lg),
             _CounterButton(
               icon: Icons.add,
               onPressed: onIncrement,
@@ -97,14 +96,14 @@ class AdhkarCounter extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         Text(
           'اضغط + لزيادة العدد',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           softWrap: false,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: foregroundColor.withValues(alpha: 0.7),
+            color: colors.textSecondary,
           ),
         ),
       ],

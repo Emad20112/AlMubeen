@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_page_carousel.dart';
 import 'package:flutter/material.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 /// Approximate height of the bottom panel for layout calculations.
 const double kQuranReaderBottomPanelHeight = 82;
@@ -42,7 +44,7 @@ class QuranReaderBottomPanel extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 340),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppRadii.xl),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                   child: Container(
@@ -52,7 +54,7 @@ class QuranReaderBottomPanel extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: backgroundColor,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(AppRadii.xl),
                       border: Border.all(color: borderColor),
                     ),
                     child: Row(
@@ -66,7 +68,7 @@ class QuranReaderBottomPanel extends StatelessWidget {
                             child: rightControls ?? const SizedBox.shrink(),
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppSpacing.xs),
                         Expanded(
                           child: QuranPageCarousel(
                             currentPage: currentPage,
@@ -74,7 +76,7 @@ class QuranReaderBottomPanel extends StatelessWidget {
                             compact: true,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: AppSpacing.xs),
                         SizedBox(
                           width: _kQuranReaderSideControlsWidth,
                           child: Align(
