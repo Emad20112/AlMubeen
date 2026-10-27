@@ -1,4 +1,5 @@
-import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/core/widgets/app_modal.dart';
 import 'package:al_mubeen/core/database/app_database.dart';
 import 'package:al_mubeen/features/quran/application/wird_controller.dart';
 import 'package:al_mubeen/features/quran/domain/wird_calculator.dart';
@@ -150,22 +151,15 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
   }
 
   Future<void> _cancelWird() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialog.show<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('إلغاء الورد؟'),
-        content: const Text('سيتم حذف خطة الورد وتقدمها من هذا الجهاز.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('تراجع'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('إلغاء الورد'),
-          ),
-        ],
-      ),
+      title: 'إلغاء الورد؟',
+      message: 'سيتم حذف خطة الورد وتقدمها من هذا الجهاز.',
+      confirmLabel: 'إلغاء الورد',
+      cancelLabel: 'تراجع',
+      isDestructive: true,
+      onConfirm: () => Navigator.pop(context, true),
+      onCancel: () => Navigator.pop(context, false),
     );
     if (confirmed == true) {
       await ref.read(wirdControllerProvider.notifier).deleteWird();
@@ -183,7 +177,7 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
             timePickerTheme: TimePickerThemeData(
               dialBackgroundColor: Theme.of(context).colorScheme.surface,
               dayPeriodTextColor: WidgetStateColor.resolveWith(
-                (_) => AppColors.maroon800,
+                (_) => Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -254,8 +248,8 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
     }
 
     final dialogWidth = MediaQuery.sizeOf(context).width * 0.92;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = isDark ? AppColors.goldenAccentDark : AppColors.maroon800;
+    final colors = context.semanticColors;
+    final accent = colors.primaryStrong;
     final boundaries = _todayBoundaries;
     final startSurah = getSurahNameArabic(
       getSurahNumberFromPage(boundaries.startPage),
@@ -525,257 +519,4 @@ class _WirdHotelDoorsDialogState extends ConsumerState<_WirdHotelDoorsDialog> {
     );
   }
 
-  /*
-  Widget _buildLeftPanel(
-    BuildContext context,
-    Color accent,
-    WirdBoundaries boundaries,
-  ) {
-    final progressValue =
-        (_completedDaysCount / (_durationDays <= 0 ? 1 : _durationDays)).clamp(
-          0.0,
-          1.0,
-        );
-
-    return Container(
-      color: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.darkSurface
-          : AppColors.parchmentLight,
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'تنبيهات ورد القرآن',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const Gap(14),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'تفعيل تذكير يومي',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
-              Switch.adaptive(
-                value: _reminderEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _reminderEnabled = value;
-                    if (!value) _selectedTime = null;
-                  });
-                },
-              ),
-            ],
-          ),
-          const Gap(8),
-          TextButton(
-            onPressed: _reminderEnabled ? _pickReminderTime : null,
-            style: TextButton.styleFrom(
-              foregroundColor: _reminderEnabled
-                  ? accent
-                  : Theme.of(context).hintColor,
-            ),
-            child: Text(
-              _selectedTime == null
-                  ? 'اختر وقت التذكير'
-                  : 'وقت التذكير: ${_formatTimeOfDay(_selectedTime)}',
-            ),
-          ),
-          const Gap(22),
-          FilledButton(
-            onPressed: _saveSettings,
-            style: FilledButton.styleFrom(
-              backgroundColor: accent,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('حفظ الإعدادات'),
-          ),
-          const Gap(10),
-          FilledButton(
-            onPressed:
-                _currentWird != null &&
-                    !_completedManually &&
-                    !_isCompletedToday
-                ? _markWirdComplete
-                : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: accent,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(
-              _completedManually || _isCompletedToday
-                  ? 'تم تسجيل إنجاز الوِرد'
-                  : 'أكملت الوِرد',
-            ),
-          ),
-          const Gap(12),
-          if (widget.onNavigateToWirdEnd != null)
-            OutlinedButton.icon(
-              onPressed: () => widget.onNavigateToWirdEnd!(boundaries.endPage),
-              icon: const Icon(Icons.flag_rounded),
-              label: const Text('إلى نهاية الوِرد'),
-            ),
-          const Gap(18),
-          Text(
-            'تقدم الخطة',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const Gap(10),
-          LinearProgressIndicator(
-            value: progressValue,
-            minHeight: 8,
-            color: accent,
-            backgroundColor: accent.withValues(alpha: 0.16),
-          ),
-          const Gap(12),
-          Text(
-            '${convertToArabicDigits(_completedDaysCount)} من ${convertToArabicDigits(_durationDays)} يوم',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(
-                context,
-              ).textTheme.bodySmall?.color?.withValues(alpha: 0.82),
-            ),
-          ),
-          const Gap(6),
-          Text(
-            'اليوم ${convertToArabicDigits(_completedDaysCount + 1)} من الخطة',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-
-  */
-
-  /*
-  Widget _buildRightPanel(
-    BuildContext context,
-    Color accent,
-    String startSurah,
-    String endSurah,
-    WirdBoundaries boundaries,
-  ) {
-    return Container(
-      color: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.darkSurfaceHigh
-          : AppColors.parchment,
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'ورد يومي',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const Gap(12),
-          DropdownButtonFormField<WirdAmountType>(
-            initialValue: _selectedType,
-            isDense: true,
-            decoration: InputDecoration(
-              labelText: 'مقدار الورد اليومي',
-              prefixIcon: const Icon(Icons.menu_book_rounded),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadii.md),
-              ),
-            ),
-            items: WirdAmountType.values
-                .map(
-                  (type) => DropdownMenuItem<WirdAmountType>(
-                    value: type,
-                    child: Text(_amountTypeLabel(type)),
-                  ),
-                )
-                .toList(),
-            onChanged: (type) {
-              if (type != null) setState(() => _selectedType = type);
-            },
-          ),
-          const Gap(18),
-          TextField(
-            controller: _durationController,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: 'عدد أيام الخطة',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadii.lg),
-              ),
-            ),
-            onChanged: (value) {
-              final parsed = int.tryParse(value);
-              if (parsed != null && parsed > 0) {
-                setState(() => _durationDays = parsed);
-              }
-            },
-          ),
-          const Gap(22),
-          Text(
-            'ورد اليوم',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const Gap(10),
-          Text.rich(
-            TextSpan(
-              children: [
-                const TextSpan(text: 'من '),
-                WidgetSpan(
-                  child: GestureDetector(
-                    onTap: () => _navigateToStartPage(boundaries.startPage),
-                    child: Text(
-                      startSurah,
-                      style: TextStyle(
-                        color: accent,
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ),
-                const TextSpan(text: ' إلى '),
-                TextSpan(
-                  text: 'ص ${convertToArabicDigits(boundaries.endPage)} من ',
-                ),
-                WidgetSpan(
-                  child: GestureDetector(
-                    onTap: () => _navigateToStartPage(boundaries.endPage),
-                    child: Text(
-                      endSurah,
-                      style: TextStyle(
-                        color: accent,
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Gap(16),
-          Text(
-            'اضغط على اسم السورة للانتقال إلى بداية الورد.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(
-                context,
-              ).textTheme.bodySmall?.color?.withValues(alpha: 0.72),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  */
 }

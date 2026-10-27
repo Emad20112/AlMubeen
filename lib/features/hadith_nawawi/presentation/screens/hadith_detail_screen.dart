@@ -1,12 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/features/hadith_nawawi/domain/models/hadith_nawawi_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:al_mubeen/app/theme/app_radii.dart';
-import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class HadithDetailScreen extends StatefulWidget {
   const HadithDetailScreen({
@@ -61,7 +62,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.semanticColors;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final windowClass = AdaptiveBreakpoints.fromWidth(screenWidth);
     final contentMaxWidth = switch (windowClass) {
@@ -71,16 +72,13 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
     };
     final sidePadding = math.max((screenWidth - contentMaxWidth) / 2, 20.0);
 
-    final bgColor = isDark ? AppColors.darkScaffold : const Color(0xFFFAF8F3);
-    final fgColor = isDark ? AppColors.darkInk : const Color(0xFF2C2420);
-
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: colors.pageSurface,
       body: SafeArea(
         child: Column(
           children: [
             // ── Header ──
-            _buildHeader(context, isDark, fgColor),
+            _buildHeader(context, colors),
 
             // ── PageView ──
             Expanded(
@@ -93,7 +91,6 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
                 itemBuilder: (context, index) {
                   return _HadithDetailPageContent(
                     entry: widget.entries[index],
-                    isDark: isDark,
                     sidePadding: sidePadding,
                   );
                 },
@@ -105,8 +102,9 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isDark, Color fgColor) {
-    final cardBg = isDark ? AppColors.darkSurfaceHigh : Colors.white;
+  Widget _buildHeader(BuildContext context, AppColorScheme colors) {
+    final cardBg = colors.surfaceElevated;
+    final fgColor = colors.textPrimary;
     final currentEntry = widget.entries[_currentIndex];
 
     return Padding(
@@ -147,7 +145,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
               backgroundColor: cardBg,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadii.sm),
-                side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
+                side: BorderSide(color: colors.border.withValues(alpha: 0.2)),
               ),
             ),
             tooltip: 'الحديث السابق',
@@ -168,7 +166,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
               backgroundColor: cardBg,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadii.sm),
-                side: BorderSide(color: fgColor.withValues(alpha: 0.1)),
+                side: BorderSide(color: colors.border.withValues(alpha: 0.2)),
               ),
             ),
             tooltip: 'الحديث التالي',
@@ -230,22 +228,20 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
 class _HadithDetailPageContent extends StatelessWidget {
   const _HadithDetailPageContent({
     required this.entry,
-    required this.isDark,
     required this.sidePadding,
   });
 
   final HadithNawawiEntry entry;
-  final bool isDark;
   final double sidePadding;
 
   @override
   Widget build(BuildContext context) {
-    final fgColor = isDark ? AppColors.darkInk : const Color(0xFF2C2420);
-    final surfaceColor = isDark ? AppColors.darkSurfaceHigh : Colors.white;
-    final mutedColor = isDark
-        ? AppColors.darkInk.withValues(alpha: 0.6)
-        : const Color(0xFF8A7D72);
-    final goldFg = isDark ? AppColors.goldenAccentDark : AppColors.goldenAccent;
+    final colors = context.semanticColors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fgColor = colors.textPrimary;
+    final surfaceColor = colors.surfaceElevated;
+    final mutedColor = colors.textSecondary;
+    final goldFg = colors.accent;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -261,7 +257,7 @@ class _HadithDetailPageContent extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: goldFg.withValues(alpha: 0.12),
+                  color: goldFg.withValues(alpha: isDark ? 0.15 : 0.12),
                   shape: BoxShape.circle,
                   border: Border.all(color: goldFg.withValues(alpha: 0.3)),
                 ),
@@ -286,9 +282,7 @@ class _HadithDetailPageContent extends StatelessWidget {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.maroon800.withValues(alpha: 0.6)
-                          : AppColors.maroon700.withValues(alpha: 0.08),
+                      color: colors.surfaceMuted,
                       borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                     child: Text(
@@ -296,9 +290,7 @@ class _HadithDetailPageContent extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: isDark
-                            ? AppColors.cardRedDark
-                            : AppColors.cardRed,
+                        color: colors.primaryStrong,
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
                       ),
@@ -367,7 +359,7 @@ class _HadithDetailPageContent extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  AppColors.maroon700.withValues(alpha: isDark ? 0.2 : 0.15),
+                  colors.border.withValues(alpha: isDark ? 0.2 : 0.15),
                   Colors.transparent,
                 ],
               ),
@@ -395,19 +387,17 @@ class _HadithDetailPageContent extends StatelessWidget {
             const SizedBox(height: 14),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: surfaceColor,
                 borderRadius: BorderRadius.circular(AppRadii.lg),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : AppColors.maroon700.withValues(alpha: 0.08),
+                  color: colors.border.withValues(alpha: isDark ? 0.12 : 0.08),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.maroon900.withValues(
-                      alpha: isDark ? 0.15 : 0.04,
+                    color: colors.surfaceSunken.withValues(
+                      alpha: isDark ? 0.2 : 0.04,
                     ),
                     blurRadius: 12,
                     offset: const Offset(0, 4),

@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_design_tokens.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
+import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:al_mubeen/core/layout/adaptive_breakpoints.dart';
 import 'package:al_mubeen/core/widgets/shimmer_group.dart';
 import 'package:al_mubeen/features/hadith_nawawi/data/hadith_nawawi_providers.dart';
@@ -9,8 +12,6 @@ import 'package:al_mubeen/features/hadith_nawawi/domain/models/hadith_nawawi_ent
 import 'package:al_mubeen/features/hadith_nawawi/presentation/screens/hadith_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:al_mubeen/app/theme/app_radii.dart';
-import 'package:al_mubeen/app/theme/app_spacing.dart';
 
 class HadithNawawiScreen extends ConsumerStatefulWidget {
   const HadithNawawiScreen({super.key});
@@ -50,6 +51,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final windowClass = AdaptiveBreakpoints.fromWidth(screenWidth);
@@ -60,25 +62,21 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
     };
     final sidePadding = math.max((screenWidth - contentMaxWidth) / 2, 16.0);
 
-    final bgColor = _bgColor(isDark);
-    final fgColor = _fgColor(isDark);
-    final surfaceColor = _surfaceColor(isDark);
-
     final entriesAsync = ref.watch(hadithNawawiEntriesProvider);
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: colors.pageSurface,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
-            SliverToBoxAdapter(child: _buildHeader(isDark, fgColor, bgColor)),
+            SliverToBoxAdapter(child: _buildHeader(colors, isDark)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(sidePadding, 0, sidePadding, 8),
-                child: _buildSearchBar(isDark, fgColor, surfaceColor),
+                child: _buildSearchBar(colors, isDark),
               ),
             ),
             ...entriesAsync.when<List<Widget>>(
@@ -88,7 +86,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
                   return [
                     SliverFillRemaining(
                       hasScrollBody: false,
-                      child: _buildEmptyState(isDark, fgColor),
+                      child: _buildEmptyState(colors),
                     ),
                   ];
                 }
@@ -140,7 +138,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
                         children: [
                           for (var index = 0; index < 6; index++) ...[
                             if (index > 0) const SizedBox(height: 14),
-                            _SkeletonCard(isDark: isDark),
+                            const _SkeletonCard(),
                           ],
                         ],
                       ),
@@ -151,7 +149,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
               error: (e, _) => [
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _buildErrorState(isDark, fgColor, e),
+                  child: _buildErrorState(colors, e),
                 ),
               ],
             ),
@@ -167,7 +165,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
     return entries.where((e) => e.matchesQuery(q)).toList();
   }
 
-  Widget _buildHeader(bool isDark, Color fgColor, Color bgColor) {
+  Widget _buildHeader(AppColorScheme colors, bool isDark) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
       child: Row(
@@ -176,7 +174,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
             onPressed: () => Navigator.of(context).pop(),
             icon: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: fgColor,
+              color: colors.textPrimary,
               size: 22,
             ),
             tooltip: 'رجوع',
@@ -188,7 +186,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: fgColor,
+                color: colors.textPrimary,
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
                 height: 1.05,
@@ -200,18 +198,16 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.goldenAccent.withValues(
+              color: colors.accent.withValues(
                 alpha: isDark ? 0.15 : 0.12,
               ),
               border: Border.all(
-                color: AppColors.goldenAccent.withValues(alpha: 0.35),
+                color: colors.accent.withValues(alpha: 0.35),
               ),
             ),
             child: Icon(
               Icons.menu_book_rounded,
-              color: AppColors.goldenAccent.withValues(
-                alpha: isDark ? 0.9 : 0.8,
-              ),
+              color: colors.accent,
               size: 20,
             ),
           ),
@@ -220,18 +216,18 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
     );
   }
 
-  Widget _buildSearchBar(bool isDark, Color fgColor, Color surfaceColor) {
+  Widget _buildSearchBar(AppColorScheme colors, bool isDark) {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(26),
+        color: colors.surfaceElevated,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
-          color: AppColors.maroon700.withValues(alpha: isDark ? 0.18 : 0.1),
+          color: colors.border.withValues(alpha: isDark ? 0.18 : 0.1),
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.maroon900.withValues(alpha: isDark ? 0.15 : 0.06),
+            color: colors.surfaceSunken.withValues(alpha: isDark ? 0.3 : 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -241,22 +237,22 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
         controller: _searchController,
         onChanged: (v) => setState(() => _query = v),
         textInputAction: TextInputAction.search,
-        cursorColor: AppColors.maroon700,
+        cursorColor: colors.primaryStrong,
         style: TextStyle(
-          color: fgColor,
+          color: colors.textPrimary,
           fontSize: 14.5,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: 'ابحث في الأحاديث...',
           hintStyle: TextStyle(
-            color: fgColor.withValues(alpha: 0.45),
+            color: colors.textSecondary.withValues(alpha: 0.7),
             fontSize: 14,
             fontWeight: FontWeight.w400,
           ),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: fgColor.withValues(alpha: 0.55),
+            color: colors.textSecondary,
             size: 22,
           ),
           suffixIcon: ValueListenableBuilder<TextEditingValue>(
@@ -271,7 +267,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
                 },
                 icon: Icon(
                   Icons.close_rounded,
-                  color: fgColor.withValues(alpha: 0.55),
+                  color: colors.textSecondary,
                   size: 20,
                 ),
               );
@@ -288,7 +284,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
     );
   }
 
-  Widget _buildEmptyState(bool isDark, Color fgColor) {
+  Widget _buildEmptyState(AppColorScheme colors) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -298,14 +294,14 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
             Icon(
               Icons.menu_book_outlined,
               size: 56,
-              color: fgColor.withValues(alpha: 0.5),
+              color: colors.textSecondary.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 18),
             Text(
               'لا توجد نتائج مطابقة',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: fgColor,
+                color: colors.textPrimary,
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
               ),
@@ -315,7 +311,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
               'جرّب كلمة بحث مختلفة أو امسح شريط البحث.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: fgColor.withValues(alpha: 0.65),
+                color: colors.textSecondary,
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 height: 1.4,
@@ -327,7 +323,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
     );
   }
 
-  Widget _buildErrorState(bool isDark, Color fgColor, Object error) {
+  Widget _buildErrorState(AppColorScheme colors, Object error) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -337,14 +333,14 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
             Icon(
               Icons.error_outline_rounded,
               size: 52,
-              color: AppColors.maroon700.withValues(alpha: 0.8),
+              color: colors.error,
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'تعذر تحميل الأحاديث',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: fgColor,
+                color: colors.textPrimary,
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
               ),
@@ -354,7 +350,7 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
               '$error',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: fgColor.withValues(alpha: 0.65),
+                color: colors.textSecondary,
                 fontSize: 12,
                 height: 1.5,
               ),
@@ -370,13 +366,6 @@ class _HadithNawawiScreenState extends ConsumerState<HadithNawawiScreen> {
       ),
     );
   }
-
-  Color _bgColor(bool isDark) =>
-      isDark ? AppColors.darkScaffold : const Color(0xFFFAF8F3);
-  Color _fgColor(bool isDark) =>
-      isDark ? AppColors.darkInk : const Color(0xFF2C2420);
-  Color _surfaceColor(bool isDark) =>
-      isDark ? AppColors.darkSurfaceHigh : Colors.white;
 }
 
 // ─── Hadith Card ──────────────────────────────────────────────
@@ -390,37 +379,32 @@ class _HadithCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardBg = isDark ? AppColors.darkSurfaceHigh : Colors.white;
-    final fgColor = isDark ? AppColors.darkInk : const Color(0xFF2C2420);
-    final mutedColor = isDark
-        ? AppColors.darkInk.withValues(alpha: 0.6)
-        : const Color(0xFF8A7D72);
+    final colors = context.semanticColors;
+    final cardBg = colors.surfaceElevated;
+    final fgColor = colors.textPrimary;
+    final mutedColor = colors.textSecondary;
 
-    final chipBg = isDark
-        ? AppColors.maroon800.withValues(alpha: 0.6)
-        : AppColors.maroon700.withValues(alpha: 0.08);
-    final chipFg = isDark ? AppColors.cardRedDark : AppColors.cardRed;
+    final chipBg = colors.surfaceMuted;
+    final chipFg = colors.primaryStrong;
 
     return RepaintBoundary(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: cardBg,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(AppRadii.xl),
               border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : AppColors.maroon700.withValues(alpha: 0.08),
+                color: colors.border.withValues(alpha: isDark ? 0.12 : 0.08),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.maroon900.withValues(
-                    alpha: isDark ? 0.2 : 0.06,
+                  color: colors.surfaceSunken.withValues(
+                    alpha: isDark ? 0.3 : 0.06,
                   ),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
@@ -440,12 +424,12 @@ class _HadithCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: fgColor.withValues(alpha: isDark ? 0.12 : 0.06),
                       border: Border.all(
-                        color: fgColor.withValues(alpha: 0.12),
+                        color: colors.border.withValues(alpha: 0.15),
                       ),
                     ),
                     child: Icon(
                       Icons.visibility_rounded,
-                      color: fgColor.withValues(alpha: 0.75),
+                      color: mutedColor,
                       size: 16,
                     ),
                   ),
@@ -518,7 +502,7 @@ class _HadithCard extends StatelessWidget {
                 const SizedBox(width: 10),
 
                 // Right: Number badge
-                _OctagonBadge(number: entry.hadithNumber, isDark: isDark),
+                _OctagonBadge(number: entry.hadithNumber),
               ],
             ),
           ),
@@ -531,22 +515,17 @@ class _HadithCard extends StatelessWidget {
 // ─── Octagonal Badge ──────────────────────────────────────────
 
 class _OctagonBadge extends StatelessWidget {
-  const _OctagonBadge({required this.number, required this.isDark});
+  const _OctagonBadge({required this.number});
 
   final int number;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = isDark
-        ? AppColors.goldenAccentDark.withValues(alpha: 0.12)
-        : AppColors.goldenAccent.withValues(alpha: 0.1);
-    final fgColor = isDark
-        ? AppColors.goldenAccentDark
-        : AppColors.goldenAccent;
-    final borderColor = isDark
-        ? AppColors.goldenAccentDark.withValues(alpha: 0.25)
-        : AppColors.goldenAccent.withValues(alpha: 0.35);
+    final colors = context.semanticColors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = colors.accent.withValues(alpha: isDark ? 0.12 : 0.1);
+    final fgColor = colors.accent;
+    final borderColor = colors.accent.withValues(alpha: isDark ? 0.25 : 0.35);
 
     return Container(
       width: 40,
@@ -574,24 +553,22 @@ class _OctagonBadge extends StatelessWidget {
 // ─── Skeleton Card ────────────────────────────────────────────
 
 class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard({required this.isDark});
-
-  final bool isDark;
+  const _SkeletonCard();
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.semanticColors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? Colors.white12 : Colors.black12;
-    final cardBg = isDark ? AppColors.darkSurfaceHigh : Colors.white;
+    final cardBg = colors.surfaceElevated;
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : AppColors.maroon700.withValues(alpha: 0.06),
+          color: colors.border.withValues(alpha: isDark ? 0.08 : 0.06),
         ),
       ),
       child: Row(
@@ -626,7 +603,7 @@ class _SkeletonCard extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     color: baseColor,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppRadii.xs),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -635,7 +612,7 @@ class _SkeletonCard extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     color: baseColor,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppRadii.xs),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
