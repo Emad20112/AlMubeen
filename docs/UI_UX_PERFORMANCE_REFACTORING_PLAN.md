@@ -224,7 +224,7 @@ flowchart TD
 | الملف الحالي الضخم | عدد الأسطر | الهيكل المقترح بعد التفكيك |
 | :--- | :--- | :--- |
 | `quran_surah_player_screen.dart` | 1,807 ➔ ~180 سطر | ✅ **تم التفكيك بنجاح بالكامل** إلى:<br>• `surah_player_state_models.dart` (نماذج الحالة وعزل التقدّم 350ms)<br>• `surah_player_buttons.dart` (أزرار التشغيل والتنقل والتحميل)<br>• `surah_player_header.dart` (الترويسة واختيار القارئ والتحميل الكلي)<br>• `surah_list_tile.dart` (قائمة السور وبطاقات التشغيل)<br>• `floating_player_bar.dart` (شريط المشغل العائم)<br>• `expanded_controls.dart` (عناصر التحكم الموسعة والحماية من قيم NaN) |
-| `translation_download_screen.dart` | 1,109 | • `presentation/screens/translation_download_screen.dart`<br>• `presentation/widgets/translation_item_tile.dart`<br>• `presentation/widgets/translation_filter_chips.dart`<br>• الاستعانة بـ `AppSearchBar` الموحد |
+| `translation_download_screen.dart` | 1,111 ➔ **158 سطر** | ✅ **تم التفكيك بنجاح** إلى `presentation/widgets/downloads/`:<br>• `translation_library_body.dart` (168) — جسم المكتبة وحالة البحث/الفلترة<br>• `translation_tile.dart` (204) — بطاقة الترجمة<br>• `translation_filter_bar.dart` (83) — شريط البحث والفلترة<br>• `compact_filter_chip.dart` (61) — رقاقة تصفية مشتركة<br>• `translation_download_progress_banner.dart` (94) — شريط التقدم وأزراره<br>• `translation_fallback_notice.dart` (51) — تنبيه الاحتياطي المحلي<br>• `translation_empty_views.dart` (46) — حالتا الفراغ على `AppEmptyStateView`<br>• تحولت الشاشة إلى `ConsumerWidget` (بلا `TextEditingController`/`setState`)<br>• الاستعانة بـ `AppSearchBar` و`AppStateView` الموحدين |
 | `quran_reader_search_sheet.dart` | 1,098 | • `presentation/widgets/search/quran_search_sheet.dart`<br>• `presentation/widgets/search/search_result_item.dart`<br>• `presentation/widgets/search/search_history_view.dart` |
 | `quran_reciters_list_view.dart` | 1,050 | • `presentation/widgets/reciters/reciter_list_tile.dart`<br>• `presentation/widgets/reciters/reciter_download_action.dart`<br>• تجريد دوال التنسيق إلى UseCases |
 | `tafsir_download_screen.dart` | 982 | • مطابقة بنية شاشة الترجمات واستخدام مكونات البطاقات المشتركة |
@@ -236,19 +236,61 @@ flowchart TD
 ### المرحلة 4: خطة تحسين الأداء وإدارة الأصول (Performance & Asset Optimization)
 
 #### 4.1. نقل معالجة البيانات الثقيلة إلى خلفية النظام (Background Isolates):
-* تحويل فك تشفير وقراءة `ar_muyassar.json` (3MB) و `quran-uthmani.xml` (1.5MB) ليعمل عبر الدالة المعزولة `compute()` أو حزمة `Isolate` المتخصصة، لمنع أي تجميد في واجهة المستخدم أثناء بدء التشغيل أو فتح التفسير.
-* تفعيل التخزين المؤقت في الذاكرة (In-Memory Caching) للنتائج المفككة مسبقاً عبر `LruCache`.
+* [x] **`ar_muyassar.json` (2.92MB):** منجَز — يُفكَّك عبر `Isolate.run` في
+  `tafsir_muyassar_asset_data_source.dart`، مع تخزين مؤقت للنتيجة وحماية من
+  التحميل المزدوج (`_recordsLoadingFuture`).
+* [x] ~~`quran-uthmani.xml`~~ — **البند أُلغي بعد تصحيح التشخيص:** الملف لم يكن
+  مستخدماً في الكود أصلاً (لا مرجع في `lib/`، ولا مكتبة XML في المشروع، ونص
+  المصحف يأتي من `qcf_quran` وواجهة Quran.com). أُخرج من الحزمة إلى
+  `tools/reference/` (انظر §4.2). لا معنى لعزله في `Isolate`.
+* [ ] تفعيل التخزين المؤقت في الذاكرة (In-Memory Caching) للنتائج المفككة مسبقاً عبر `LruCache` — منجَز جزئياً (تخزين مؤقت لكل مصدر، بلا سياسة إخلاء LRU مركزية).
 
 #### 4.2. ضغط وتحسين الأصول البصرية (Asset Pipeline):
 * ضغط صور التطبيق:
   * تحويل `al_kawthar_foreground.png` (1.47MB) و `al_kawthar_app_icon.png` (1.39MB) إلى تنسيق محسن، وتقليص حجمها إلى أقل من **150KB** (توفير أكثر من 88% من الحجم).
 * تنظيف الأصول المؤقتة أو غير المستخدمة من مجلد `assets/data/` (مثل ملفات التوثيق والنصوص غير اللازمة في حزمة الإنتاج `implementation_plan.md`, `install.ps1.txt`).
+* [x] **`quran-uthmani.xml` (1.47MB) — أُخرج من الحزمة:** ثُبت أنه غير مستخدم
+  نهائياً (لا مرجع في `lib/`، ولا محلل XML ضمن التبعيات، ونص المصحف يُعرض عبر
+  `qcf_quran` ويُجلب من Quran.com ثم يُخزَّن في Drift). نُقل إلى
+  `tools/reference/` خارج `assets/` مع `README.md` يوضح المصدر والترخيص
+  (Tanzil / CC-BY 3.0) وسبب الإخراج. **الوفر: ~1.47MB من حجم الحزمة.**
+  ⚠️ يجب الإبقاء على الإسناد إلى Tanzil في شاشة «عن التطبيق» حتى بعد الإخراج.
+* [ ] ضغط صورتي `al_kawthar_*` — **لم يبدأ** (ما زالتا 1.44MB و1.36MB).
 
 #### 4.3. منع إعادة البناء غير الضرورية وضبط الودجات:
 * استخدام `const` في كافة الودجات الثابتة، وضبط قواعد Linter لتفعيل التحذير الإلزامي لـ `prefer_const_constructors`.
 * قصر استدعاءات `ref.watch` على مستوى الحقول الدقيقة باستخدام `.select((state) => state.specificField)`.
 * تزويد كافة القوائم الديناميكية بـ `itemExtent` ثابت حيثما أمكن ومفاتيح تتبع `ValueKey(item.id)` لمنع إعادة بناء القوائم أثناء التمرير.
-* إزالة جميع عبارات `print()` في الكود واستبدالها بنظام تسجيل منظم محمي بشروط بيئة التطوير `kDebugMode`.
+* [x] إزالة جميع عبارات `print()` في الكود واستبدالها بنظام تسجيل منظم محمي بشروط بيئة التطوير `kDebugMode` — **منجَز: صفر `print(` في `lib/`**.
+
+---
+
+### المرحلة 5: سجل التحقق الفعلي (Verified Status Log)
+
+> **آخر تحقق: 2026-10-27** — أرقام مأخوذة من قياس مباشر على `lib/features/`،
+> لا من تقديرات. الأوامر: `flutter analyze lib` → **صفر مشاكل**.
+
+| المؤشر | الهدف | القيمة الحالية | الحالة |
+| :--- | :---: | :---: | :--- |
+| `Color(0x...)` في `features/` | 0 | **84** | 🟡 تقدم (كان 212) |
+| مراجع `AppColors.` | 0 | **148** | 🟡 تقدم |
+| `fontSize:` صريح | 0 | **149** | 🔴 لم يتحرك |
+| `BorderRadius.circular` صريح | 0 | **179** | 🟠 تراجع طفيف (189) |
+| `EdgeInsets.fromLTRB` | 0 | **41** | 🟠 تقدم جزئي (كان 45) |
+| `EdgeInsetsDirectional` | — | **6** | 🔴 البند غير منفَّذ |
+| `setState` في `features/` | 0 | **57** | 🟡 تقدم محدود |
+| مراجع `context.semanticColors` | — | **48** | 🟢 نمو مطّرد |
+| `print()` في `lib/` | 0 | **0** | ✅ منجَز |
+| ملفات واجهة > 300 سطر | 0 | **4** | 🟠 (كان 8) |
+| `quran-uthmani.xml` في الحزمة | مُزال | **مُزال** | ✅ منجَز |
+
+**ملفات الواجهة المتبقية فوق 300 سطر:** `quran_reader_search_sheet.dart` (1,100)،
+`quran_reciters_list_view.dart` (1,040)، `tafsir_download_screen.dart` (984)،
+`quran_audio_download_screen.dart` (955).
+
+**اختبارات فاشلة على الشجرة الأصلية (ليست نتيجة أي تغيير في هذه الخطة):**
+`test/features/quran/quran_audio_prefetch_test.dart` و`test/widget_test.dart`
+(تحُقّق بـ`git stash`). تحتاجان مهمة مستقلة.
 
 ---
 
