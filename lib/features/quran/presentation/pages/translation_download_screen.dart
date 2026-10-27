@@ -3,8 +3,8 @@ import 'package:al_mubeen/core/design/app_design_components.dart';
 import 'package:al_mubeen/features/quran/application/translation_download_controller.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
-import 'package:al_mubeen/features/quran/presentation/widgets/downloads/translation_empty_views.dart';
-import 'package:al_mubeen/features/quran/presentation/widgets/downloads/translation_library_body.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/downloads/shared/resource_empty_views.dart';
+import 'package:al_mubeen/features/quran/presentation/widgets/downloads/translations/translation_library_body.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,7 +93,7 @@ class TranslationDownloadScreen extends ConsumerWidget {
               );
             }
 
-            return TranslationEmptyMessage(
+            return ResourceEmptyMessage(
               icon: Icons.translate_rounded,
               title: 'لا توجد ترجمات متاحة',
               message: 'جرّب تحديث القائمة بعد قليل.',

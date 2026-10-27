@@ -1,29 +1,45 @@
 import 'package:al_mubeen/app/theme/app_design_tokens.dart';
 import 'package:al_mubeen/app/theme/app_radii.dart';
 import 'package:al_mubeen/app/theme/app_spacing.dart';
-import 'package:al_mubeen/features/quran/domain/repositories/quran_repository.dart';
 import 'package:flutter/material.dart';
 
-/// بطاقة عرض خيار الترجمة للتنزيل أو التفعيل.
-class TranslationTile extends StatelessWidget {
-  const TranslationTile({
+/// بطاقة عرض مورد موحدة (Resource Tile) للتنزيلات (ترجمة، تفسير، قراء).
+///
+/// مصممة بأعلى معايير الأداء والوصول وتوحيد الهوية البصرية:
+/// - حاوية مرتفعة دلالية [context.semanticColors.surfaceElevated].
+/// - مؤشرات حالة واضحة (تنزيل، إيقاف مؤقت، اكتمال، تحديد).
+/// - استجابة لمسية سلسة ومتوافقة مع RTL.
+class ResourceTile extends StatelessWidget {
+  const ResourceTile({
     super.key,
-    required this.translation,
+    required this.title,
+    this.subtitle,
+    this.author,
+    this.additionalInfo,
+    this.leadingIcon = Icons.menu_book_rounded,
     required this.isSelected,
     required this.isDownloaded,
     required this.isDownloading,
     required this.isPaused,
-    required this.downloadProgress,
+    this.downloadProgress,
     required this.onTap,
+    this.downloadTooltip = 'تنزيل',
+    this.downloadedLabel = 'محمّل محليًا',
   });
 
-  final Translation translation;
+  final String title;
+  final String? subtitle;
+  final String? author;
+  final String? additionalInfo;
+  final IconData leadingIcon;
   final bool isSelected;
   final bool isDownloaded;
   final bool isDownloading;
   final bool isPaused;
   final double? downloadProgress;
   final VoidCallback onTap;
+  final String downloadTooltip;
+  final String downloadedLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +59,7 @@ class TranslationTile extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         Text(
           'جاري التنزيل...',
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: colors.textSecondary, fontSize: 12),
         ),
       ]);
       trailingWidget = Padding(
@@ -68,10 +81,7 @@ class TranslationTile extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         Text(
           'متوقف مؤقتًا',
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: colors.textSecondary, fontSize: 12),
         ),
       ]);
       trailingWidget = Icon(
@@ -83,11 +93,8 @@ class TranslationTile extends StatelessWidget {
       statusWidgets.addAll([
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'محمّلة محليًا',
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: 12,
-          ),
+          downloadedLabel,
+          style: TextStyle(color: colors.textSecondary, fontSize: 12),
         ),
       ]);
       trailingWidget = Icon(
@@ -99,7 +106,7 @@ class TranslationTile extends StatelessWidget {
       trailingWidget = IconButton(
         icon: const Icon(Icons.download_rounded),
         color: primaryColor,
-        tooltip: 'تنزيل الترجمة',
+        tooltip: downloadTooltip,
         onPressed: onTap,
       );
     }
@@ -121,7 +128,9 @@ class TranslationTile extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: colors.surfaceSunken.withValues(alpha: isSelected ? 0.15 : 0.05),
+            color: colors.surfaceSunken.withValues(
+              alpha: isSelected ? 0.15 : 0.05,
+            ),
             blurRadius: isSelected ? 12 : 6,
             offset: const Offset(0, 3),
           ),
@@ -143,11 +152,7 @@ class TranslationTile extends StatelessWidget {
                     color: primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
-                  child: Icon(
-                    Icons.translate_rounded,
-                    color: primaryColor,
-                    size: 24,
-                  ),
+                  child: Icon(leadingIcon, color: primaryColor, size: 24),
                 ),
                 const SizedBox(width: AppSpacing.lg),
                 Expanded(
@@ -155,40 +160,37 @@ class TranslationTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        translation.name,
+                        title,
                         style: TextStyle(
                           color: colors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (translation.resourceName != null &&
-                          translation.resourceName != translation.name) ...[
+                      if (subtitle != null && subtitle != title) ...[
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          translation.resourceName!,
+                          subtitle!,
                           style: TextStyle(
                             color: colors.textSecondary,
                             fontSize: 14,
                           ),
                         ),
                       ],
-                      if (translation.authorName != null) ...[
+                      if (author != null) ...[
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          'المترجم: ${translation.authorName!}',
+                          author!,
                           style: TextStyle(
                             color: colors.textSecondary.withValues(alpha: 0.8),
                             fontSize: 12,
                           ),
                         ),
                       ],
-                      if (translation.translatedAuthorName != null &&
-                          translation.translatedAuthorName !=
-                              translation.authorName) ...[
+                      if (additionalInfo != null) ...[
                         const SizedBox(height: 2),
                         Text(
-                          translation.translatedAuthorName!,
+                          additionalInfo!,
                           style: TextStyle(
                             color: colors.textSecondary.withValues(alpha: 0.65),
                             fontSize: 12,

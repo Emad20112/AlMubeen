@@ -26,9 +26,7 @@ class CompactFilterChip extends StatelessWidget {
     final borderColor = isSelected
         ? accentColor.withValues(alpha: 0.35)
         : colors.border;
-    final textColor = isSelected
-        ? accentColor
-        : colors.textSecondary;
+    final textColor = isSelected ? accentColor : colors.textSecondary;
 
     return Material(
       color: Colors.transparent,
