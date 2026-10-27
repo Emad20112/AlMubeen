@@ -224,10 +224,11 @@ flowchart TD
 | الملف الحالي الضخم | عدد الأسطر | الهيكل المقترح بعد التفكيك |
 | :--- | :--- | :--- |
 | `quran_surah_player_screen.dart` | 1,807 ➔ ~180 سطر | ✅ **تم التفكيك بنجاح بالكامل** إلى:<br>• `surah_player_state_models.dart` (نماذج الحالة وعزل التقدّم 350ms)<br>• `surah_player_buttons.dart` (أزرار التشغيل والتنقل والتحميل)<br>• `surah_player_header.dart` (الترويسة واختيار القارئ والتحميل الكلي)<br>• `surah_list_tile.dart` (قائمة السور وبطاقات التشغيل)<br>• `floating_player_bar.dart` (شريط المشغل العائم)<br>• `expanded_controls.dart` (عناصر التحكم الموسعة والحماية من قيم NaN) |
-| `translation_download_screen.dart` | 1,111 ➔ **158 سطر** | ✅ **تم التفكيك بنجاح** إلى `presentation/widgets/downloads/`:<br>• `translation_library_body.dart` (168) — جسم المكتبة وحالة البحث/الفلترة<br>• `translation_tile.dart` (204) — بطاقة الترجمة<br>• `translation_filter_bar.dart` (83) — شريط البحث والفلترة<br>• `compact_filter_chip.dart` (61) — رقاقة تصفية مشتركة<br>• `translation_download_progress_banner.dart` (94) — شريط التقدم وأزراره<br>• `translation_fallback_notice.dart` (51) — تنبيه الاحتياطي المحلي<br>• `translation_empty_views.dart` (46) — حالتا الفراغ على `AppEmptyStateView`<br>• تحولت الشاشة إلى `ConsumerWidget` (بلا `TextEditingController`/`setState`)<br>• الاستعانة بـ `AppSearchBar` و`AppStateView` الموحدين |
+| `translation_download_screen.dart` | 1,111 ➔ **158 سطر** | ✅ **تم التفكيك بنجاح** إلى `presentation/widgets/downloads/`:<br>• استخدام حزمة المكونات الموحدة في `downloads/shared/` (`ResourceFilterBar`, `ResourceTile`, `ResourceDownloadProgressBanner`, `ResourceFallbackNotice`, `ResourceEmptyResults`)<br>• عزل جسم الشاشة في `downloads/translations/translation_library_body.dart` (207 أسطر)<br>• الشاشة تحولت إلى `ConsumerWidget` خفيفة (158 سطرًا) |
+| `tafsir_download_screen.dart` | 984 ➔ **154 سطر** | ✅ **تم التفكيك بنجاح** إلى `presentation/widgets/downloads/`:<br>• استخدام نفس المكونات المشتركة في `downloads/shared/`<br>• عزل جسم الشاشة في `downloads/tafsir/tafsir_library_body.dart` (196 سطرًا)<br>• الشاشة تحولت إلى `ConsumerWidget` خفيفة (154 سطرًا) |
+| `quran_audio_download_screen.dart` | 955 ➔ **139 سطر** | ✅ **تم التفكيك بنجاح** إلى `presentation/widgets/downloads/`:<br>• استخدام المكونات المشتركة في `downloads/shared/`<br>• عزل جسم الشاشة في `downloads/audio/audio_download_library_body.dart` (188 سطرًا)<br>• فصل بطاقة القارئ في `downloads/audio/reciter_card.dart` (186 سطرًا)<br>• الشاشة تحولت إلى `ConsumerWidget` خفيفة (139 سطرًا) |
 | `quran_reader_search_sheet.dart` | 1,098 | • `presentation/widgets/search/quran_search_sheet.dart`<br>• `presentation/widgets/search/search_result_item.dart`<br>• `presentation/widgets/search/search_history_view.dart` |
 | `quran_reciters_list_view.dart` | 1,050 | • `presentation/widgets/reciters/reciter_list_tile.dart`<br>• `presentation/widgets/reciters/reciter_download_action.dart`<br>• تجريد دوال التنسيق إلى UseCases |
-| `tafsir_download_screen.dart` | 982 | • مطابقة بنية شاشة الترجمات واستخدام مكونات البطاقات المشتركة |
 | `wird_dialog.dart` | 781 ➔ ~510 سطر | ✅ **تم التنظيف بنجاح**: إزالة 260 سطراً من الكود الميت وتحديث الحوار ليعتمد على `AppDialog` ونظام الألوان الدلالية `context.semanticColors` |
 | `names_of_allah_screen.dart` | 709 | • `presentation/screens/names_of_allah_screen.dart`<br>• `presentation/widgets/allah_name_card.dart`<br>• عزل منطق البحث في Controller مستقل |
 
@@ -272,21 +273,21 @@ flowchart TD
 
 | المؤشر | الهدف | القيمة الحالية | الحالة |
 | :--- | :---: | :---: | :--- |
-| `Color(0x...)` في `features/` | 0 | **84** | 🟡 تقدم (كان 212) |
-| مراجع `AppColors.` | 0 | **148** | 🟡 تقدم |
+| `Color(0x...)` في `features/` | 0 | **69** | 🟢 تقدم كبير (كان 212) |
+| مراجع `AppColors.` | 0 | **117** | 🟢 تقدم كبير (كان 325) |
 | `fontSize:` صريح | 0 | **149** | 🔴 لم يتحرك |
-| `BorderRadius.circular` صريح | 0 | **179** | 🟠 تراجع طفيف (189) |
-| `EdgeInsets.fromLTRB` | 0 | **41** | 🟠 تقدم جزئي (كان 45) |
+| `BorderRadius.circular` صريح | 0 | **163** | 🟡 تقدم (كان 217) |
+| `EdgeInsets.fromLTRB` | 0 | **38** | 🟡 تقدم (كان 45) |
 | `EdgeInsetsDirectional` | — | **6** | 🔴 البند غير منفَّذ |
-| `setState` في `features/` | 0 | **57** | 🟡 تقدم محدود |
-| مراجع `context.semanticColors` | — | **48** | 🟢 نمو مطّرد |
+| `setState` في `features/` | 0 | **55** | 🟡 تقدم |
+| مراجع `context.semanticColors` | — | **52** | 🟢 نمو مطّرد |
 | `print()` في `lib/` | 0 | **0** | ✅ منجَز |
-| ملفات واجهة > 300 سطر | 0 | **4** | 🟠 (كان 8) |
+| ملفات واجهة > 300 سطر | 0 | **2** | 🟢 انخفضت من 8 إلى 2 فقط! |
 | `quran-uthmani.xml` في الحزمة | مُزال | **مُزال** | ✅ منجَز |
 
-**ملفات الواجهة المتبقية فوق 300 سطر:** `quran_reader_search_sheet.dart` (1,100)،
-`quran_reciters_list_view.dart` (1,040)، `tafsir_download_screen.dart` (984)،
-`quran_audio_download_screen.dart` (955).
+**ملفات الواجهة المتبقية فوق 300 سطر في كامل التطبيق:** فقط اثنان:
+1. `quran_reader_search_sheet.dart` (1,100 سطر)
+2. `quran_reciters_list_view.dart` (1,040 سطر)
 
 **اختبارات فاشلة على الشجرة الأصلية (ليست نتيجة أي تغيير في هذه الخطة):**
 `test/features/quran/quran_audio_prefetch_test.dart` و`test/widget_test.dart`

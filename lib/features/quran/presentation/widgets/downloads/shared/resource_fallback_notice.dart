@@ -3,10 +3,15 @@ import 'package:al_mubeen/app/theme/app_radii.dart';
 import 'package:al_mubeen/app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 
-/// شريط تنبيه يُعرض عندما تفشل قائمة الترجمات الكاملة ويُكتفى بالمحمّل محليًا.
-class TranslationFallbackNotice extends StatelessWidget {
-  const TranslationFallbackNotice({super.key, required this.onRetry});
+/// شريط تنبيه موحد يُعرض عندما تفشل قائمة الموارد الكاملة ويُكتفى بالمحمّل محليًا.
+class ResourceFallbackNotice extends StatelessWidget {
+  const ResourceFallbackNotice({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
 
+  final String message;
   final VoidCallback onRetry;
 
   @override
@@ -37,7 +42,7 @@ class TranslationFallbackNotice extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                'تعذر تحميل القائمة الكاملة. تم عرض الترجمات المحفوظة محليًا فقط.',
+                message,
                 style: TextStyle(
                   color: colors.textPrimary,
                   fontSize: 13,
