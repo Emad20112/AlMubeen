@@ -243,6 +243,41 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     await playOrToggleAyah(ayahRef: ayahRef, recitationId: recitationId);
   }
 
+  /// يتيح التبديل السلس للقارئ أثناء تشغيل الآية الحالية أو إيقافها،
+  /// مع تنظيف الكاش المؤقت لروابط الآيات للقارئ السابق لتحرير الذاكرة
+  /// والحفاظ على أعلى أداء ممكن.
+  Future<void> switchReciter({
+    required int newRecitationId,
+    AyahRef? fallbackAyah,
+    bool autoPlay = true,
+  }) async {
+    final targetAyah = state.currentAyah ?? fallbackAyah;
+    if (targetAyah == null) return;
+
+    final wasPlaying = state.isPlaying || _audioPlayer.playing;
+
+    // مسح الكاش المؤقت للروابط للقارئ السابق لتوفير الذاكرة ومنع التداخل
+    _prefetchCache.clear();
+    _prefetchingKeys.clear();
+
+    if (autoPlay || wasPlaying) {
+      await playAyahFromBeginning(
+        ayahRef: targetAyah,
+        recitationId: newRecitationId,
+      );
+    } else {
+      state = state.copyWith(
+        currentAyah: targetAyah,
+        recitationId: newRecitationId,
+        isPlaying: false,
+        isLoading: false,
+      );
+      await _audioPlayer.stop();
+      _loadedKey = null;
+      _playlistAyahs.clear();
+    }
+  }
+
   Future<void> _startNewPlaylistWindow(
     AyahRef startAyah,
     int recitationId,
@@ -395,7 +430,8 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       }
 
       networkUrl = _prefetchCache[key];
-      if (networkUrl == null) {        throw NoInternetException(
+      if (networkUrl == null) {
+        throw NoInternetException(
           'تعذر تحميل بيانات الصوت للآية ${ayahRef.ayah}.',
         );
       }

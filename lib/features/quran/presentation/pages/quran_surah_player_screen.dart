@@ -147,6 +147,12 @@ class _QuranSurahPlayerScreenState extends ConsumerState<QuranSurahPlayerScreen>
                       ref
                           .read(appUserPreferencesProvider.notifier)
                           .setPreferredReciter(recitation);
+
+                      // ⚡ تبديل فوري وسلس للقارئ في مشغل السور مباشرة
+                      ref
+                          .read(quranSurahPlayerProvider.notifier)
+                          .switchReciter(newRecitationId: recitation.id);
+
                       // فحص الملفات المحلية للقارئ الجديد (islamic.app أو quran.com)
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted) {
