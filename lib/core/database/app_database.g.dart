@@ -9970,6 +9970,818 @@ class HisnContentItemCacheCompanion
   }
 }
 
+class $NamesOfAllahEntriesTable extends NamesOfAllahEntries
+    with TableInfo<$NamesOfAllahEntriesTable, NamesOfAllahTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NamesOfAllahEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _meaningMeta = const VerificationMeta(
+    'meaning',
+  );
+  @override
+  late final GeneratedColumn<String> meaning = GeneratedColumn<String>(
+    'meaning',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _searchIndexMeta = const VerificationMeta(
+    'searchIndex',
+  );
+  @override
+  late final GeneratedColumn<String> searchIndex = GeneratedColumn<String>(
+    'search_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, meaning, searchIndex];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'names_of_allah_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NamesOfAllahTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('meaning')) {
+      context.handle(
+        _meaningMeta,
+        meaning.isAcceptableOrUnknown(data['meaning']!, _meaningMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_meaningMeta);
+    }
+    if (data.containsKey('search_index')) {
+      context.handle(
+        _searchIndexMeta,
+        searchIndex.isAcceptableOrUnknown(
+          data['search_index']!,
+          _searchIndexMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_searchIndexMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NamesOfAllahTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NamesOfAllahTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      meaning: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meaning'],
+      )!,
+      searchIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}search_index'],
+      )!,
+    );
+  }
+
+  @override
+  $NamesOfAllahEntriesTable createAlias(String alias) {
+    return $NamesOfAllahEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class NamesOfAllahTableData extends DataClass
+    implements Insertable<NamesOfAllahTableData> {
+  final int id;
+  final String name;
+  final String meaning;
+  final String searchIndex;
+  const NamesOfAllahTableData({
+    required this.id,
+    required this.name,
+    required this.meaning,
+    required this.searchIndex,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['meaning'] = Variable<String>(meaning);
+    map['search_index'] = Variable<String>(searchIndex);
+    return map;
+  }
+
+  NamesOfAllahEntriesCompanion toCompanion(bool nullToAbsent) {
+    return NamesOfAllahEntriesCompanion(
+      id: Value(id),
+      name: Value(name),
+      meaning: Value(meaning),
+      searchIndex: Value(searchIndex),
+    );
+  }
+
+  factory NamesOfAllahTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NamesOfAllahTableData(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      meaning: serializer.fromJson<String>(json['meaning']),
+      searchIndex: serializer.fromJson<String>(json['searchIndex']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'meaning': serializer.toJson<String>(meaning),
+      'searchIndex': serializer.toJson<String>(searchIndex),
+    };
+  }
+
+  NamesOfAllahTableData copyWith({
+    int? id,
+    String? name,
+    String? meaning,
+    String? searchIndex,
+  }) => NamesOfAllahTableData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    meaning: meaning ?? this.meaning,
+    searchIndex: searchIndex ?? this.searchIndex,
+  );
+  NamesOfAllahTableData copyWithCompanion(NamesOfAllahEntriesCompanion data) {
+    return NamesOfAllahTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      meaning: data.meaning.present ? data.meaning.value : this.meaning,
+      searchIndex: data.searchIndex.present
+          ? data.searchIndex.value
+          : this.searchIndex,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NamesOfAllahTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('meaning: $meaning, ')
+          ..write('searchIndex: $searchIndex')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, meaning, searchIndex);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NamesOfAllahTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.meaning == this.meaning &&
+          other.searchIndex == this.searchIndex);
+}
+
+class NamesOfAllahEntriesCompanion
+    extends UpdateCompanion<NamesOfAllahTableData> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> meaning;
+  final Value<String> searchIndex;
+  const NamesOfAllahEntriesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.meaning = const Value.absent(),
+    this.searchIndex = const Value.absent(),
+  });
+  NamesOfAllahEntriesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required String meaning,
+    required String searchIndex,
+  }) : name = Value(name),
+       meaning = Value(meaning),
+       searchIndex = Value(searchIndex);
+  static Insertable<NamesOfAllahTableData> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? meaning,
+    Expression<String>? searchIndex,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (meaning != null) 'meaning': meaning,
+      if (searchIndex != null) 'search_index': searchIndex,
+    });
+  }
+
+  NamesOfAllahEntriesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? meaning,
+    Value<String>? searchIndex,
+  }) {
+    return NamesOfAllahEntriesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      meaning: meaning ?? this.meaning,
+      searchIndex: searchIndex ?? this.searchIndex,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (meaning.present) {
+      map['meaning'] = Variable<String>(meaning.value);
+    }
+    if (searchIndex.present) {
+      map['search_index'] = Variable<String>(searchIndex.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NamesOfAllahEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('meaning: $meaning, ')
+          ..write('searchIndex: $searchIndex')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HadithNawawiEntriesTable extends HadithNawawiEntries
+    with TableInfo<$HadithNawawiEntriesTable, HadithNawawiTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HadithNawawiEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _hadithNumberMeta = const VerificationMeta(
+    'hadithNumber',
+  );
+  @override
+  late final GeneratedColumn<int> hadithNumber = GeneratedColumn<int>(
+    'hadith_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _previewMeta = const VerificationMeta(
+    'preview',
+  );
+  @override
+  late final GeneratedColumn<String> preview = GeneratedColumn<String>(
+    'preview',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fullTextMeta = const VerificationMeta(
+    'fullText',
+  );
+  @override
+  late final GeneratedColumn<String> fullText = GeneratedColumn<String>(
+    'full_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _searchIndexMeta = const VerificationMeta(
+    'searchIndex',
+  );
+  @override
+  late final GeneratedColumn<String> searchIndex = GeneratedColumn<String>(
+    'search_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    hadithNumber,
+    title,
+    preview,
+    fullText,
+    source,
+    description,
+    searchIndex,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hadith_nawawi_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HadithNawawiTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('hadith_number')) {
+      context.handle(
+        _hadithNumberMeta,
+        hadithNumber.isAcceptableOrUnknown(
+          data['hadith_number']!,
+          _hadithNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_hadithNumberMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('preview')) {
+      context.handle(
+        _previewMeta,
+        preview.isAcceptableOrUnknown(data['preview']!, _previewMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_previewMeta);
+    }
+    if (data.containsKey('full_text')) {
+      context.handle(
+        _fullTextMeta,
+        fullText.isAcceptableOrUnknown(data['full_text']!, _fullTextMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fullTextMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('search_index')) {
+      context.handle(
+        _searchIndexMeta,
+        searchIndex.isAcceptableOrUnknown(
+          data['search_index']!,
+          _searchIndexMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_searchIndexMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HadithNawawiTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HadithNawawiTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      hadithNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}hadith_number'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      preview: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}preview'],
+      )!,
+      fullText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}full_text'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      searchIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}search_index'],
+      )!,
+    );
+  }
+
+  @override
+  $HadithNawawiEntriesTable createAlias(String alias) {
+    return $HadithNawawiEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class HadithNawawiTableData extends DataClass
+    implements Insertable<HadithNawawiTableData> {
+  final int id;
+  final int hadithNumber;
+  final String title;
+  final String preview;
+  final String fullText;
+  final String source;
+  final String description;
+  final String searchIndex;
+  const HadithNawawiTableData({
+    required this.id,
+    required this.hadithNumber,
+    required this.title,
+    required this.preview,
+    required this.fullText,
+    required this.source,
+    required this.description,
+    required this.searchIndex,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['hadith_number'] = Variable<int>(hadithNumber);
+    map['title'] = Variable<String>(title);
+    map['preview'] = Variable<String>(preview);
+    map['full_text'] = Variable<String>(fullText);
+    map['source'] = Variable<String>(source);
+    map['description'] = Variable<String>(description);
+    map['search_index'] = Variable<String>(searchIndex);
+    return map;
+  }
+
+  HadithNawawiEntriesCompanion toCompanion(bool nullToAbsent) {
+    return HadithNawawiEntriesCompanion(
+      id: Value(id),
+      hadithNumber: Value(hadithNumber),
+      title: Value(title),
+      preview: Value(preview),
+      fullText: Value(fullText),
+      source: Value(source),
+      description: Value(description),
+      searchIndex: Value(searchIndex),
+    );
+  }
+
+  factory HadithNawawiTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HadithNawawiTableData(
+      id: serializer.fromJson<int>(json['id']),
+      hadithNumber: serializer.fromJson<int>(json['hadithNumber']),
+      title: serializer.fromJson<String>(json['title']),
+      preview: serializer.fromJson<String>(json['preview']),
+      fullText: serializer.fromJson<String>(json['fullText']),
+      source: serializer.fromJson<String>(json['source']),
+      description: serializer.fromJson<String>(json['description']),
+      searchIndex: serializer.fromJson<String>(json['searchIndex']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'hadithNumber': serializer.toJson<int>(hadithNumber),
+      'title': serializer.toJson<String>(title),
+      'preview': serializer.toJson<String>(preview),
+      'fullText': serializer.toJson<String>(fullText),
+      'source': serializer.toJson<String>(source),
+      'description': serializer.toJson<String>(description),
+      'searchIndex': serializer.toJson<String>(searchIndex),
+    };
+  }
+
+  HadithNawawiTableData copyWith({
+    int? id,
+    int? hadithNumber,
+    String? title,
+    String? preview,
+    String? fullText,
+    String? source,
+    String? description,
+    String? searchIndex,
+  }) => HadithNawawiTableData(
+    id: id ?? this.id,
+    hadithNumber: hadithNumber ?? this.hadithNumber,
+    title: title ?? this.title,
+    preview: preview ?? this.preview,
+    fullText: fullText ?? this.fullText,
+    source: source ?? this.source,
+    description: description ?? this.description,
+    searchIndex: searchIndex ?? this.searchIndex,
+  );
+  HadithNawawiTableData copyWithCompanion(HadithNawawiEntriesCompanion data) {
+    return HadithNawawiTableData(
+      id: data.id.present ? data.id.value : this.id,
+      hadithNumber: data.hadithNumber.present
+          ? data.hadithNumber.value
+          : this.hadithNumber,
+      title: data.title.present ? data.title.value : this.title,
+      preview: data.preview.present ? data.preview.value : this.preview,
+      fullText: data.fullText.present ? data.fullText.value : this.fullText,
+      source: data.source.present ? data.source.value : this.source,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      searchIndex: data.searchIndex.present
+          ? data.searchIndex.value
+          : this.searchIndex,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HadithNawawiTableData(')
+          ..write('id: $id, ')
+          ..write('hadithNumber: $hadithNumber, ')
+          ..write('title: $title, ')
+          ..write('preview: $preview, ')
+          ..write('fullText: $fullText, ')
+          ..write('source: $source, ')
+          ..write('description: $description, ')
+          ..write('searchIndex: $searchIndex')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    hadithNumber,
+    title,
+    preview,
+    fullText,
+    source,
+    description,
+    searchIndex,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HadithNawawiTableData &&
+          other.id == this.id &&
+          other.hadithNumber == this.hadithNumber &&
+          other.title == this.title &&
+          other.preview == this.preview &&
+          other.fullText == this.fullText &&
+          other.source == this.source &&
+          other.description == this.description &&
+          other.searchIndex == this.searchIndex);
+}
+
+class HadithNawawiEntriesCompanion
+    extends UpdateCompanion<HadithNawawiTableData> {
+  final Value<int> id;
+  final Value<int> hadithNumber;
+  final Value<String> title;
+  final Value<String> preview;
+  final Value<String> fullText;
+  final Value<String> source;
+  final Value<String> description;
+  final Value<String> searchIndex;
+  const HadithNawawiEntriesCompanion({
+    this.id = const Value.absent(),
+    this.hadithNumber = const Value.absent(),
+    this.title = const Value.absent(),
+    this.preview = const Value.absent(),
+    this.fullText = const Value.absent(),
+    this.source = const Value.absent(),
+    this.description = const Value.absent(),
+    this.searchIndex = const Value.absent(),
+  });
+  HadithNawawiEntriesCompanion.insert({
+    this.id = const Value.absent(),
+    required int hadithNumber,
+    required String title,
+    required String preview,
+    required String fullText,
+    required String source,
+    required String description,
+    required String searchIndex,
+  }) : hadithNumber = Value(hadithNumber),
+       title = Value(title),
+       preview = Value(preview),
+       fullText = Value(fullText),
+       source = Value(source),
+       description = Value(description),
+       searchIndex = Value(searchIndex);
+  static Insertable<HadithNawawiTableData> custom({
+    Expression<int>? id,
+    Expression<int>? hadithNumber,
+    Expression<String>? title,
+    Expression<String>? preview,
+    Expression<String>? fullText,
+    Expression<String>? source,
+    Expression<String>? description,
+    Expression<String>? searchIndex,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (hadithNumber != null) 'hadith_number': hadithNumber,
+      if (title != null) 'title': title,
+      if (preview != null) 'preview': preview,
+      if (fullText != null) 'full_text': fullText,
+      if (source != null) 'source': source,
+      if (description != null) 'description': description,
+      if (searchIndex != null) 'search_index': searchIndex,
+    });
+  }
+
+  HadithNawawiEntriesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? hadithNumber,
+    Value<String>? title,
+    Value<String>? preview,
+    Value<String>? fullText,
+    Value<String>? source,
+    Value<String>? description,
+    Value<String>? searchIndex,
+  }) {
+    return HadithNawawiEntriesCompanion(
+      id: id ?? this.id,
+      hadithNumber: hadithNumber ?? this.hadithNumber,
+      title: title ?? this.title,
+      preview: preview ?? this.preview,
+      fullText: fullText ?? this.fullText,
+      source: source ?? this.source,
+      description: description ?? this.description,
+      searchIndex: searchIndex ?? this.searchIndex,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (hadithNumber.present) {
+      map['hadith_number'] = Variable<int>(hadithNumber.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (preview.present) {
+      map['preview'] = Variable<String>(preview.value);
+    }
+    if (fullText.present) {
+      map['full_text'] = Variable<String>(fullText.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (searchIndex.present) {
+      map['search_index'] = Variable<String>(searchIndex.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HadithNawawiEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('hadithNumber: $hadithNumber, ')
+          ..write('title: $title, ')
+          ..write('preview: $preview, ')
+          ..write('fullText: $fullText, ')
+          ..write('source: $source, ')
+          ..write('description: $description, ')
+          ..write('searchIndex: $searchIndex')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -10013,6 +10825,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $HisnContentItemCacheTable hisnContentItemCache =
       $HisnContentItemCacheTable(this);
+  late final $NamesOfAllahEntriesTable namesOfAllahEntries =
+      $NamesOfAllahEntriesTable(this);
+  late final $HadithNawawiEntriesTable hadithNawawiEntries =
+      $HadithNawawiEntriesTable(this);
   late final Index quranChapterCacheUpdatedAt = Index(
     'quran_chapter_cache_updated_at',
     'CREATE INDEX quran_chapter_cache_updated_at ON quran_chapter_cache (updated_at)',
@@ -10093,6 +10909,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     translationTextCache,
     hisnContentCache,
     hisnContentItemCache,
+    namesOfAllahEntries,
+    hadithNawawiEntries,
     quranChapterCacheUpdatedAt,
     quranVerseCacheChapterVerse,
     quranVerseCachePageNumber,
@@ -15806,6 +16624,472 @@ typedef $$HisnContentItemCacheTableProcessedTableManager =
       HisnContentItemCacheEntry,
       PrefetchHooks Function()
     >;
+typedef $$NamesOfAllahEntriesTableCreateCompanionBuilder =
+    NamesOfAllahEntriesCompanion Function({
+      Value<int> id,
+      required String name,
+      required String meaning,
+      required String searchIndex,
+    });
+typedef $$NamesOfAllahEntriesTableUpdateCompanionBuilder =
+    NamesOfAllahEntriesCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> meaning,
+      Value<String> searchIndex,
+    });
+
+class $$NamesOfAllahEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $NamesOfAllahEntriesTable> {
+  $$NamesOfAllahEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get meaning => $composableBuilder(
+    column: $table.meaning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get searchIndex => $composableBuilder(
+    column: $table.searchIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$NamesOfAllahEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $NamesOfAllahEntriesTable> {
+  $$NamesOfAllahEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get meaning => $composableBuilder(
+    column: $table.meaning,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get searchIndex => $composableBuilder(
+    column: $table.searchIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$NamesOfAllahEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NamesOfAllahEntriesTable> {
+  $$NamesOfAllahEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get meaning =>
+      $composableBuilder(column: $table.meaning, builder: (column) => column);
+
+  GeneratedColumn<String> get searchIndex => $composableBuilder(
+    column: $table.searchIndex,
+    builder: (column) => column,
+  );
+}
+
+class $$NamesOfAllahEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NamesOfAllahEntriesTable,
+          NamesOfAllahTableData,
+          $$NamesOfAllahEntriesTableFilterComposer,
+          $$NamesOfAllahEntriesTableOrderingComposer,
+          $$NamesOfAllahEntriesTableAnnotationComposer,
+          $$NamesOfAllahEntriesTableCreateCompanionBuilder,
+          $$NamesOfAllahEntriesTableUpdateCompanionBuilder,
+          (
+            NamesOfAllahTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $NamesOfAllahEntriesTable,
+              NamesOfAllahTableData
+            >,
+          ),
+          NamesOfAllahTableData,
+          PrefetchHooks Function()
+        > {
+  $$NamesOfAllahEntriesTableTableManager(
+    _$AppDatabase db,
+    $NamesOfAllahEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NamesOfAllahEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NamesOfAllahEntriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$NamesOfAllahEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> meaning = const Value.absent(),
+                Value<String> searchIndex = const Value.absent(),
+              }) => NamesOfAllahEntriesCompanion(
+                id: id,
+                name: name,
+                meaning: meaning,
+                searchIndex: searchIndex,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required String meaning,
+                required String searchIndex,
+              }) => NamesOfAllahEntriesCompanion.insert(
+                id: id,
+                name: name,
+                meaning: meaning,
+                searchIndex: searchIndex,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$NamesOfAllahEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NamesOfAllahEntriesTable,
+      NamesOfAllahTableData,
+      $$NamesOfAllahEntriesTableFilterComposer,
+      $$NamesOfAllahEntriesTableOrderingComposer,
+      $$NamesOfAllahEntriesTableAnnotationComposer,
+      $$NamesOfAllahEntriesTableCreateCompanionBuilder,
+      $$NamesOfAllahEntriesTableUpdateCompanionBuilder,
+      (
+        NamesOfAllahTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $NamesOfAllahEntriesTable,
+          NamesOfAllahTableData
+        >,
+      ),
+      NamesOfAllahTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$HadithNawawiEntriesTableCreateCompanionBuilder =
+    HadithNawawiEntriesCompanion Function({
+      Value<int> id,
+      required int hadithNumber,
+      required String title,
+      required String preview,
+      required String fullText,
+      required String source,
+      required String description,
+      required String searchIndex,
+    });
+typedef $$HadithNawawiEntriesTableUpdateCompanionBuilder =
+    HadithNawawiEntriesCompanion Function({
+      Value<int> id,
+      Value<int> hadithNumber,
+      Value<String> title,
+      Value<String> preview,
+      Value<String> fullText,
+      Value<String> source,
+      Value<String> description,
+      Value<String> searchIndex,
+    });
+
+class $$HadithNawawiEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $HadithNawawiEntriesTable> {
+  $$HadithNawawiEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get hadithNumber => $composableBuilder(
+    column: $table.hadithNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get preview => $composableBuilder(
+    column: $table.preview,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fullText => $composableBuilder(
+    column: $table.fullText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get searchIndex => $composableBuilder(
+    column: $table.searchIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HadithNawawiEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $HadithNawawiEntriesTable> {
+  $$HadithNawawiEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get hadithNumber => $composableBuilder(
+    column: $table.hadithNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get preview => $composableBuilder(
+    column: $table.preview,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fullText => $composableBuilder(
+    column: $table.fullText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get searchIndex => $composableBuilder(
+    column: $table.searchIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HadithNawawiEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HadithNawawiEntriesTable> {
+  $$HadithNawawiEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get hadithNumber => $composableBuilder(
+    column: $table.hadithNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get preview =>
+      $composableBuilder(column: $table.preview, builder: (column) => column);
+
+  GeneratedColumn<String> get fullText =>
+      $composableBuilder(column: $table.fullText, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get searchIndex => $composableBuilder(
+    column: $table.searchIndex,
+    builder: (column) => column,
+  );
+}
+
+class $$HadithNawawiEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HadithNawawiEntriesTable,
+          HadithNawawiTableData,
+          $$HadithNawawiEntriesTableFilterComposer,
+          $$HadithNawawiEntriesTableOrderingComposer,
+          $$HadithNawawiEntriesTableAnnotationComposer,
+          $$HadithNawawiEntriesTableCreateCompanionBuilder,
+          $$HadithNawawiEntriesTableUpdateCompanionBuilder,
+          (
+            HadithNawawiTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $HadithNawawiEntriesTable,
+              HadithNawawiTableData
+            >,
+          ),
+          HadithNawawiTableData,
+          PrefetchHooks Function()
+        > {
+  $$HadithNawawiEntriesTableTableManager(
+    _$AppDatabase db,
+    $HadithNawawiEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HadithNawawiEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HadithNawawiEntriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HadithNawawiEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> hadithNumber = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> preview = const Value.absent(),
+                Value<String> fullText = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<String> searchIndex = const Value.absent(),
+              }) => HadithNawawiEntriesCompanion(
+                id: id,
+                hadithNumber: hadithNumber,
+                title: title,
+                preview: preview,
+                fullText: fullText,
+                source: source,
+                description: description,
+                searchIndex: searchIndex,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int hadithNumber,
+                required String title,
+                required String preview,
+                required String fullText,
+                required String source,
+                required String description,
+                required String searchIndex,
+              }) => HadithNawawiEntriesCompanion.insert(
+                id: id,
+                hadithNumber: hadithNumber,
+                title: title,
+                preview: preview,
+                fullText: fullText,
+                source: source,
+                description: description,
+                searchIndex: searchIndex,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HadithNawawiEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HadithNawawiEntriesTable,
+      HadithNawawiTableData,
+      $$HadithNawawiEntriesTableFilterComposer,
+      $$HadithNawawiEntriesTableOrderingComposer,
+      $$HadithNawawiEntriesTableAnnotationComposer,
+      $$HadithNawawiEntriesTableCreateCompanionBuilder,
+      $$HadithNawawiEntriesTableUpdateCompanionBuilder,
+      (
+        HadithNawawiTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $HadithNawawiEntriesTable,
+          HadithNawawiTableData
+        >,
+      ),
+      HadithNawawiTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -15857,4 +17141,8 @@ class $AppDatabaseManager {
       $$HisnContentCacheTableTableManager(_db, _db.hisnContentCache);
   $$HisnContentItemCacheTableTableManager get hisnContentItemCache =>
       $$HisnContentItemCacheTableTableManager(_db, _db.hisnContentItemCache);
+  $$NamesOfAllahEntriesTableTableManager get namesOfAllahEntries =>
+      $$NamesOfAllahEntriesTableTableManager(_db, _db.namesOfAllahEntries);
+  $$HadithNawawiEntriesTableTableManager get hadithNawawiEntries =>
+      $$HadithNawawiEntriesTableTableManager(_db, _db.hadithNawawiEntries);
 }
