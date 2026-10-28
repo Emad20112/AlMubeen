@@ -25,6 +25,7 @@ void warmUpQuranSearchMetadata() {
   _QuranSearchMetadataCache.instance.warmUp();
 }
 
+/// نتيجة البحث القرآني.
 @immutable
 class QuranSearchResult {
   const QuranSearchResult({
@@ -58,6 +59,7 @@ class _VerseSearchMetadata {
     required this.verseNumber,
     required this.surahName,
     required this.verseText,
+    required this.normalizedText,
     required this.pageNumber,
   });
 
@@ -65,7 +67,66 @@ class _VerseSearchMetadata {
   final int verseNumber;
   final String surahName;
   final String verseText;
+  final String normalizedText;
   final int pageNumber;
+}
+
+/// مطبّع النصوص العربية والقرآنية فائق الذكاء والأداء للبحث.
+abstract final class QuranSearchNormalizer {
+  const QuranSearchNormalizer._();
+
+  /// تطبيع شامل وموحد لأي نص قرآني أو استعلام بحث.
+  static String normalize(String input) {
+    if (input.isEmpty) return '';
+
+    return normalise(input)
+        // إزالة الحركات وعلامات الضبط القرآني والوقف والتنوين
+        .replaceAll(
+          RegExp(r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]'),
+          '',
+        )
+        // إزالة التطويل (الكشيدة)
+        .replaceAll('ـ', '')
+        // توحيد جميع أشكال الألف والهمزات
+        .replaceAll('ٱ', 'ا')
+        .replaceAll('آ', 'ا')
+        .replaceAll('أ', 'ا')
+        .replaceAll('إ', 'ا')
+        // توحيد الياء والألف المقصورة
+        .replaceAll('ى', 'ي')
+        // توحيد الهمزات على النبرة والسطر
+        .replaceAll('ئ', 'ي')
+        .replaceAll('ؤ', 'و')
+        // توحيد التاء المربوطة والهاء
+        .replaceAll('ة', 'ه')
+        .trim()
+        .toLowerCase();
+  }
+
+  /// إزالة سوابق الجر والعطف الشائعة من الكلمة العربية.
+  static String stripCommonPrefixes(String word) {
+    if (word.length <= 3) return word;
+
+    const compoundPrefixes = ['بال', 'فال', 'وال', 'كال', 'ولل'];
+    for (final prefix in compoundPrefixes) {
+      if (word.startsWith(prefix) && word.length > prefix.length + 2) {
+        return word.substring(prefix.length);
+      }
+    }
+
+    if (word.startsWith('ال') && word.length > 4) {
+      return word.substring(2);
+    }
+
+    const singlePrefixes = ['و', 'ف', 'ب', 'ك', 'ل'];
+    for (final prefix in singlePrefixes) {
+      if (word.startsWith(prefix) && word.length > prefix.length + 2) {
+        return word.substring(prefix.length);
+      }
+    }
+
+    return word;
+  }
 }
 
 class _QuranSearchMetadataCache {
@@ -84,6 +145,8 @@ class _QuranSearchMetadataCache {
   _VerseSearchMetadata? forAyah(int surahNumber, int verseNumber) {
     return _verseMetadata[_cacheKey(surahNumber, verseNumber)];
   }
+
+  Iterable<_VerseSearchMetadata> get allVerses => _verseMetadata.values;
 
   Map<int, _VerseSearchMetadata> _buildVerseMetadata() {
     final pageByAyah = _buildPageIndex();
@@ -111,6 +174,7 @@ class _QuranSearchMetadataCache {
           () => getSurahNameArabic(surahNumber),
         ),
         verseText: verseText,
+        normalizedText: QuranSearchNormalizer.normalize(verseText),
         pageNumber: pageByAyah[key] ?? getPageNumber(surahNumber, verseNumber),
       );
     }
@@ -144,69 +208,99 @@ class _QuranSearchMetadataCache {
   }
 }
 
+/// دالة البحث الذكي الهجين: تجمع بين البحث بالعبارات المتعددة في الكاش
+/// المطبّع والبحث الموضعي عن الكلمات.
 List<QuranSearchResult> _searchQuranWords({
   required String query,
   required bool exactMatch,
 }) {
   final metadataCache = _QuranSearchMetadataCache.instance;
-  final highlightQuery = normalise(query).trim();
-  final exactCandidates = exactMatch
-      ? _exactSearchCandidates(query)
-      : const <String>{};
+  final normalizedQuery = QuranSearchNormalizer.normalize(query);
+  if (normalizedQuery.isEmpty) return const [];
+
+  final queryWords = normalizedQuery
+      .split(RegExp(r'\s+'))
+      .where((w) => w.isNotEmpty)
+      .toList();
+
   final seenAyahs = <int>{};
-  final results = <QuranSearchResult>[];
+  final exactPhraseResults = <QuranSearchResult>[];
+  final allWordsResults = <QuranSearchResult>[];
 
-  for (final searchQuery in _qcfSearchQueryCandidates(query)) {
-    final response = Map<Object?, Object?>.from(searchWords(searchQuery));
-    final rawResults = response['result'];
-    if (rawResults is! List) {
-      continue;
-    }
+  // 1. فحص مباشر فائق السرعة عبر الكاش المطبّع في الذاكرة (يدعم العبارات والكلمات المتعددة)
+  for (final metadata in metadataCache.allVerses) {
+    final text = metadata.normalizedText;
 
-    for (final rawResult in rawResults) {
-      if (rawResult is! Map) {
-        continue;
+    if (text.contains(normalizedQuery)) {
+      final key = _cacheKey(metadata.surahNumber, metadata.verseNumber);
+      if (seenAyahs.add(key)) {
+        exactPhraseResults.add(_buildResult(metadata, normalizedQuery));
+        if (exactPhraseResults.length >= 50) {
+          return List<QuranSearchResult>.unmodifiable(exactPhraseResults);
+        }
       }
+    } else if (!exactMatch && queryWords.length > 1) {
+      // فحص اشتمال الآية على جميع كلمات الاستعلام
+      final containsAllWords = queryWords.every((word) {
+        if (text.contains(word)) return true;
+        final stripped = QuranSearchNormalizer.stripCommonPrefixes(word);
+        return stripped != word && text.contains(stripped);
+      });
 
-      final result = Map<Object?, Object?>.from(rawResult);
-      final surahNumber = _asInt(result['suraNumber']);
-      final verseNumber = _asInt(result['verseNumber']);
-      if (surahNumber == null || verseNumber == null) {
-        continue;
-      }
-
-      final key = _cacheKey(surahNumber, verseNumber);
-      if (!seenAyahs.add(key)) {
-        continue;
-      }
-
-      final metadata = metadataCache.forAyah(surahNumber, verseNumber);
-      if (metadata == null ||
-          (exactMatch &&
-              !_verseContainsExactMatch(metadata.verseText, exactCandidates))) {
-        continue;
-      }
-
-      results.add(
-        QuranSearchResult(
-          surahNumber: metadata.surahNumber,
-          verseNumber: metadata.verseNumber,
-          surahName: metadata.surahName,
-          verseText: metadata.verseText,
-          pageNumber: metadata.pageNumber,
-          juzNumber: getJuzNumber(surahNumber, verseNumber),
-          hizbNumber: getHizbNumber(surahNumber, verseNumber),
-          normalizedQuery: highlightQuery,
-        ),
-      );
-
-      if (results.length >= 50) {
-        return List<QuranSearchResult>.unmodifiable(results);
+      if (containsAllWords) {
+        final key = _cacheKey(metadata.surahNumber, metadata.verseNumber);
+        if (seenAyahs.add(key)) {
+          allWordsResults.add(_buildResult(metadata, normalizedQuery));
+        }
       }
     }
   }
 
-  return List<QuranSearchResult>.unmodifiable(results);
+  // 2. دمج نتائج مطابقة الكلمات المنفردة عبر qcf_quran
+  if (exactPhraseResults.length + allWordsResults.length < 50) {
+    for (final candidate in _qcfSearchQueryCandidates(query)) {
+      final response = Map<Object?, Object?>.from(searchWords(candidate));
+      final rawResults = response['result'];
+      if (rawResults is! List) continue;
+
+      for (final rawResult in rawResults) {
+        if (rawResult is! Map) continue;
+
+        final result = Map<Object?, Object?>.from(rawResult);
+        final surahNumber = _asInt(result['suraNumber']);
+        final verseNumber = _asInt(result['verseNumber']);
+        if (surahNumber == null || verseNumber == null) continue;
+
+        final key = _cacheKey(surahNumber, verseNumber);
+        if (!seenAyahs.add(key)) continue;
+
+        final metadata = metadataCache.forAyah(surahNumber, verseNumber);
+        if (metadata != null) {
+          allWordsResults.add(_buildResult(metadata, normalizedQuery));
+          if (exactPhraseResults.length + allWordsResults.length >= 50) {
+            break;
+          }
+        }
+      }
+      if (exactPhraseResults.length + allWordsResults.length >= 50) break;
+    }
+  }
+
+  final combined = [...exactPhraseResults, ...allWordsResults];
+  return List<QuranSearchResult>.unmodifiable(combined.take(50));
+}
+
+QuranSearchResult _buildResult(_VerseSearchMetadata metadata, String query) {
+  return QuranSearchResult(
+    surahNumber: metadata.surahNumber,
+    verseNumber: metadata.verseNumber,
+    surahName: metadata.surahName,
+    verseText: metadata.verseText,
+    pageNumber: metadata.pageNumber,
+    juzNumber: getJuzNumber(metadata.surahNumber, metadata.verseNumber),
+    hizbNumber: getHizbNumber(metadata.surahNumber, metadata.verseNumber),
+    normalizedQuery: query,
+  );
 }
 
 Iterable<String> _qcfSearchQueryCandidates(String query) sync* {
@@ -225,89 +319,10 @@ Iterable<String> _qcfSearchQueryCandidates(String query) sync* {
   add(removeDiacritics(trimmed));
   add(normalise(trimmed));
 
-  final qcfTextNormalForm = _toQcfTextNormalSearchForm(trimmed);
-  add(qcfTextNormalForm);
-  add(_replaceWordFinalHehWithTaMarbuta(qcfTextNormalForm));
-  add(_replaceWordFinalHehWithTaMarbuta(trimmed));
+  final normalized = QuranSearchNormalizer.normalize(trimmed);
+  add(normalized);
 
   yield* candidates;
-}
-
-Set<String> _exactSearchCandidates(String query) {
-  return {
-    for (final candidate in _qcfSearchQueryCandidates(query))
-      ..._normalizedWordTokens(candidate),
-  }..removeWhere((candidate) => candidate.isEmpty);
-}
-
-bool _verseContainsExactMatch(String verseText, Set<String> exactCandidates) {
-  if (exactCandidates.isEmpty) {
-    return false;
-  }
-
-  for (final token in _normalizedWordTokens(verseText)) {
-    if (exactCandidates.contains(token) ||
-        exactCandidates.contains(_withoutOneLetterArabicPrefix(token))) {
-      return true;
-    }
-  }
-  return false;
-}
-
-Set<String> _normalizedWordTokens(String input) {
-  final normalizedForms = <String>{
-    _normalizeExactText(input),
-    _toQcfTextNormalSearchForm(input),
-  };
-
-  final tokens = <String>{};
-  final wordPattern = RegExp(r'[\u0621-\u064A\u066E-\u06D3]+');
-  for (final normalizedForm in normalizedForms) {
-    for (final match in wordPattern.allMatches(normalizedForm)) {
-      tokens.add(match.group(0) ?? '');
-    }
-  }
-
-  return tokens;
-}
-
-String _normalizeExactText(String input) {
-  return normalise(input)
-      .replaceAll('ٱ', 'ا')
-      .replaceAll(
-        RegExp(r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]'),
-        '',
-      )
-      .toLowerCase();
-}
-
-String _withoutOneLetterArabicPrefix(String token) {
-  if (token.length < 3) {
-    return token;
-  }
-
-  const prefixes = {'و', 'ف', 'ب', 'ك', 'ل'};
-  if (prefixes.contains(token.substring(0, 1))) {
-    return token.substring(1);
-  }
-  return token;
-}
-
-String _toQcfTextNormalSearchForm(String input) {
-  return removeDiacritics(input)
-      .replaceAll('ٱ', 'ا')
-      .replaceAll('آ', 'ا')
-      .replaceAll('أ', 'ا')
-      .replaceAll('إ', 'ا')
-      .replaceAll('ؤ', 'و')
-      .replaceAll('ئ', 'ي')
-      .replaceAll('ى', 'ي')
-      .replaceAll('ـ', '')
-      .toLowerCase();
-}
-
-String _replaceWordFinalHehWithTaMarbuta(String input) {
-  return input.replaceAllMapped(RegExp(r'ه(?=\s|$)'), (match) => 'ة');
 }
 
 int _cacheKey(int surahNumber, int verseNumber) =>
