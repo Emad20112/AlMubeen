@@ -12,7 +12,7 @@ final class IslamicAppRemoteDataSource {
   final QuranComApiClient _apiClient;
 
   Future<DataResult<List<QuranRecitation>>> fetchReciters() async {
-    final result = await _apiClient.getJsonList('reciters');
+    final result = await _apiClient.getJsonList('api/islamic/reciters');
     return result.when(success: _parseReciters, error: DataError.new);
   }
 

@@ -46,7 +46,7 @@ final quranComApiClientProvider = Provider<QuranComApiClient>((ref) {
 
 final islamicAppApiClientProvider = Provider<QuranComApiClient>((ref) {
   final client = HttpQuranComApiClient(
-    baseUri: Uri.parse('https://api.islamic.app/v1/audio'),
+    baseUri: AppConfig.quranBackendUrl,
   );
   ref.onDispose(client.dispose);
   return client;

@@ -32,6 +32,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
 
     expect(find.byType(OnboardingScreen), findsOneWidget);
     expect(find.text('التالي', skipOffstage: false), findsWidgets);

@@ -29,13 +29,20 @@ final class HttpQuranComApiClient implements QuranComApiClient {
     HttpClient? httpClient,
     Map<String, String> headers = const {},
     this.requestTimeout = const Duration(seconds: 15),
-  }) : _httpClient = httpClient ?? HttpClient(),
+  }) : _httpClient = httpClient ?? _createConfiguredHttpClient(),
        _headers = Map.unmodifiable(headers);
 
   final Uri baseUri;
   final Duration requestTimeout;
   final HttpClient _httpClient;
   final Map<String, String> _headers;
+
+  static HttpClient _createConfiguredHttpClient() {
+    final client = HttpClient();
+    client.idleTimeout = const Duration(seconds: 45);
+    client.connectionTimeout = const Duration(seconds: 15);
+    return client;
+  }
 
   @override
   Future<DataResult<JsonMap>> getJson(
@@ -59,6 +66,7 @@ final class HttpQuranComApiClient implements QuranComApiClient {
 
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       request.headers.set(HttpHeaders.userAgentHeader, 'AlMubeen/1.0');
+      request.headers.set(HttpHeaders.connectionHeader, 'keep-alive');
 
       for (final entry in _headers.entries) {
         request.headers.set(entry.key, entry.value);
@@ -163,6 +171,7 @@ final class HttpQuranComApiClient implements QuranComApiClient {
 
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       request.headers.set(HttpHeaders.userAgentHeader, 'AlMubeen/1.0');
+      request.headers.set(HttpHeaders.connectionHeader, 'keep-alive');
 
       for (final entry in _headers.entries) {
         request.headers.set(entry.key, entry.value);

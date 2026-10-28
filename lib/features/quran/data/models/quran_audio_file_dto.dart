@@ -1,3 +1,4 @@
+import 'package:al_mubeen/core/config/app_config.dart';
 import 'package:al_mubeen/core/data/json_map.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
 import 'package:al_mubeen/features/quran/domain/repositories/quran_audio_repository.dart';
@@ -32,12 +33,20 @@ final class QuranAudioFileDto {
       throw FormatException('Missing audio url for audio entry.', json);
     }
 
+    final directUri = _resolveDirectAudioUrl(audioUrlValue);
     return QuranAudioFileDto(
       verseKey: resolvedVerseKey,
-      url: _audioUrl(audioUrlValue),
+      url: _proxyAudioUrl(directUri),
       duration: _intValue(json['duration']),
       format: _stringValue(json['format']),
       id: _intValue(json['id']),
+    );
+  }
+
+  static Uri _proxyAudioUrl(Uri directUri) {
+    return AppConfig.quranBackendUrl.replace(
+      path: '/api/audio/stream',
+      queryParameters: {'url': directUri.toString()},
     );
   }
 
@@ -61,7 +70,7 @@ final class QuranAudioFileDto {
     );
   }
 
-  static Uri _audioUrl(String value) {
+  static Uri _resolveDirectAudioUrl(String value) {
     if (value.startsWith('//')) {
       final uri = Uri.parse('https:$value');
       debugPrint('QuranAudioFileDto: protocol-relative URL -> $uri');

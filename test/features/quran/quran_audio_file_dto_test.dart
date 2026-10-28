@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('QuranAudioFileDto', () {
     test(
-      'parses audio_url when backend returns a single audio_file object',
+      'parses audio_url and wraps it with backend audio proxy stream',
       () {
         final dto = QuranAudioFileDto.fromJson({
           'audio_url': 'https://example.com/1.mp3',
@@ -13,7 +13,8 @@ void main() {
           'duration': 123,
         }, fallbackVerseKey: const QuranVerseKey(surah: 1, ayah: 1));
 
-        expect(dto.url.toString(), 'https://example.com/1.mp3');
+        expect(dto.url.path, '/api/audio/stream');
+        expect(dto.url.queryParameters['url'], 'https://example.com/1.mp3');
         expect(dto.verseKey.surah, 1);
         expect(dto.verseKey.ayah, 1);
       },

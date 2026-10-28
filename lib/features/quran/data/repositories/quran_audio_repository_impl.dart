@@ -1,3 +1,4 @@
+import 'package:al_mubeen/core/config/app_config.dart';
 import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
 import 'package:al_mubeen/core/data/data_result.dart';
@@ -62,11 +63,11 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
         );
       }
       final globalAyah = _getGlobalAyahNumber(verseKey.surah, verseKey.ayah);
-      // Use direct CDN URL to avoid 302 redirects that cause just_audio issues
-      final url = Uri.parse(
-        'https://cdn.islamic.app/quran/audio/$identifier/$globalAyah.mp3',
+      final rawUrl =
+          'https://cdn.islamic.app/quran/audio/$identifier/$globalAyah.mp3';
+      return DataSuccess(
+        QuranAudioFile(verseKey: verseKey, url: _proxyAudioUrl(rawUrl)),
       );
-      return DataSuccess(QuranAudioFile(verseKey: verseKey, url: url));
     }
 
     final result = await _remoteDataSource.getAyahAudioFiles(
@@ -104,12 +105,11 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
       final files = <QuranAudioFile>[];
       for (var ayah = 1; ayah <= verseCount; ayah++) {
         final globalAyah = _getGlobalAyahNumber(chapterNumber, ayah);
+        final rawUrl = 'https://cdn.islamic.app/quran/audio/$identifier/$globalAyah.mp3';
         files.add(
           QuranAudioFile(
             verseKey: QuranVerseKey(surah: chapterNumber, ayah: ayah),
-            url: Uri.parse(
-              'https://cdn.islamic.app/quran/audio/$identifier/$globalAyah.mp3',
-            ),
+            url: _proxyAudioUrl(rawUrl),
           ),
         );
       }
@@ -145,14 +145,9 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
           ),
         );
       }
-      // Use direct CDN URL to avoid 302 redirects.
-      // NOTE: islamic.app expects the surah number WITHOUT zero-padding;
-      // padded URLs like 001.mp3 return 404.
-      return DataSuccess(
-        Uri.parse(
-          'https://cdn.islamic.app/quran/audio-surah/$identifier/$surahNumber.mp3',
-        ),
-      );
+      final rawUrl =
+          'https://cdn.islamic.app/quran/audio-surah/$identifier/$surahNumber.mp3';
+      return DataSuccess(_proxyAudioUrl(rawUrl));
     }
 
     final result = await _remoteDataSource.getChapterRecitation(
@@ -187,7 +182,7 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
           }
 
           final url = _resolveAudioUrl(audioUrlValue);
-          return DataSuccess(url);
+          return DataSuccess(_proxyAudioUrl(url.toString()));
         } on Object catch (error, stackTrace) {
           return DataError(
             DataFailure(
@@ -200,6 +195,13 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
         }
       },
       error: DataError.new,
+    );
+  }
+
+  static Uri _proxyAudioUrl(String directUrl) {
+    return AppConfig.quranBackendUrl.replace(
+      path: '/api/audio/stream',
+      queryParameters: {'url': directUrl},
     );
   }
 
