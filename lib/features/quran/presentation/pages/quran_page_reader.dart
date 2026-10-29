@@ -4,7 +4,6 @@ import 'package:al_mubeen/app/theme/app_colors.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
 import 'package:al_mubeen/features/quran/application/quran_highlight_controller.dart';
-import 'package:al_mubeen/features/quran/data/models/highlight_verse.dart';
 import 'package:al_mubeen/features/quran/data/local/quran_page_helpers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
 import 'package:al_mubeen/features/quran/presentation/widgets/ayah_audio_player_bar.dart';
@@ -56,6 +55,10 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
   /// Controls the header/footer overlay visibility.
   late final AnimationController _overlayAnimation;
+  late final CurvedAnimation _overlayCurveSlide;
+  late final CurvedAnimation _overlayCurveFade;
+  late final Animation<Offset> _topSlideAnimation;
+  late final Animation<Offset> _bottomSlideAnimation;
   bool _isOverlayVisible = false;
 
   /// Tracks the last ayah we synced so we don't re-highlight redundantly.
@@ -85,6 +88,25 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
       duration: const Duration(milliseconds: 280),
     );
 
+    // 🛡️ PERF: كائنات CurvedAnimation و Tween تُنشأ وتُخزن مرة واحدة في initState
+    // لمنع تراكم كائنات Animation ومستمعيها في كل إطار بناء.
+    _overlayCurveSlide = CurvedAnimation(
+      parent: _overlayAnimation,
+      curve: Curves.easeOutQuint,
+    );
+    _overlayCurveFade = CurvedAnimation(
+      parent: _overlayAnimation,
+      curve: Curves.easeInOutCubic,
+    );
+    _topSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1),
+      end: Offset.zero,
+    ).animate(_overlayCurveSlide);
+    _bottomSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(_overlayCurveSlide);
+
     final initialHighlight = widget.initialHighlight;
     if (initialHighlight != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -101,9 +123,15 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     WidgetsBinding.instance.removeObserver(this);
     _saveProgressDebounce?.cancel();
+    if (_saveProgressDebounce != null &&
+        _currentPage.value != _lastPersistedPage) {
+      unawaited(_persistCurrentPage(_currentPage.value));
+    }
     _pageController.dispose();
     _currentPage.dispose();
     _highlightController.dispose();
+    _overlayCurveSlide.dispose();
+    _overlayCurveFade.dispose();
     _overlayAnimation.dispose();
 
     super.dispose();
@@ -122,6 +150,12 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     }
 
     final pageDifference = (boundedPage - _currentPage.value).abs();
+
+    if (!_pageController.hasClients) {
+      _currentPage.value = boundedPage;
+      _schedulePersistCurrentPage(boundedPage);
+      return;
+    }
 
     if (pageDifference > 2) {
       if (mounted) {
@@ -274,17 +308,11 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
   /// الذي يقرأ `MediaQuery` مرة واحدة فقط.
   Widget _buildPageView(
     BuildContext context, {
-    required List<HighlightVerse> highlights,
     required bool isDark,
     required double fontScale,
     required double availableHeight,
     required double screenWidth,
   }) {
-    final highlightMap = buildHighlightMap(highlights);
-
-    Color? getVerseHighlight(int surah, int verse) =>
-        highlightMap.isEmpty ? null : highlightMap[(surah, verse)];
-
     const int linesPerPage = 15;
     const double internalPadding = 62.0;
     final fontSize = getFontSize(1, context);
@@ -321,7 +349,8 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
         final meta = QuranPageMetaCache.instance.forPage(pageNumber);
 
         // 🛡️ PERF: [QuranPageView] يعزل كل طبقة (QCF / header / footer) في
-        // `RepaintBoundary` مستقلة، فلا يُعاد رسم صفحة QCF عند تغيّر التظليل فقط.
+        // `RepaintBoundary` مستقلة، والـ highlightController يمرر مباشرة لكل صفحة
+        // لتحديث الآية المظللة في صفحتها فقط دون إعادة بناء الـ PageView بأكمله.
         return QuranPageView(
           key: ValueKey<int>(pageNumber),
           pageNumber: pageNumber,
@@ -332,28 +361,38 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
           headerJuzStyle: headerJuzStyle,
           headerSurahStyle: headerSurahStyle,
           footerPageStyle: footerPageStyle,
-          getVerseHighlight: getVerseHighlight,
+          highlightController: _highlightController,
           onLongPressDown: _handleLongPress,
         );
       },
     );
   }
 
-  /// 🛡️ حل مشكلة إعادة الآية الثانية وتضليل التالية
+  /// 🛡️ مزامنة التظليل الصوتي مع موضع الآية الحالية:
+  /// - عند الإيقاف المؤقت (Pause): يُحفظ موضع الآية والتظليل كما هو دون مسحهما.
+  /// - عند التوقف النهائي (Stop أو انتهاء السورة بدون آية): يُمسح التظليل الصوتي فقط.
+  /// - التظليلات اليدوية لا تُمسح مطلقاً عند توقف التلاوة.
   void _syncAudioHighlight({
     required AyahRef? currentAyah,
     required bool isPlaying,
   }) {
-    // 1. إذا توقف الصوت، نظّف التظليل وارجع
-    if (currentAyah == null || !isPlaying) {
+    // 1. إذا لم تكن هناك آية جارية (مثل عند الضغط على Stop أو إفراغ المشغل):
+    if (currentAyah == null) {
       if (_lastSyncedAyah != null) {
         _lastSyncedAyah = null;
-        _highlightController.clear();
+        _highlightController.clearAudioHighlight();
       }
       return;
     }
 
-    // 2. إذا كانت الآية هي نفسها التي تم مزامنتها مسبقاً، تجاهل الطلب لمنع الحلقة المفرغة
+    // 2. إذا كان الصوت موقوفاً مؤقتاً (Pause):
+    // نحتفظ بالتظليل الحالي وموضع الآية تماماً كما يقتضي المبدأ الهندسي.
+    // لا نمسح التظليل لمجرد أن isPlaying أصبحت false!
+    if (!isPlaying) {
+      return;
+    }
+
+    // 3. إذا كانت الآية هي نفسها التي تم مزامنتها مسبقاً، لا داعي لإعادة العمليات
     if (_lastSyncedAyah?.surah == currentAyah.surah &&
         _lastSyncedAyah?.ayah == currentAyah.ayah) {
       return;
@@ -361,14 +400,19 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
 
     _lastSyncedAyah = currentAyah;
 
-    // 3. نكتفي بتحديث التظليل فقط بصمت بدون إعادة تحريك الصفحة إذا كنا في نفس الصفحة
-    _highlightController.highlightSingle(currentAyah, _highlightColor(context));
+    // 4. تعيين التظليل الصوتي للآية الجارية دون مساس بالتظليلات اليدوية
+    _highlightController.setAudioHighlight(
+      currentAyah,
+      _highlightColor(context),
+    );
 
-    // 4. لا ننتقل للصفحة إلا إذا كانت الآية الجديدة في صفحة "مختلفة تماماً" عن الصفحة المعروضة حالياً
+    // 5. نقل الصفحة فقط إذا كانت الآية في صفحة مختلفة ومتحكم الصفحة متاح
     if (currentAyah.page != _currentPage.value) {
-      // نغير الصفحة بصمت وبدون إرسال إشارات إعادة تشغيل للمشغل
-      _pageController.jumpToPage(currentAyah.page - 1);
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(currentAyah.page - 1);
+      }
       _currentPage.value = currentAyah.page;
+      _schedulePersistCurrentPage(currentAyah.page);
     }
   }
 
@@ -448,35 +492,32 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
     _hideOverlay();
   }
 
-  Widget _buildAnimatedOverlay({
-    required Offset beginOffset,
-    required Widget child,
-  }) {
+  Widget _buildTopAnimatedOverlay({required Widget child}) {
     return AnimatedBuilder(
       animation: _overlayAnimation,
-      builder: (context, child) {
+      builder: (context, staticChild) {
         if (_overlayAnimation.isDismissed) {
           return const SizedBox.shrink();
         }
-
-        final animation = CurvedAnimation(
-          parent: _overlayAnimation,
-          curve: Curves.easeOutQuint,
-        );
-
-        final slideOffset = Tween<Offset>(
-          begin: beginOffset,
-          end: Offset.zero,
-        ).animate(animation).value;
-
-        final opacity = CurvedAnimation(
-          parent: _overlayAnimation,
-          curve: Curves.easeInOutCubic,
-        ).value;
-
         return FractionalTranslation(
-          translation: slideOffset,
-          child: Opacity(opacity: opacity, child: child),
+          translation: _topSlideAnimation.value,
+          child: Opacity(opacity: _overlayCurveFade.value, child: staticChild),
+        );
+      },
+      child: child,
+    );
+  }
+
+  Widget _buildBottomAnimatedOverlay({required Widget child}) {
+    return AnimatedBuilder(
+      animation: _overlayAnimation,
+      builder: (context, staticChild) {
+        if (_overlayAnimation.isDismissed) {
+          return const SizedBox.shrink();
+        }
+        return FractionalTranslation(
+          translation: _bottomSlideAnimation.value,
+          child: Opacity(opacity: _overlayCurveFade.value, child: staticChild),
         );
       },
       child: child,
@@ -566,18 +607,12 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                 top: false,
                 child: MediaQuery(
                   data: mediaQuery.copyWith(textScaler: TextScaler.linear(1)),
-                  child: ValueListenableBuilder<List<HighlightVerse>>(
-                    valueListenable: _highlightController,
-                    builder: (context, highlights, _) {
-                      return _buildPageView(
-                        context,
-                        highlights: highlights,
-                        isDark: isDark,
-                        fontScale: fontScale,
-                        availableHeight: availablePageHeight,
-                        screenWidth: screenSize.width,
-                      );
-                    },
+                  child: _buildPageView(
+                    context,
+                    isDark: isDark,
+                    fontScale: fontScale,
+                    availableHeight: availablePageHeight,
+                    screenWidth: screenSize.width,
                   ),
                 ),
               ),
@@ -599,8 +634,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                 right: 0,
                 bottom: iconNavBarOffset,
                 child: RepaintBoundary(
-                  child: _buildAnimatedOverlay(
-                    beginOffset: const Offset(0, 1),
+                  child: _buildBottomAnimatedOverlay(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -628,8 +662,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
             right: 0,
             bottom: 0,
             child: RepaintBoundary(
-              child: _buildAnimatedOverlay(
-                beginOffset: const Offset(0, 1),
+              child: _buildBottomAnimatedOverlay(
                 child: QuranReaderIconNavBar(
                   selectedIndex: 0,
                   onQuranTapped: () {},
@@ -656,8 +689,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
             left: 0,
             right: 0,
             child: RepaintBoundary(
-              child: _buildAnimatedOverlay(
-                beginOffset: const Offset(0, -1),
+              child: _buildTopAnimatedOverlay(
                 child: QuranReaderHeader(
                   onSearchTapped: _openSearchSheet,
                   onSurahListTapped: _openSurahPicker,
