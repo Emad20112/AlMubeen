@@ -164,6 +164,34 @@ final class QuranSurahPlayerController extends Notifier<SurahPlayerState> {
     await _loadAndPlayChapter(surahNumber, recitationId, position: position);
   }
 
+  /// يتيح التبديل السلس للقارئ أثناء تشغيل السورة، بحيث إن كانت
+  /// السورة قيد التشغيل حالياً، يتم مباشرة إكمال تشغيلها بالقارئ الجديد
+  /// من نفس الموضع، مع تحديث المعرف وإعادة التحميل فوراً.
+  Future<void> switchReciter({
+    required int newRecitationId,
+    bool forcePlay = false,
+  }) async {
+    final currentSurah = state.currentSurah;
+    final wasPlaying = state.isPlaying || (_player?.playing ?? false);
+
+    state = state.copyWith(
+      recitationId: newRecitationId,
+      clearError: true,
+    );
+
+    if (wasPlaying || forcePlay) {
+      // إيقاف المشغل الحالي فوراً وإلغاء المفتاح المحمل القديم
+      _loadedKey = null;
+      await _loadAndPlayChapter(
+        currentSurah,
+        newRecitationId,
+        position: _player?.position.inMilliseconds,
+      );
+    } else {
+      _loadedKey = null;
+    }
+  }
+
   Future<void> togglePlayPause() async {
     if (!_debounce()) return;
 

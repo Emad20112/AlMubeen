@@ -1,14 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:isolate';
 
+import 'package:al_mubeen/core/database/app_database.dart';
+import 'package:al_mubeen/core/database/static_data_seeds.dart';
 import 'package:al_mubeen/features/hadith_nawawi/domain/models/hadith_nawawi_entry.dart';
-import 'package:flutter/services.dart';
+import 'package:drift/drift.dart';
 
 final class HadithNawawiLocalDataSource {
-  HadithNawawiLocalDataSource();
+  HadithNawawiLocalDataSource(this._db);
 
-  static const String _assetPath = 'assets/data/40-hadith-nawawi.json';
+  final AppDatabase _db;
 
   List<HadithNawawiEntry>? _cachedEntries;
   Future<List<HadithNawawiEntry>>? _loadingFuture;
@@ -42,32 +42,34 @@ final class HadithNawawiLocalDataSource {
   }
 
   Future<List<HadithNawawiEntry>> _loadEntries() async {
-    final jsonString = await rootBundle.loadString(_assetPath);
-    final entries = await Isolate.run(() {
-      return _parseHadithNawawi(jsonString);
-    });
+    final query = _db.select(_db.hadithNawawiEntries)
+      ..orderBy([(t) => OrderingTerm(expression: t.id, mode: OrderingMode.asc)]);
 
-    return entries.asMap().entries.map((e) {
-      final raw = e.value;
-      return HadithNawawiEntry.fromJson({
-        'id': e.key + 1,
-        'hadith': raw['hadith'],
-        'description': raw['description'],
+    var rows = await query.get();
+
+    if (rows.isEmpty) {
+      await _db.batch((batch) {
+        batch.insertAllOnConflictUpdate(
+          _db.hadithNawawiEntries,
+          staticHadithNawawiSeeds,
+        );
       });
-    }).toList();
-  }
-}
-
-List<Map<String, Object?>> _parseHadithNawawi(String jsonString) {
-  final decoded = jsonDecode(jsonString);
-  if (decoded is! List) {
-    throw const FormatException('Expected the 40 Hadith asset to be a JSON list.');
-  }
-
-  return decoded.map<Map<String, Object?>>((entry) {
-    if (entry is Map) {
-      return entry.cast<String, Object?>();
+      rows = await query.get();
     }
-    throw const FormatException('Expected each hadith item to be a JSON object.');
-  }).toList(growable: false);
+
+    return rows
+        .map(
+          (row) => HadithNawawiEntry(
+            id: row.id,
+            hadithNumber: row.hadithNumber,
+            title: row.title,
+            preview: row.preview,
+            fullText: row.fullText,
+            source: row.source,
+            description: row.description,
+            searchIndex: row.searchIndex,
+          ),
+        )
+        .toList(growable: true);
+  }
 }

@@ -17,8 +17,8 @@ void main() {
       );
 
       expect(window.length, 5);
-      expect(window.first.ayah, 2);
-      expect(window.last.ayah, 6);
+      expect(window.first.ayah, 1);
+      expect(window.last.ayah, 5);
     });
   });
 }

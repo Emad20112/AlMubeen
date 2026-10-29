@@ -12,7 +12,7 @@ class AppConfig {
   static const String _envAssetPath = 'env/app.env';
   static const String _defaultBackendUrl = 'https://quan-packend.vercel.app';
 
-  static late final Uri quranBackendUrl;
+  static Uri quranBackendUrl = Uri.parse(_defaultBackendUrl);
 
   static Future<void> load() async {
     await _loadPublicEnvFile();

@@ -310,7 +310,8 @@ void main() {
       expect(result, isA<DataSuccess<QuranAudioFile>>());
       final audioFile = (result as DataSuccess<QuranAudioFile>).value;
       expect(audioFile.verseKey.value, '1:1');
-      expect(audioFile.url.toString(), contains('Alafasy/mp3/001001.mp3'));
+      expect(audioFile.url.path, '/api/audio/stream');
+      expect(Uri.decodeComponent(audioFile.url.queryParameters['url']!), contains('Alafasy/mp3/001001.mp3'));
       expect(client.requests.single.path, 'api/recitations/7/by_ayah/1/1');
       expect(client.requests.single.queryParameters['per_page'], '1');
     });

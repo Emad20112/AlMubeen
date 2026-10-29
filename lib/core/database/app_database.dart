@@ -1,3 +1,4 @@
+import 'package:al_mubeen/core/database/static_data_seeds.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
@@ -368,6 +369,32 @@ class HisnContentItemCache extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+@DataClassName('NamesOfAllahTableData')
+class NamesOfAllahEntries extends Table {
+  IntColumn get id => integer()();
+  TextColumn get name => text()();
+  TextColumn get meaning => text()();
+  TextColumn get searchIndex => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DataClassName('HadithNawawiTableData')
+class HadithNawawiEntries extends Table {
+  IntColumn get id => integer()();
+  IntColumn get hadithNumber => integer()();
+  TextColumn get title => text()();
+  TextColumn get preview => text()();
+  TextColumn get fullText => text()();
+  TextColumn get source => text()();
+  TextColumn get description => text()();
+  TextColumn get searchIndex => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     QuranChapterCache,
@@ -389,6 +416,8 @@ class HisnContentItemCache extends Table {
     TranslationTextCache,
     HisnContentCache,
     HisnContentItemCache,
+    NamesOfAllahEntries,
+    HadithNawawiEntries,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -397,12 +426,15 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forExecutor(super.executor);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
-      onCreate: (migrator) => migrator.createAll(),
+      onCreate: (migrator) async {
+        await migrator.createAll();
+        await seedStaticDatabaseContent(this);
+      },
       onUpgrade: (migrator, from, to) async {
         if (from < 2) {
           await migrator.createTable(quranRecitationCache);
@@ -451,19 +483,19 @@ class AppDatabase extends _$AppDatabase {
             )
           ''');
           await (migrator.database as AppDatabase).customStatement('''
-            CREATE INDEX IF NOT EXISTS downloaded_tafsirs_resource_id 
+            CREATE INDEX IF NOT EXISTS downloaded_tafsirs_resource_id
             ON downloaded_tafsirs (resource_id)
           ''');
           await (migrator.database as AppDatabase).customStatement('''
-            CREATE INDEX IF NOT EXISTS downloaded_tafsirs_updated_at 
+            CREATE INDEX IF NOT EXISTS downloaded_tafsirs_updated_at
             ON downloaded_tafsirs (updated_at)
           ''');
           await (migrator.database as AppDatabase).customStatement('''
-            CREATE INDEX IF NOT EXISTS tafsir_text_cache_resource_chapter_ayah 
+            CREATE INDEX IF NOT EXISTS tafsir_text_cache_resource_chapter_ayah
             ON tafsir_text_cache (resource_id, chapter_id, ayah_number)
           ''');
           await (migrator.database as AppDatabase).customStatement('''
-            CREATE INDEX IF NOT EXISTS tafsir_text_cache_updated_at 
+            CREATE INDEX IF NOT EXISTS tafsir_text_cache_updated_at
             ON tafsir_text_cache (cached_at)
           ''');
         }
@@ -492,19 +524,19 @@ class AppDatabase extends _$AppDatabase {
             )
           ''');
           await (migrator.database as AppDatabase).customStatement('''
-            CREATE INDEX IF NOT EXISTS downloaded_translations_resource_id 
+            CREATE INDEX IF NOT EXISTS downloaded_translations_resource_id
             ON downloaded_translations (resource_id)
           ''');
           await (migrator.database as AppDatabase).customStatement('''
-            CREATE INDEX IF NOT EXISTS downloaded_translations_updated_at 
+            CREATE INDEX IF NOT EXISTS downloaded_translations_updated_at
             ON downloaded_translations (updated_at)
           ''');
           await (migrator.database as AppDatabase).customStatement('''
-            CREATE INDEX IF NOT EXISTS translation_text_cache_resource_chapter_ayah 
+            CREATE INDEX IF NOT EXISTS translation_text_cache_resource_chapter_ayah
             ON translation_text_cache (resource_id, chapter_id, ayah_number)
           ''');
           await (migrator.database as AppDatabase).customStatement('''
-            CREATE INDEX IF NOT EXISTS translation_text_cache_updated_at 
+            CREATE INDEX IF NOT EXISTS translation_text_cache_updated_at
             ON translation_text_cache (cached_at)
           ''');
         }
@@ -540,6 +572,11 @@ class AppDatabase extends _$AppDatabase {
           await migrator.createTable(wirdDailyProgressTable);
           await migrator.createTable(wirdCycleHistoryTable);
           await migrator.createTable(wirdAchievementsTable);
+        }
+        if (from < 14) {
+          await migrator.createTable(namesOfAllahEntries);
+          await migrator.createTable(hadithNawawiEntries);
+          await seedStaticDatabaseContent(this);
         }
       },
     );
