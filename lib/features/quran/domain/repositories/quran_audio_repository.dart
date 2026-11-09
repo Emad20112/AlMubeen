@@ -1,4 +1,5 @@
 import 'package:al_mubeen/core/data/data_result.dart';
+import 'package:al_mubeen/features/quran/data/models/chapter_audio_model.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
 import 'package:flutter/foundation.dart';
 
@@ -7,6 +8,7 @@ abstract interface class QuranAudioRepository {
     required QuranVerseKey verseKey,
     required int recitationId,
   });
+
   Future<DataResult<List<QuranAudioFile>>> getSurahAudioFiles({
     required int chapterNumber,
     required int recitationId,
@@ -14,6 +16,12 @@ abstract interface class QuranAudioRepository {
 
   /// جلب رابط ملف الصوت الكامل لسورة واحدة من واجهة Quran.com v4.
   Future<DataResult<Uri>> getChapterAudioUrl({
+    required int reciterId,
+    required int surahNumber,
+  });
+
+  /// جلب بيانات السورة الكاملة وتوقيتات جميع الآيات للتشغيل الذكي.
+  Future<DataResult<ChapterAudioData>> getChapterAudioData({
     required int reciterId,
     required int surahNumber,
   });
