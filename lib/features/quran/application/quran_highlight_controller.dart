@@ -4,17 +4,20 @@ import 'package:flutter/material.dart';
 
 /// يدير التظليلات في المصحف مع فصل صريح ودقيق بين التظليل الصوتي والتظليلات اليدوية.
 ///
-/// هذا الفصل يضمن:
-/// 1. عدم مسح التظليلات اليدوية عند توقف التلاوة الصوتية أو تغيير الآيات.
-/// 2. بقاء تظليل الآية الصوتية عند الإيقاف المؤقت (Pause) دون مسحه.
-/// 3. استبدال آية التلاوة الحالية تلقائياً عند تقدم القارئ دون لمس التظليلات اليدوية.
+/// القواعد المعمارية الصارمة:
+/// 1. التظليل اليدوي: دائم وثابت ولا يتأثر بحالة تشغيل الصوت (Play/Pause/Stop).
+/// 2. التظليل الصوتي: يظهر أثناء التلاوة النشطة فقط، ويختفي فوراً عند الإيقاف المؤقت (Pause)
+///    أو التوقف النهائي (Stop)، ويعود للظهور عند الاستئناف (Resume) على نفس الآية.
+/// 3. التظليل الصوتي واليدوي لا يختلطان في الحالة الداخلية.
 class QuranHighlightController extends ValueNotifier<List<HighlightVerse>> {
   QuranHighlightController() : super(const []);
 
   HighlightVerse? _audioHighlight;
+  HighlightVerse? _pausedAudioHighlight;
   final List<HighlightVerse> _manualHighlights = <HighlightVerse>[];
 
   HighlightVerse? get audioHighlight => _audioHighlight;
+  HighlightVerse? get pausedAudioHighlight => _pausedAudioHighlight;
   List<HighlightVerse> get manualHighlights => List.unmodifiable(_manualHighlights);
 
   void _recomputeValue() {
@@ -70,6 +73,13 @@ class QuranHighlightController extends ValueNotifier<List<HighlightVerse>> {
 
   /// تعيين تظليل صوتي حصري للآية التي يتلوها القارئ حالياً
   void setAudioHighlight(AyahRef ref, Color color) {
+    final newHighlight = HighlightVerse(
+      surah: ref.surah,
+      verseNumber: ref.ayah,
+      page: ref.page,
+      color: color,
+    );
+
     if (_audioHighlight != null &&
         _audioHighlight!.surah == ref.surah &&
         _audioHighlight!.verseNumber == ref.ayah &&
@@ -77,19 +87,33 @@ class QuranHighlightController extends ValueNotifier<List<HighlightVerse>> {
       return;
     }
 
-    _audioHighlight = HighlightVerse(
-      surah: ref.surah,
-      verseNumber: ref.ayah,
-      page: ref.page,
-      color: color,
-    );
+    _audioHighlight = newHighlight;
+    _pausedAudioHighlight = newHighlight;
     _recomputeValue();
   }
 
-  /// مسح التظليل الصوتي فقط (عند التوقف النهائي للتلاوة Stop أو انتهاء السورة)
-  void clearAudioHighlight() {
+  /// إخفاء التظليل الصوتي عند الإيقاف المؤقت (Pause) مع الاحتفاظ بالآية داخلياً للاستئناف
+  void pauseAudioHighlight() {
     if (_audioHighlight == null) return;
+    _pausedAudioHighlight = _audioHighlight;
     _audioHighlight = null;
+    _recomputeValue();
+  }
+
+  /// استئناف إظهار التظليل الصوتي عند العودة للتشغيل (Resume)
+  void resumeAudioHighlight([Color? fallbackColor]) {
+    if (_audioHighlight != null) return;
+    if (_pausedAudioHighlight != null) {
+      _audioHighlight = _pausedAudioHighlight;
+      _recomputeValue();
+    }
+  }
+
+  /// مسح التظليل الصوتي نهائياً (عند التوقف Stop أو انتهاء السورة)
+  void clearAudioHighlight() {
+    if (_audioHighlight == null && _pausedAudioHighlight == null) return;
+    _audioHighlight = null;
+    _pausedAudioHighlight = null;
     _recomputeValue();
   }
 
