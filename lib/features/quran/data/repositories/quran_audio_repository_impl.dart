@@ -3,6 +3,7 @@ import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/data/data_fetch_policy.dart';
 import 'package:al_mubeen/core/data/data_result.dart';
 import 'package:al_mubeen/core/data/json_map.dart';
+import 'package:al_mubeen/features/quran/data/models/chapter_audio_model.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_audio_file_dto.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
 import 'package:al_mubeen/features/quran/data/remote/quran_com_remote_data_source.dart';
@@ -188,6 +189,75 @@ final class QuranAudioRepositoryImpl implements QuranAudioRepository {
             DataFailure(
               kind: DataFailureKind.parsing,
               message: 'Failed to parse chapter recitation response.',
+              cause: error,
+              stackTrace: stackTrace,
+            ),
+          );
+        }
+      },
+      error: DataError.new,
+    );
+  }
+
+  @override
+  Future<DataResult<ChapterAudioData>> getChapterAudioData({
+    required int reciterId,
+    required int surahNumber,
+  }) async {
+    final (identifier, _) = await _getIslamicAppRecitation(reciterId);
+    if (identifier != null) {
+      return const DataError(
+        DataFailure(
+          kind: DataFailureKind.notFound,
+          message:
+              'Islamic.app reciters do not provide verse timestamps for full chapters.',
+        ),
+      );
+    }
+
+    final result = await _remoteDataSource.getChapterRecitation(
+      reciterId: reciterId,
+      surahNumber: surahNumber,
+    );
+
+    return result.when(
+      success: (json) {
+        try {
+          final audioFile = (json['audio_file'] is JsonMap)
+              ? json['audio_file'] as JsonMap
+              : json;
+
+          final audioUrlValue =
+              json['audio_url']?.toString().trim() ??
+              audioFile['audio_url']?.toString().trim() ??
+              audioFile['url']?.toString().trim();
+
+          if (audioUrlValue == null || audioUrlValue.isEmpty) {
+            return const DataError(
+              DataFailure(
+                kind: DataFailureKind.notFound,
+                message: 'No audio_url found in chapter recitation response.',
+              ),
+            );
+          }
+
+          final resolvedDirectUrl = _resolveAudioUrl(audioUrlValue);
+          final proxiedUrl = _proxyAudioUrl(resolvedDirectUrl.toString());
+
+          final chapterData = ChapterAudioData.fromJson(
+            json,
+            chapterNumber: surahNumber,
+            reciterId: reciterId,
+            resolvedAudioUrl: proxiedUrl,
+          );
+
+          return DataSuccess(chapterData);
+        } on Object catch (error, stackTrace) {
+          return DataError(
+            DataFailure(
+              kind: DataFailureKind.parsing,
+              message:
+                  'Failed to parse chapter recitation timestamps response.',
               cause: error,
               stackTrace: stackTrace,
             ),

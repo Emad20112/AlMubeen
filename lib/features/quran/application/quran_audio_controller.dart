@@ -5,6 +5,7 @@ import 'package:al_mubeen/core/cache/lru_cache.dart';
 import 'package:al_mubeen/core/data/data_failure.dart';
 import 'package:al_mubeen/core/network/connectivity_providers.dart';
 import 'package:al_mubeen/core/network/no_internet_exception.dart';
+import 'package:al_mubeen/features/quran/data/models/chapter_audio_model.dart';
 import 'package:al_mubeen/features/quran/data/models/quran_verse_key.dart';
 import 'package:al_mubeen/features/quran/data/quran_providers.dart';
 import 'package:al_mubeen/features/quran/domain/ayah_ref.dart';
@@ -13,6 +14,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:qcf_quran/qcf_quran.dart';
+
+enum AudioPlaybackMode {
+  chapter,
+  ayah,
+}
 
 final quranAudioControllerProvider =
     NotifierProvider<QuranAudioController, QuranAudioState>(
@@ -24,22 +30,26 @@ final class QuranAudioState {
   const QuranAudioState({
     this.currentAyah,
     this.recitationId,
+    this.playbackMode = AudioPlaybackMode.ayah,
     this.isPlaying = false,
     this.isLoading = false,
     this.errorMessage,
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.isLocalSource = false,
+    this.chapterAudioData,
   });
 
   final AyahRef? currentAyah;
   final int? recitationId;
+  final AudioPlaybackMode playbackMode;
   final bool isPlaying;
   final bool isLoading;
   final String? errorMessage;
   final Duration position;
   final Duration duration;
   final bool isLocalSource;
+  final ChapterAudioData? chapterAudioData;
 
   bool isCurrent({required AyahRef ayahRef, required int recitationId}) {
     final current = currentAyah;
@@ -52,34 +62,37 @@ final class QuranAudioState {
   QuranAudioState copyWith({
     AyahRef? currentAyah,
     int? recitationId,
+    AudioPlaybackMode? playbackMode,
     bool? isPlaying,
     bool? isLoading,
     String? errorMessage,
     Duration? position,
     Duration? duration,
     bool? isLocalSource,
+    ChapterAudioData? chapterAudioData,
+    bool clearChapterData = false,
   }) {
     return QuranAudioState(
       currentAyah: currentAyah ?? this.currentAyah,
       recitationId: recitationId ?? this.recitationId,
+      playbackMode: playbackMode ?? this.playbackMode,
       isPlaying: isPlaying ?? this.isPlaying,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
       position: position ?? this.position,
       duration: duration ?? this.duration,
       isLocalSource: isLocalSource ?? this.isLocalSource,
+      chapterAudioData: clearChapterData
+          ? null
+          : (chapterAudioData ?? this.chapterAudioData),
     );
   }
 }
 
 final class QuranAudioController extends Notifier<QuranAudioState> {
-  static const int _prefetchWindowSize = 6;
-  static const int _prefetchTriggerIndex = 3;
-
-  /// 🛡️ PERF: حد أعلى لعدد روابط الآيات المُخزَّنة مؤقتاً. نافذة الـ prefetch
-  /// لا تزيد عن 6 آيات، فنافذة بحجم 24 تعطي هامشاً آمناً للتنقل بين السور
-  /// دون السماح للكاش بالنمو بلا سقف خلال جلسات القراءة الطويلة.
-  static const int _prefetchCacheCapacity = 24;
+  static const int prefetchBatchSize = 5;
+  static const int _prefetchTriggerIndex = 2;
+  static const int _prefetchCacheCapacity = 30;
 
   late final AudioPlayer _audioPlayer;
 
@@ -90,16 +103,16 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   StreamSubscription<PlaybackEvent>? _playbackEventSubscription;
   StreamSubscription<bool>? _connectivitySubscription;
 
+  AudioPlaybackMode _currentMode = AudioPlaybackMode.ayah;
+  ChapterAudioData? _currentChapterData;
   String? _loadedKey;
   final Set<String> _prefetchingKeys = <String>{};
 
-  /// كاش LRU محدود السعة لمنع تراكم لا نهائي في الذاكرة.
   final LruCache<String, Uri> _prefetchCache = LruCache<String, Uri>(
     maximumSize: _prefetchCacheCapacity,
   );
 
   final List<AyahRef> _playlistAyahs = <AyahRef>[];
-
   int _requestId = 0;
   bool _isAppendingNextWindow = false;
   int _lastSignalledIndex = -1;
@@ -118,7 +131,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       _handlePositionChanged,
     );
     _durationSubscription = _audioPlayer.durationStream.listen((duration) {
-      if (duration != null) {
+      if (duration != null && duration > Duration.zero) {
         state = state.copyWith(duration: duration);
       }
     });
@@ -143,7 +156,6 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
           _audioPlayer.processingState == ProcessingState.buffering ||
           _audioPlayer.processingState == ProcessingState.loading;
 
-      // Local files keep playing even without internet.
       if (!isConnected &&
           !state.isLocalSource &&
           isNetworkPlaybackActive &&
@@ -165,7 +177,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       _playbackEventSubscription?.cancel();
       _connectivitySubscription?.cancel();
       _audioPlayer.dispose();
-      debugPrint('AudioPlayer disposed.');
+      debugPrint('QuranAudioController: AudioPlayer disposed.');
     });
 
     return const QuranAudioState();
@@ -175,9 +187,35 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     required AyahRef ayahRef,
     required int recitationId,
   }) async {
-    final key = _keyFor(ayahRef, recitationId);
+    // 1. في وضع السورة الكاملة: إذا كانت نفس السورة محملة بالفعل لنفس القارئ
+    if (_currentMode == AudioPlaybackMode.chapter &&
+        _currentChapterData != null &&
+        _currentChapterData!.chapterNumber == ayahRef.surah &&
+        state.recitationId == recitationId) {
+      if (_audioPlayer.playing) {
+        await _audioPlayer.pause();
+      } else {
+        // إذا اختار المستخدم آية معينة داخل نفس السورة المحملة
+        final current = state.currentAyah;
+        if (current == null || current.ayah != ayahRef.ayah) {
+          final startMs = _currentChapterData!.getStartMsForAyah(ayahRef.ayah);
+          if (startMs != null) {
+            await _audioPlayer.seek(Duration(milliseconds: startMs));
+          }
+        }
+        if (_audioPlayer.processingState == ProcessingState.completed) {
+          await _audioPlayer.seek(Duration.zero);
+        }
+        await _audioPlayer.play();
+      }
+      return;
+    }
 
-    if (_loadedKey == key && state.recitationId == recitationId) {
+    // 2. في وضع الآيات المستقلة: إذا كانت نفس الآية محملة
+    final key = _keyFor(ayahRef, recitationId);
+    if (_currentMode == AudioPlaybackMode.ayah &&
+        _loadedKey == key &&
+        state.recitationId == recitationId) {
       if (_audioPlayer.playing) {
         await _audioPlayer.pause();
       } else {
@@ -189,6 +227,86 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       return;
     }
 
+    // 3. بدء جلسة تشغيل جديدة بالوضع المناسب
+    await _startPlayback(ayahRef: ayahRef, recitationId: recitationId);
+  }
+
+  Future<void> playAyahFromBeginning({
+    required AyahRef ayahRef,
+    required int recitationId,
+  }) async {
+    // إذا كانت نفس السورة محملة في وضع السورة، ننتقل مباشرة لبداية الآية
+    if (_currentMode == AudioPlaybackMode.chapter &&
+        _currentChapterData != null &&
+        _currentChapterData!.chapterNumber == ayahRef.surah &&
+        state.recitationId == recitationId) {
+      final startMs = _currentChapterData!.getStartMsForAyah(ayahRef.ayah) ?? 0;
+      await _audioPlayer.seek(Duration(milliseconds: startMs));
+      await _audioPlayer.play();
+      state = state.copyWith(
+        currentAyah: ayahRef,
+        recitationId: recitationId,
+        isPlaying: true,
+        isLoading: false,
+      );
+      return;
+    }
+
+    final key = _keyFor(ayahRef, recitationId);
+    if (_currentMode == AudioPlaybackMode.ayah &&
+        _loadedKey == key &&
+        state.recitationId == recitationId) {
+      await _audioPlayer.seek(Duration.zero, index: 0);
+      await _audioPlayer.play();
+      state = state.copyWith(
+        currentAyah: ayahRef,
+        recitationId: recitationId,
+        isPlaying: true,
+        isLoading: false,
+      );
+      return;
+    }
+
+    await _startPlayback(ayahRef: ayahRef, recitationId: recitationId);
+  }
+
+  Future<void> switchReciter({
+    required int newRecitationId,
+    AyahRef? fallbackAyah,
+    bool autoPlay = true,
+  }) async {
+    final targetAyah = state.currentAyah ?? fallbackAyah;
+    if (targetAyah == null) return;
+
+    final wasPlaying = state.isPlaying || _audioPlayer.playing;
+
+    _prefetchCache.clear();
+    _prefetchingKeys.clear();
+    _currentChapterData = null;
+
+    if (autoPlay || wasPlaying) {
+      await playAyahFromBeginning(
+        ayahRef: targetAyah,
+        recitationId: newRecitationId,
+      );
+    } else {
+      state = state.copyWith(
+        currentAyah: targetAyah,
+        recitationId: newRecitationId,
+        isPlaying: false,
+        isLoading: false,
+        clearChapterData: true,
+      );
+      await _audioPlayer.stop();
+      _loadedKey = null;
+      _playlistAyahs.clear();
+    }
+  }
+
+  Future<void> _startPlayback({
+    required AyahRef ayahRef,
+    required int recitationId,
+  }) async {
     final reqId = ++_requestId;
 
     state = QuranAudioState(
@@ -197,12 +315,67 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       isLoading: true,
     );
 
-    await _audioPlayer.stop();
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {}
+
     _loadedKey = null;
     _playlistAyahs.clear();
     _lastSignalledIndex = -1;
+    _currentChapterData = null;
 
+    // ─── محاولة جلب وفحص ملف السورة الكاملة أولاً ──────────────────────────────
+    ChapterAudioData? validChapterData;
+
+    if (recitationId > 0) {
+      try {
+        final result = await ref
+            .read(quranAudioRepositoryProvider)
+            .getChapterAudioData(
+              reciterId: recitationId,
+              surahNumber: ayahRef.surah,
+            );
+
+        final chapterData = result.valueOrNull;
+        if (chapterData != null) {
+          final validation = chapterData.validate();
+          if (validation.isValid) {
+            validChapterData = chapterData;
+          } else {
+            debugPrint(
+              'Chapter audio validation rejected: ${validation.reason}. Falling back to Ayah mode.',
+            );
+          }
+        }
+      } on Object catch (error) {
+        debugPrint(
+          'Error checking chapter audio: $error. Falling back to Ayah mode.',
+        );
+      }
+    }
+
+    if (reqId != _requestId) return;
+
+    if (validChapterData != null) {
+      try {
+        await _startChapterPlayback(
+          chapterData: validChapterData,
+          startAyah: ayahRef,
+          recitationId: recitationId,
+          requestId: reqId,
+        );
+        return;
+      } on Object catch (error) {
+        debugPrint(
+          'Failed to play chapter file: $error. Falling back to Ayah mode.',
+        );
+        if (reqId != _requestId) return;
+      }
+    }
+
+    // ─── الوضع الاحتياطي: تشغيل الآيات المفردة كنافذة تدريجية ───────────────
     try {
+      _currentMode = AudioPlaybackMode.ayah;
       await _startNewPlaylistWindow(ayahRef, recitationId, reqId);
     } on NoInternetException catch (error) {
       debugPrint('Quran audio offline: $error');
@@ -222,60 +395,41 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     }
   }
 
-  Future<void> playAyahFromBeginning({
-    required AyahRef ayahRef,
+  Future<void> _startChapterPlayback({
+    required ChapterAudioData chapterData,
+    required AyahRef startAyah,
     required int recitationId,
+    required int requestId,
   }) async {
-    final key = _keyFor(ayahRef, recitationId);
+    _currentMode = AudioPlaybackMode.chapter;
+    _currentChapterData = chapterData;
+    _loadedKey = 'chapter:${chapterData.reciterId}:${chapterData.chapterNumber}';
 
-    if (_loadedKey == key && state.recitationId == recitationId) {
-      await _audioPlayer.seek(Duration.zero, index: 0);
-      await _audioPlayer.play();
-      state = state.copyWith(
-        currentAyah: ayahRef,
-        recitationId: recitationId,
-        isPlaying: true,
-        isLoading: false,
-      );
-      return;
-    }
+    final startMs = chapterData.getStartMsForAyah(startAyah.ayah) ?? 0;
+    final initialPos = Duration(milliseconds: startMs);
+    final totalDuration = Duration(milliseconds: chapterData.durationMs);
 
-    await playOrToggleAyah(ayahRef: ayahRef, recitationId: recitationId);
-  }
+    final audioSource = AudioSource.uri(chapterData.audioUrl);
+    await _audioPlayer.setAudioSource(
+      audioSource,
+      initialPosition: initialPos,
+    );
 
-  /// يتيح التبديل السلس للقارئ أثناء تشغيل الآية الحالية أو إيقافها،
-  /// مع تنظيف الكاش المؤقت لروابط الآيات للقارئ السابق لتحرير الذاكرة
-  /// والحفاظ على أعلى أداء ممكن.
-  Future<void> switchReciter({
-    required int newRecitationId,
-    AyahRef? fallbackAyah,
-    bool autoPlay = true,
-  }) async {
-    final targetAyah = state.currentAyah ?? fallbackAyah;
-    if (targetAyah == null) return;
+    if (requestId != _requestId) return;
 
-    final wasPlaying = state.isPlaying || _audioPlayer.playing;
+    state = state.copyWith(
+      currentAyah: startAyah,
+      recitationId: recitationId,
+      playbackMode: AudioPlaybackMode.chapter,
+      chapterAudioData: chapterData,
+      isLoading: false,
+      isPlaying: true,
+      position: initialPos,
+      duration: totalDuration,
+      isLocalSource: false,
+    );
 
-    // مسح الكاش المؤقت للروابط للقارئ السابق لتوفير الذاكرة ومنع التداخل
-    _prefetchCache.clear();
-    _prefetchingKeys.clear();
-
-    if (autoPlay || wasPlaying) {
-      await playAyahFromBeginning(
-        ayahRef: targetAyah,
-        recitationId: newRecitationId,
-      );
-    } else {
-      state = state.copyWith(
-        currentAyah: targetAyah,
-        recitationId: newRecitationId,
-        isPlaying: false,
-        isLoading: false,
-      );
-      await _audioPlayer.stop();
-      _loadedKey = null;
-      _playlistAyahs.clear();
-    }
+    await _audioPlayer.play();
   }
 
   Future<void> _startNewPlaylistWindow(
@@ -283,10 +437,14 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     int recitationId,
     int requestId,
   ) async {
-    final windowAyahs = _buildWindow(startAyah, _prefetchWindowSize);
+    _currentMode = AudioPlaybackMode.ayah;
+    _currentChapterData = null;
+
+    final windowAyahs = _buildWindow(startAyah, prefetchBatchSize);
     if (windowAyahs.isEmpty) return;
 
-    final initialBatchCount = 1;
+    // تجهيز الآيتين الأوليين فوراً في قائمة التشغيل لضمان انتقال خالٍ تماماً من التقطيع
+    final initialBatchCount = windowAyahs.length >= 2 ? 2 : 1;
     final initialAyahs = windowAyahs.sublist(0, initialBatchCount);
 
     final resolvedInitial = await Future.wait(
@@ -309,6 +467,8 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     state = state.copyWith(
       currentAyah: startAyah,
       recitationId: recitationId,
+      playbackMode: AudioPlaybackMode.ayah,
+      clearChapterData: true,
       isLoading: false,
       isPlaying: true,
       isLocalSource: resolvedInitial.first.isLocal,
@@ -348,6 +508,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   }
 
   void _handleCurrentIndexChanged(int? index) {
+    if (_currentMode != AudioPlaybackMode.ayah) return;
     if (index == null || _playlistAyahs.isEmpty) return;
     if (index < 0 || index >= _playlistAyahs.length) return;
 
@@ -372,7 +533,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
 
       if (nextStart != null) {
         _isAppendingNextWindow = true;
-        final nextBatch = _buildWindow(nextStart, _prefetchWindowSize);
+        final nextBatch = _buildWindow(nextStart, prefetchBatchSize);
 
         unawaited(
           _appendAyahsToPlaylist(
@@ -384,6 +545,36 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
           }),
         );
       }
+    }
+  }
+
+  void _handlePositionChanged(Duration position) {
+    final now = DateTime.now();
+    final lastUpdate = _lastPositionStateUpdate;
+
+    if (lastUpdate != null &&
+        now.difference(lastUpdate) < const Duration(milliseconds: 250)) {
+      return;
+    }
+    _lastPositionStateUpdate = now;
+
+    if (_currentMode == AudioPlaybackMode.chapter &&
+        _currentChapterData != null) {
+      final currentAyah = _currentChapterData!.findAyahAtPosition(
+        position.inMilliseconds,
+      );
+      final activeAyah = state.currentAyah;
+      final ayahChanged = currentAyah != null &&
+          (activeAyah == null ||
+              activeAyah.surah != currentAyah.surah ||
+              activeAyah.ayah != currentAyah.ayah);
+
+      state = state.copyWith(
+        position: position,
+        currentAyah: ayahChanged ? currentAyah : activeAyah,
+      );
+    } else {
+      state = state.copyWith(position: position);
     }
   }
 
@@ -407,14 +598,69 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     }
   }
 
+  Future<void> seekTo(Duration position) async {
+    await _audioPlayer.seek(position);
+    if (_currentMode == AudioPlaybackMode.chapter &&
+        _currentChapterData != null) {
+      final resolved = _currentChapterData!.findAyahAtPosition(
+        position.inMilliseconds,
+      );
+      if (resolved != null && resolved != state.currentAyah) {
+        state = state.copyWith(position: position, currentAyah: resolved);
+      } else {
+        state = state.copyWith(position: position);
+      }
+    }
+  }
+
+  Future<void> seekToAyah(int ayahNumber) async {
+    if (_currentMode == AudioPlaybackMode.chapter &&
+        _currentChapterData != null) {
+      final startMs = _currentChapterData!.getStartMsForAyah(ayahNumber);
+      if (startMs != null) {
+        await seekTo(Duration(milliseconds: startMs));
+      }
+    }
+  }
+
+  Future<void> seekForward({int seconds = 10}) async {
+    final currentPosition = _audioPlayer.position;
+    final newPosition = currentPosition + Duration(seconds: seconds);
+    final duration = _audioPlayer.duration;
+
+    if (duration != null && newPosition > duration) {
+      await seekTo(duration);
+    } else {
+      await seekTo(newPosition);
+    }
+  }
+
+  Future<void> seekBackward({int seconds = 10}) async {
+    final currentPosition = _audioPlayer.position;
+    final newPosition = currentPosition - Duration(seconds: seconds);
+    await seekTo(newPosition < Duration.zero ? Duration.zero : newPosition);
+  }
+
+  Future<void> stop() async {
+    _requestId++;
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {}
+    _loadedKey = null;
+    _currentChapterData = null;
+    _currentMode = AudioPlaybackMode.ayah;
+    _playlistAyahs.clear();
+    _lastPositionStateUpdate = null;
+    _prefetchCache.clear();
+    state = const QuranAudioState();
+  }
+
   Future<_ResolvedAyahSource> _resolveAyahSourceForPlayback(
     AyahRef ayahRef,
     int recitationId,
   ) async {
     final audioRepo = ref.read(audioRepositoryProvider);
 
-    // 1. Check if the ayah is already downloaded locally first —
-    //    this enables offline playback from the local audio library.
     final isLocal = await audioRepo.isAyahDownloaded(
       reciterId: recitationId,
       surahNumber: ayahRef.surah,
@@ -423,7 +669,6 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
 
     Uri? networkUrl;
     if (!isLocal) {
-      // 2. Only fetch the network URL when the file is NOT available locally.
       final key = _keyFor(ayahRef, recitationId);
       if (!_prefetchCache.containsKey(key)) {
         await _fetchAyahUri(ayahRef, recitationId);
@@ -500,64 +745,23 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     return audioFile.url;
   }
 
-  Future<void> stop() async {
-    _requestId++;
-    await _audioPlayer.stop();
-    _loadedKey = null;
-    _playlistAyahs.clear();
-    _lastPositionStateUpdate = null;
-    _prefetchCache.clear(); // تفريغ كاش العناوين لمنع تراكم المقابض
-    state = const QuranAudioState();
-  }
-
-  Future<void> seekForward({int seconds = 10}) async {
-    final currentPosition = _audioPlayer.position;
-    final newPosition = currentPosition + Duration(seconds: seconds);
-    final duration = _audioPlayer.duration;
-
-    if (duration != null && newPosition > duration) {
-      await _audioPlayer.seek(duration);
-    } else {
-      await _audioPlayer.seek(newPosition);
-    }
-  }
-
-  Future<void> seekBackward({int seconds = 10}) async {
-    final currentPosition = _audioPlayer.position;
-    final newPosition = currentPosition - Duration(seconds: seconds);
-
-    if (newPosition < Duration.zero) {
-      await _audioPlayer.seek(Duration.zero);
-    } else {
-      await _audioPlayer.seek(newPosition);
-    }
-  }
-
-  Future<void> seekTo(Duration position) async {
-    await _audioPlayer.seek(position);
-  }
-
   Future<void> _configureAudioSession() async {
     try {
       final session = await AudioSession.instance;
-      await session.configure(const AudioSessionConfiguration.speech());
+      await session.configure(
+        const AudioSessionConfiguration(
+          avAudioSessionCategory: AVAudioSessionCategory.playback,
+          avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+          androidAudioAttributes: AndroidAudioAttributes(
+            contentType: AndroidAudioContentType.speech,
+            usage: AndroidAudioUsage.media,
+          ),
+          androidWillPauseWhenDucked: true,
+        ),
+      );
     } on Object catch (error) {
       debugPrint('Quran audio session error: $error');
     }
-  }
-
-  void _handlePositionChanged(Duration position) {
-    final now = DateTime.now();
-    final lastUpdate = _lastPositionStateUpdate;
-
-    // 🛡️ تجميع وتخفيف التحديثات لمنع إغراق الـ JNI بـ Allocations متكررة
-    if (lastUpdate != null &&
-        now.difference(lastUpdate) < const Duration(milliseconds: 400)) {
-      return;
-    }
-
-    _lastPositionStateUpdate = now;
-    state = state.copyWith(position: position);
   }
 
   Future<void> _recheckConnectivityOrError(
@@ -583,6 +787,7 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
       _audioPlayer.stop();
     } catch (_) {}
     _loadedKey = null;
+    _currentChapterData = null;
     _playlistAyahs.clear();
     _lastPositionStateUpdate = null;
     state = QuranAudioState(
@@ -646,7 +851,6 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   }
 }
 
-/// 🛡️ Top-Level Helper Function للمحافظة على مواصفات الاختبارات والبدء بالآية المحددة
 List<AyahRef> buildPrefetchWindow({
   required AyahRef start,
   required int count,

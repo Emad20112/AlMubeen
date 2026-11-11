@@ -21,8 +21,9 @@ class QuranPageView extends StatelessWidget {
     required this.headerJuzStyle,
     required this.headerSurahStyle,
     required this.footerPageStyle,
-    required this.getVerseHighlight,
     required this.onLongPressDown,
+    this.highlightController,
+    this.getVerseHighlight,
     super.key,
   });
 
@@ -38,25 +39,46 @@ class QuranPageView extends StatelessWidget {
   final TextStyle headerSurahStyle;
   final TextStyle footerPageStyle;
 
-  /// دالة تُعيد لون خلفية الآية إن كانت مُظلَّلة، وإلا `null`.
-  final Color? Function(int surah, int verse) getVerseHighlight;
+  /// وحدة التحكم بالتظليلات للاستماع الذاتي محلياً لكل صفحة دون إعادة بناء كامل الـ PageView
+  final ValueNotifier<List<HighlightVerse>>? highlightController;
+
+  /// دالة احتياطية تُعيد لون خلفية الآية إن كانت مُظلَّلة، وإلا `null`.
+  final Color? Function(int surah, int verse)? getVerseHighlight;
 
   final void Function(int surah, int verse, LongPressStartDetails details)
   onLongPressDown;
 
   @override
   Widget build(BuildContext context) {
+    Widget buildQcfContent(Color? Function(int surah, int verse) highlightGetter) {
+      return RepaintBoundary(
+        child: QcfPage(
+          pageNumber: pageNumber,
+          verseBackgroundColor: highlightGetter,
+          onLongPressDown: onLongPressDown,
+          theme: theme,
+          sp: fontScale,
+        ),
+      );
+    }
+
     return Stack(
       children: [
-        RepaintBoundary(
-          child: QcfPage(
-            pageNumber: pageNumber,
-            verseBackgroundColor: getVerseHighlight,
-            onLongPressDown: onLongPressDown,
-            theme: theme,
-            sp: fontScale,
-          ),
-        ),
+        if (highlightController != null)
+          ValueListenableBuilder<List<HighlightVerse>>(
+            valueListenable: highlightController!,
+            builder: (context, highlights, _) {
+              if (highlights.isEmpty) {
+                return buildQcfContent((_, _) => null);
+              }
+              final highlightMap = buildHighlightMap(highlights);
+              return buildQcfContent(
+                (surah, verse) => highlightMap[(surah, verse)],
+              );
+            },
+          )
+        else
+          buildQcfContent(getVerseHighlight ?? ((_, _) => null)),
         Positioned(
           top: 0,
           left: 0,
