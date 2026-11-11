@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:al_mubeen/app/theme/app_colors.dart';
+import 'package:al_mubeen/app/theme/app_radii.dart';
 import 'package:al_mubeen/core/preferences/app_user_preferences.dart';
 import 'package:al_mubeen/core/widgets/network_error_banner.dart';
 import 'package:al_mubeen/features/quran/application/quran_audio_controller.dart';
@@ -11,6 +12,7 @@ import 'package:al_mubeen/features/quran/domain/repositories/quran_reciter_repos
 import 'package:al_mubeen/features/quran/presentation/widgets/quran_reciters_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qcf_quran/qcf_quran.dart';
 
 class AyahAudioErrorBanner extends ConsumerWidget {
   const AyahAudioErrorBanner({super.key});
@@ -342,6 +344,288 @@ QuranRecitation? _firstAyahRecitation(List<QuranRecitation> recitations) {
     if (recitation.hasAyahAudio) return recitation;
   }
   return null;
+}
+
+/// شريط تحكم ذكي ومتكامل بتلاوة السورة والآيات
+class SmartQuranPlayerBar extends ConsumerStatefulWidget {
+  const SmartQuranPlayerBar({super.key});
+
+  @override
+  ConsumerState<SmartQuranPlayerBar> createState() =>
+      _SmartQuranPlayerBarState();
+}
+
+class _SmartQuranPlayerBarState extends ConsumerState<SmartQuranPlayerBar> {
+  double? _dragValue;
+
+  String _formatDuration(Duration d) {
+    if (d.isNegative || d == Duration.zero) return '00:00';
+    final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final hours = d.inHours;
+    if (hours > 0) {
+      return '$hours:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentAyah = ref.watch(
+      quranAudioControllerProvider.select((s) => s.currentAyah),
+    );
+    if (currentAyah == null) {
+      return const SizedBox.shrink();
+    }
+
+    final isPlaying = ref.watch(
+      quranAudioControllerProvider.select((s) => s.isPlaying),
+    );
+    final isLoading = ref.watch(
+      quranAudioControllerProvider.select((s) => s.isLoading),
+    );
+    final position = ref.watch(
+      quranAudioControllerProvider.select((s) => s.position),
+    );
+    final duration = ref.watch(
+      quranAudioControllerProvider.select((s) => s.duration),
+    );
+    final recitationId = ref.watch(
+      quranAudioControllerProvider.select((s) => s.recitationId),
+    );
+    final mode = ref.watch(
+      quranAudioControllerProvider.select((s) => s.playbackMode),
+    );
+
+    final reciters =
+        ref.watch(quranRecitationsProvider).asData?.value ?? const [];
+    final activeReciter =
+        reciters.where((r) => r.id == recitationId).firstOrNull;
+    final reciterName = activeReciter?.reciterName ?? 'القارئ';
+    final surahName = getSurahNameArabic(currentAyah.surah);
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFD8B457) : AppColors.maroon800;
+    final backgroundColor = isDark
+        ? const Color(0xFF1E1916).withValues(alpha: 0.92)
+        : const Color(0xFFF9F5EC).withValues(alpha: 0.95);
+    final borderColor = primaryColor.withValues(alpha: isDark ? 0.22 : 0.15);
+
+    final maxMs = duration.inMilliseconds > 0
+        ? duration.inMilliseconds.toDouble()
+        : 1.0;
+    final currentPosMs = position.inMilliseconds.toDouble().clamp(0.0, maxMs);
+    final effectiveSliderVal =
+        (_dragValue ?? currentPosMs).clamp(0.0, maxMs);
+
+    final remaining =
+        (duration > position) ? (duration - position) : Duration.zero;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            border: Border.all(color: borderColor),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // رأس الشريط: اسم السورة والآية + اسم القارئ
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        mode == AudioPlaybackMode.chapter
+                            ? Icons.album_rounded
+                            : Icons.audiotrack_rounded,
+                        size: 16,
+                        color: primaryColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'سورة $surahName (الآية ${currentAyah.ayah})',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                          fontFamily: 'IBMPlexSansArabic',
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    reciterName,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                      fontFamily: 'IBMPlexSansArabic',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+
+              // شريط التقدم الزمني الحقيقي مع المدة المنقضية والمتبقية
+              Row(
+                children: [
+                  Text(
+                    _formatDuration(position),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                  ),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 3,
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 5,
+                        ),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 10,
+                        ),
+                        activeTrackColor: primaryColor,
+                        inactiveTrackColor: primaryColor.withValues(
+                          alpha: 0.2,
+                        ),
+                        thumbColor: primaryColor,
+                      ),
+                      child: Slider(
+                        value: effectiveSliderVal,
+                        min: 0.0,
+                        max: maxMs,
+                        onChangeStart: (val) {
+                          setState(() => _dragValue = val);
+                        },
+                        onChanged: (val) {
+                          setState(() => _dragValue = val);
+                        },
+                        onChangeEnd: (val) {
+                          setState(() => _dragValue = null);
+                          ref
+                              .read(quranAudioControllerProvider.notifier)
+                              .seekTo(Duration(milliseconds: val.toInt()));
+                        },
+                      ),
+                    ),
+                  ),
+                  Text(
+                    _formatDuration(remaining),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+
+              // أزرار التحكم بالتشغيل
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(Icons.replay_10_rounded, color: primaryColor),
+                    tooltip: 'تأخير 10 ثوانٍ',
+                    onPressed: () {
+                      ref
+                          .read(quranAudioControllerProvider.notifier)
+                          .seekBackward(seconds: 10);
+                    },
+                  ),
+                  isLoading
+                      ? SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: primaryColor,
+                          ),
+                        )
+                      : IconButton(
+                          iconSize: 32,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(
+                            isPlaying
+                                ? Icons.pause_circle_filled_rounded
+                                : Icons.play_circle_fill_rounded,
+                            color: primaryColor,
+                          ),
+                          tooltip: isPlaying ? 'إيقاف مؤقت' : 'استئناف',
+                          onPressed: () {
+                            if (recitationId != null) {
+                              ref
+                                  .read(quranAudioControllerProvider.notifier)
+                                  .playOrToggleAyah(
+                                    ayahRef: currentAyah,
+                                    recitationId: recitationId,
+                                  );
+                            }
+                          },
+                        ),
+                  IconButton(
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(Icons.forward_10_rounded, color: primaryColor),
+                    tooltip: 'تقديم 10 ثوانٍ',
+                    onPressed: () {
+                      ref
+                          .read(quranAudioControllerProvider.notifier)
+                          .seekForward(seconds: 10);
+                    },
+                  ),
+                  IconButton(
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(Icons.stop_circle_outlined, color: primaryColor),
+                    tooltip: 'إيقاف التلاوة',
+                    onPressed: () {
+                      ref.read(quranAudioControllerProvider.notifier).stop();
+                    },
+                  ),
+                  IconButton(
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(Icons.headphones_rounded, color: primaryColor),
+                    tooltip: 'تغيير القارئ',
+                    onPressed: () {
+                      showReciterPickerSheet(
+                        context: context,
+                        currentAyah: currentAyah,
+                        currentRecitationId: recitationId,
+                        playOnSelect: true,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // _RecitersBottomSheet removed — now handled by showReciterPickerSheet() in quran_reciters_list_view.dart

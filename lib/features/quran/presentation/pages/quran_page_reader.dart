@@ -638,6 +638,7 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const AyahAudioErrorBanner(),
+                        const SmartQuranPlayerBar(),
                         QuranReaderBottomPanel(
                           currentPage: page,
                           onPageSelected: _goToPage,
