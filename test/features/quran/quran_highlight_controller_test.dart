@@ -54,18 +54,36 @@ void main() {
       expect(controller.value.first.verseNumber, 1);
     });
 
-    test('Pause retains audio highlight without clearing', () {
-      final ayah = AyahRef.fromSurahAyah(surah: 2, ayah: 255);
-      controller.setAudioHighlight(ayah, testColor);
+    test('Pause hides audio highlight from view while preserving it for resume', () {
+      final manualAyah = AyahRef.fromSurahAyah(surah: 1, ayah: 1);
+      final audioAyah = AyahRef.fromSurahAyah(surah: 2, ayah: 255);
 
-      expect(controller.contains(ayah), isTrue);
+      // Set manual highlight
+      controller.toggleSingle(manualAyah, manualColor);
+
+      // Start audio highlight
+      controller.setAudioHighlight(audioAyah, testColor);
       expect(controller.audioHighlight, isNotNull);
+      expect(controller.value.length, 2);
 
-      // Simulating what happens during pause: NO clearAudioHighlight is called
-      // Controller keeps the state intact for seamless resume
-      expect(controller.audioHighlight!.surah, 2);
+      // When pause occurs: audio highlight is hidden from visible highlights
+      controller.pauseAudioHighlight();
+      expect(controller.audioHighlight, isNull);
+      expect(controller.pausedAudioHighlight, isNotNull);
+      expect(controller.pausedAudioHighlight!.verseNumber, 255);
+
+      // Only manual highlight is visible during pause
+      expect(controller.value.length, 1);
+      expect(controller.value.first.verseNumber, 1);
+      expect(controller.contains(audioAyah), isFalse);
+      expect(controller.contains(manualAyah), isTrue);
+
+      // When resumed: audio highlight reappears
+      controller.resumeAudioHighlight();
+      expect(controller.audioHighlight, isNotNull);
       expect(controller.audioHighlight!.verseNumber, 255);
-      expect(controller.value.isNotEmpty, isTrue);
+      expect(controller.value.length, 2);
+      expect(controller.contains(audioAyah), isTrue);
     });
 
     test('Manual clear only clears manual highlights', () {

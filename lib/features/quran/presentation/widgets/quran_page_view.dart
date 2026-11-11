@@ -68,8 +68,7 @@ class QuranPageView extends StatelessWidget {
           ValueListenableBuilder<List<HighlightVerse>>(
             valueListenable: highlightController!,
             builder: (context, highlights, _) {
-              final pageHighlights = highlights.where((h) => h.page == pageNumber);
-              if (pageHighlights.isEmpty) {
+              if (highlights.isEmpty) {
                 return buildQcfContent((_, _) => null);
               }
               final highlightMap = buildHighlightMap(highlights);

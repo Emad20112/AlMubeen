@@ -369,14 +369,16 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
   }
 
   /// 🛡️ مزامنة التظليل الصوتي مع موضع الآية الحالية:
-  /// - عند الإيقاف المؤقت (Pause): يُحفظ موضع الآية والتظليل كما هو دون مسحهما.
-  /// - عند التوقف النهائي (Stop أو انتهاء السورة بدون آية): يُمسح التظليل الصوتي فقط.
-  /// - التظليلات اليدوية لا تُمسح مطلقاً عند توقف التلاوة.
+  /// - أثناء التشغيل (Playing): يظهر التظليل الصوتي على الآية الجارية.
+  /// - عند الإيقاف المؤقت (Pause): يختفي التظليل الصوتي فوراً مع الاحتفاظ بموضع الآية للاستئناف.
+  /// - عند الاستئناف (Resume): يظهر التظليل الصوتي مجدداً على نفس الآية.
+  /// - عند التوقف النهائي (Stop أو انتهاء السورة): يُمسح التظليل الصوتي نهائياً.
+  /// - التظليلات اليدوية: تبقى محفوظة وثابتة دائماً دون أدنى تأثير وتستمر عبر تقليب الصفحات.
   void _syncAudioHighlight({
     required AyahRef? currentAyah,
     required bool isPlaying,
   }) {
-    // 1. إذا لم تكن هناك آية جارية (مثل عند الضغط على Stop أو إفراغ المشغل):
+    // 1. إذا لم تكن هناك تلاوة نشطة أو توقفت التلاوة نهائياً (Stop):
     if (currentAyah == null) {
       if (_lastSyncedAyah != null) {
         _lastSyncedAyah = null;
@@ -385,29 +387,26 @@ class _QuranPageReaderState extends ConsumerState<QuranPageReader>
       return;
     }
 
-    // 2. إذا كان الصوت موقوفاً مؤقتاً (Pause):
-    // نحتفظ بالتظليل الحالي وموضع الآية تماماً كما يقتضي المبدأ الهندسي.
-    // لا نمسح التظليل لمجرد أن isPlaying أصبحت false!
+    // 2. إذا توقفت التلاوة مؤقتاً (Pause):
+    // إخفاء التظليل الصوتي فوراً مع الاحتفاظ بموضع الآية الجارية للاستئناف
     if (!isPlaying) {
+      _highlightController.pauseAudioHighlight();
       return;
     }
 
-    // 3. إذا كانت الآية هي نفسها التي تم مزامنتها مسبقاً، لا داعي لإعادة العمليات
-    if (_lastSyncedAyah?.surah == currentAyah.surah &&
-        _lastSyncedAyah?.ayah == currentAyah.ayah) {
-      return;
-    }
+    // 3. أثناء التشغيل (Playing / Resume):
+    // إعادة إظهار أو تحديث التظليل الصوتي
+    final ayahChanged = _lastSyncedAyah?.surah != currentAyah.surah ||
+        _lastSyncedAyah?.ayah != currentAyah.ayah;
 
     _lastSyncedAyah = currentAyah;
-
-    // 4. تعيين التظليل الصوتي للآية الجارية دون مساس بالتظليلات اليدوية
     _highlightController.setAudioHighlight(
       currentAyah,
       _highlightColor(context),
     );
 
-    // 5. نقل الصفحة فقط إذا كانت الآية في صفحة مختلفة ومتحكم الصفحة متاح
-    if (currentAyah.page != _currentPage.value) {
+    // 4. نقل الصفحة فقط إذا كانت الآية في صفحة مختلفة ومتحكم الصفحة متاح
+    if (ayahChanged && currentAyah.page != _currentPage.value) {
       if (_pageController.hasClients) {
         _pageController.jumpToPage(currentAyah.page - 1);
       }
