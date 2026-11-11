@@ -91,7 +91,7 @@ final class QuranAudioState {
 
 final class QuranAudioController extends Notifier<QuranAudioState> {
   static const int prefetchBatchSize = 5;
-  static const int _prefetchTriggerIndex = 3;
+  static const int _prefetchTriggerIndex = 2;
   static const int _prefetchCacheCapacity = 30;
 
   late final AudioPlayer _audioPlayer;
@@ -443,7 +443,8 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
     final windowAyahs = _buildWindow(startAyah, prefetchBatchSize);
     if (windowAyahs.isEmpty) return;
 
-    final initialBatchCount = 1;
+    // تجهيز الآيتين الأوليين فوراً في قائمة التشغيل لضمان انتقال خالٍ تماماً من التقطيع
+    final initialBatchCount = windowAyahs.length >= 2 ? 2 : 1;
     final initialAyahs = windowAyahs.sublist(0, initialBatchCount);
 
     final resolvedInitial = await Future.wait(
@@ -747,7 +748,17 @@ final class QuranAudioController extends Notifier<QuranAudioState> {
   Future<void> _configureAudioSession() async {
     try {
       final session = await AudioSession.instance;
-      await session.configure(const AudioSessionConfiguration.speech());
+      await session.configure(
+        const AudioSessionConfiguration(
+          avAudioSessionCategory: AVAudioSessionCategory.playback,
+          avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+          androidAudioAttributes: AndroidAudioAttributes(
+            contentType: AndroidAudioContentType.speech,
+            usage: AndroidAudioUsage.media,
+          ),
+          androidWillPauseWhenDucked: true,
+        ),
+      );
     } on Object catch (error) {
       debugPrint('Quran audio session error: $error');
     }
